@@ -1,3 +1,51 @@
+# 2024-07-01
+
+## synapse-admin is now restricted to your homeserver's URL by default
+
+A new feature introduced in synapse-admin [v0.10.0](https://github.com/Awesome-Technologies/synapse-admin/releases/tag/0.10.0) (released and supported by the playbook since a a few months ago) provides the ability to [restrict its usage to a specific homeserver](https://github.com/Awesome-Technologies/synapse-admin/blob/e21e44362c879ac41f47c580b04210842b6ff3d7/README.md#restricting-available-homeserver) (or multiple homeservers).
+
+The playbook has just started making use of this feature. **From now on, your synapse-admin instance will be restricted to the homeserver you're managing via the playbook**. When configured like this, the *Homeserver URL* field in synapse-admin's web UI changes from a text field to a dropdown having a single value (the URL of your homeserver). This makes usage simpler for most people, as they won't need to manually enter a *Homeserver URL* anymore.
+
+If you'd like **to go back to the old unrestricted behavior**, use the following configuration:
+
+```yml
+# Use this configuration to allow synapse-admin to manage any homeserver instance.
+matrix_synapse_admin_config_restrictBaseUrl: []
+```
+
+
+# 2024-06-25
+
+## The URL-prefix for Hookshot generic webhooks has changed
+
+Until now, generic Hookshot webhook URLs looked like this: `https://matrix.DOMAIN/hookshot/webhooks/:hookId`.
+
+The `/hookshot/webhooks` common prefix gets stripped by Traefik automatically, so Hookshot only sees the part that comes after (`/:hookId`).
+
+[A few years ago](https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/1681), Hookshot started to prefer to handle webhooks at a `/webhook/:hookId` path (instead of directly at `/:hookId`).
+
+To avoid future problems, we've [reconfigured](https://github.com/spantaleev/matrix-docker-ansible-deploy/commit/4704a60718946fd469aeee7fc3ae8127c633bb6b) our Hookshot configuration to use webhook URLs that include `/webhook` in the URL suffix (e.g. `/hookshot/webhooks/webhook/:hookId`, instead of `/hookshot/webhooks/:hookId`). This means that when we strip the common prefi (`/hookshot/webhooks`), we'll end up sending `/webhook/:hookId` to Hookshot, just like recommended.
+
+When generating new webhooks, you should start seeing the new URLs being used.
+
+**For now**, **both** old URLs (`/hookshot/webhooks/:hookId`) and new URLs (`/hookshot/webhooks/webhook/:hookId`) **continue to work***, so your webhooks will not break just yet.
+
+However, **we recommend that you update all your old webhook URLs** (configured in other systems) to include the new `/webhook` path component, so that future Hookshot changes (whenever they come) will not break your webhooks. You don't need to do anything on the Hookshot side - you merely need to reconfigure the remote systems that use your webhook URLs.
+
+
+
+# 2024-06-22
+
+## The maubot user is now managed by the playbook
+
+To make things easier and to be consistent with other roles, the [maubot](./docs/configuring-playbook-bot-maubot.md) user (`bot.maubot` by default) is [now](https://github.com/spantaleev/matrix-docker-ansible-deploy/pull/3376) automatically created be the playbook.
+
+If you have an existing maubot installation, you will need to specify `matrix_bot_maubot_initial_password` in your `vars.yml` file to make the playbook not complain about it being undefined.
+Since the bot is already registered in your installation, there's nothing for the playbook to do anyway. In case you don't remember the password you've registered your maubot user account with, you can specify any value for this variable.
+
+If you've registered another username for the bot (other than the recommended default of `bot.maubot`), consider adjusting the `matrix_bot_maubot_login` variable (e.g. `matrix_bot_maubot_login: my.maubot.username`).
+
+
 # 2024-06-03
 
 ## WeChat bridging support
