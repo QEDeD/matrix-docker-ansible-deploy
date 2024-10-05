@@ -1,0 +1,219 @@
+# The bare domain name which represents your Matrix identity.
+# Matrix user ids for your server will be of the form (`@user:<matrix-domain>`).
+#
+# Note: this playbook does not touch the server referenced here.
+# Installation happens on another server ("matrix.<matrix-domain>").
+#
+# If you've deployed using the wrong domain, you'll have to run the Uninstalling step,
+# because you can't change the Domain after deployment.
+#
+# Example value: example.com
+matrix_domain: "{{domain}}"
+
+# The Matrix homeserver software to install.
+# See:
+#  - `roles/custom/matrix-base/defaults/main.yml` for valid options
+# - the `docs/configuring-playbook-IMPLEMENTATION_NAME.md` documentation page, if one is available for your implementation choice
+matrix_homeserver_implementation: synapse
+
+matrix_homeserver_generic_secret_key: "{{matrix_homeserver_generic_secret_key}}"
+
+matrix_sliding_sync_enabled: true
+#12/07/2023 - added
+
+matrix_synapse_max_upload_size_mb: 150
+#12/07/2023 - added
+
+# This is something which is provided to Let's Encrypt when retrieving SSL certificates for domains.
+#
+# In case SSL renewal fails at some point, you'll also get an email notification there.
+#
+# If you decide to use another method for managing SSL certificates (different than the default Let's Encrypt),
+# you won't be required to define this variable (see `docs/configuring-playbook-ssl-certificates.md`).
+#
+# Example value: someone@example.com
+
+
+########################################################################
+#                                                                      #
+# Traefik                                                              #
+#                                                                      #
+########################################################################
+ 
+devture_traefik_config_certificatesResolvers_acme_email: '{{admin_user_email}}'
+
+devture_traefik_dashboard_enabled: true
+devture_traefik_dashboard_hostname: "{{ matrix_server_fqn_matrix }}"
+devture_traefik_dashboard_basicauth_enabled: true
+devture_traefik_dashboard_basicauth_user: "{{devture_traefik_dashboard_basicauth_user}}"
+devture_traefik_dashboard_basicauth_password: "{{devture_traefik_dashboard_basicauth_password}}"
+
+# By default, the playbook manages its own Traefik (https://doc.traefik.io/traefik/) reverse-proxy server.
+# It will retrieve SSL certificates for you on-demand and forward requests to all other components.
+# For alternatives, see `docs/configuring-playbook-own-webserver.md`.
+matrix_playbook_reverse_proxy_type: playbook-managed-traefik
+
+########################################################################
+#                                                                      #
+# /Traefik                                                             #
+#                                                                      #
+########################################################################
+
+# A shared secret (between Coturn and Synapse) used for authentication.
+# You can put any string here, but generating a strong one is preferred (e.g. `pwgen -s 64 1`).
+# matrix_coturn_turn_static_auth_secret: 'IJFoEWlHchURaCPjxWgDCHOJwpM5QeYStIPy1g4zCLmd0o3nt9uCy8IAtZKVUpIq'
+# disabled 19/03/2023
+
+# A secret used to protect access keys issued by the server.
+# You can put any string here, but generating a strong one is preferred (e.g. `pwgen -s 64 1`).
+matrix_synapse_macaroon_secret_key: "{{matrix_synapse_macaroon_secret_key}}"
+
+# A Postgres password to use for the superuser Postgres user (called `matrix` by default).
+#
+# The playbook creates additional Postgres users and databases (one for each enabled service)
+# using this superuser account.
+devture_postgres_connection_password: "{{devture_postgres_connection_password}}"
+
+## added things ## 
+
+  # metrics and graphs #
+
+prometheus_enabled: true
+
+prometheus_node_exporter_enabled: true
+
+grafana_enabled: true
+
+grafana_anonymous_access: false
+
+
+
+########################################################################
+#                                                                      #
+# exim                                                                 #
+#                                                                      #
+########################################################################
+
+exim_relay_sender_address: "matrix@{{domain}}"
+exim_relay_relay_use: true
+exim_relay_relay_host_name: "smtp.sendgrid.net"
+exim_relay_relay_host_port: 587
+exim_relay_relay_auth: true
+exim_relay_relay_auth_username: "apikey"
+exim_relay_relay_auth_password: "{{vault_exim_relay_relay_auth_password}}"
+
+
+
+########################################################################
+#                                                                      #
+# /exim                                                                #
+#                                                                      #
+########################################################################
+
+########################################################################
+#                                                                      #
+# Coturn                                                               #
+#                                                                      #
+########################################################################
+
+
+matrix_coturn_container_network: "matrix-coturn"
+#04/02/2024 - added
+
+
+#matrix_coturn_container_network: host
+#09/03/2023 - added, #04/02/2024 - commented out
+
+matrix_coturn_turn_external_ip_address: ""
+
+#28/06/2023 - added, #04/02/2024 - updated
+
+matrix_coturn_denied_peer_ips:
+  - 0.0.0.0-0.255.255.255
+#  - 10.0.0.0-10.255.255.255
+  - 100.64.0.0-100.127.255.255
+  - 127.0.0.0-127.255.255.255
+  - 169.254.0.0-169.254.255.255
+  - 172.16.0.0-172.31.255.255
+  - 192.0.0.0-192.0.0.255
+  - 192.0.2.0-192.0.2.255
+  - 192.88.99.0-192.88.99.255
+  - 192.168.0.0-192.168.255.255
+  - 198.18.0.0-198.19.255.255
+  - 198.51.100.0-198.51.100.255
+  - 203.0.113.0-203.0.113.255
+  - 240.0.0.0-255.255.255.255
+  - ::1
+  - 64:ff9b::-64:ff9b::ffff:ffff
+  - ::ffff:0.0.0.0-::ffff:255.255.255.255
+  - 100::-100::ffff:ffff:ffff:ffff
+  - 2001::-2001:1ff:ffff:ffff:ffff:ffff:ffff:ffff
+  - 2002::-2002:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+  - fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+  - fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+
+########################################################################
+#                                                                      #
+# /Coturn                                                              #
+#                                                                      #
+########################################################################
+
+# This has no relation to your Matrix user id. It can be any username you'd like.
+# Changing the username subsequently won't work.
+grafana_default_admin_user: "{{admin_user_email}}"
+
+# Changing the password subsequently won't work.
+grafana_default_admin_password: "{{grafana_default_admin_password}}"
+
+  # Workers #
+
+ 
+matrix_synapse_workers_preset: one-of-each
+
+#added 13-06-2023 after workers started causing issues 
+#commented out again again 22-10-2023: 
+ 
+#devture_postgres_process_extra_arguments: [
+#  "-c 'max_connections=200'"
+#]
+
+  # Element # 
+
+  #matrix_client_element_enabled: false
+
+# Serve base domain # 
+
+matrix_static_files_container_labels_base_domain_enabled: true
+
+  # Synapse Admin #
+
+matrix_synapse_admin_enabled: true
+
+matrix_synapse_ext_password_provider_shared_secret_auth_enabled: true
+matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret}}"
+
+  # Synapse Stats #  
+matrix_synapse_usage_exporter_enabled: true
+
+# (Optional) Expose endpoint if you want to collect statistics from outside (from other homeservers).
+# If enabled, synapse-usage-exporter will be exposed publicly at `matrix.DOMAIN/report-usage-stats/push`.
+# When collecting usage statistics for Synapse running on the same host, you don't need to enable this.
+# You can adjust the hostname and path via `matrix_synapse_usage_exporter_hostname` and `matrix_synapse_usage_exporter_path_prefix`.
+# matrix_synapse_usage_exporter_proxying_enabled: true
+
+  # Bridges # 
+
+    ## Signal ##
+matrix_mautrix_signal_enabled: true
+
+    ## Discord ##
+matrix_mx_puppet_discord_enabled: true
+
+    ## Whatsapp ##
+matrix_mautrix_whatsapp_enabled: true
+
+    # extra synapse#
+#matrix_synapse_container_federation_api_plain_host_bind_port: '8048'
+#matrix_synapse_container_client_api_host_bind_port: '8008'
+
+
