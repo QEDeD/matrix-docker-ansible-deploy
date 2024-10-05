@@ -40,13 +40,13 @@ matrix_synapse_max_upload_size_mb: 150
 #                                                                      #
 ########################################################################
  
-devture_traefik_config_certificatesResolvers_acme_email: '{{admin_user_email}}'
+traefik_config_certificatesResolvers_acme_email: '{{admin_user_email}}'
 
-devture_traefik_dashboard_enabled: true
-devture_traefik_dashboard_hostname: "{{ matrix_server_fqn_matrix }}"
-devture_traefik_dashboard_basicauth_enabled: true
-devture_traefik_dashboard_basicauth_user: "{{devture_traefik_dashboard_basicauth_user}}"
-devture_traefik_dashboard_basicauth_password: "{{devture_traefik_dashboard_basicauth_password}}"
+traefik_dashboard_enabled: true
+traefik_dashboard_hostname: "{{ matrix_server_fqn_matrix }}"
+traefik_dashboard_basicauth_enabled: true
+traefik_dashboard_basicauth_user: "{{devture_traefik_dashboard_basicauth_user}}"
+traefik_dashboard_basicauth_password: "{{devture_traefik_dashboard_basicauth_password}}"
 
 # By default, the playbook manages its own Traefik (https://doc.traefik.io/traefik/) reverse-proxy server.
 # It will retrieve SSL certificates for you on-demand and forward requests to all other components.
@@ -72,7 +72,7 @@ matrix_synapse_macaroon_secret_key: "{{matrix_synapse_macaroon_secret_key}}"
 #
 # The playbook creates additional Postgres users and databases (one for each enabled service)
 # using this superuser account.
-devture_postgres_connection_password: "{{devture_postgres_connection_password}}"
+postgres_connection_password: "{{devture_postgres_connection_password}}"
 
 ## added things ## 
 
@@ -173,7 +173,7 @@ matrix_synapse_workers_preset: one-of-each
 #added 13-06-2023 after workers started causing issues 
 #commented out again again 22-10-2023: 
  
-#devture_postgres_process_extra_arguments: [
+#postgres_process_extra_arguments: [
 #  "-c 'max_connections=200'"
 #]
 
