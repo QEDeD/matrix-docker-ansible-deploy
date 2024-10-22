@@ -26,7 +26,7 @@ While you will need some local disk space around, it's only to accommodate usage
 
 ## Installing
 
-After [creating the S3 bucket and configuring it](configuring-playbook-s3.md#bucket-creation-and-security-configuration), you can proceed to configure `s3-storage-provider` in your configuration file (`inventory/host_vars/matrix.<your-domain>/vars.yml`):
+After [creating the S3 bucket and configuring it](configuring-playbook-s3.md#bucket-creation-and-security-configuration), you can proceed to configure `s3-storage-provider` in your configuration file (`inventory/host_vars/matrix.example.com/vars.yml`):
 
 ```yaml
 matrix_synapse_ext_synapse_s3_storage_provider_enabled: true
@@ -36,7 +36,7 @@ matrix_synapse_ext_synapse_s3_storage_provider_config_region_name: some-region-n
 matrix_synapse_ext_synapse_s3_storage_provider_config_endpoint_url: https://s3.REGION_NAME.amazonaws.com # adjust this
 matrix_synapse_ext_synapse_s3_storage_provider_config_storage_class: STANDARD # or STANDARD_IA, etc.
 
-# Authentication Method 1 - (access key id + secret)
+# Authentication Method 1 - (access key ID + secret)
 # This works on all providers (AWS and other compatible systems).
 # Uncomment the variables below to use it.
 # matrix_synapse_ext_synapse_s3_storage_provider_config_access_key_id: access-key-goes-here

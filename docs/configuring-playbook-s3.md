@@ -1,7 +1,6 @@
 # Storing Synapse media files on Amazon S3 or another compatible Object Storage (optional)
 
-By default, this playbook configures your server to store Synapse's content repository (`media_store`) files on the local filesystem.
-If that's alright, you can skip this.
+By default, this playbook configures your server to store Synapse's content repository (`media_store`) files on the local filesystem. If that's okay, you can skip this document.
 
 As an alternative to storing media files on the local filesystem, you can store them on [Amazon S3](https://aws.amazon.com/s3/) or another S3-compatible object store.
 
@@ -65,7 +64,7 @@ You'll need an Amazon S3 bucket and some IAM user credentials (access key + secr
 }
 ```
 
-**NOTE**: This policy needs to be attached to an IAM user created from the **Security Credentials** menu. This is not a **Bucket Policy**.
+**Note**: This policy needs to be attached to an IAM user created from the **Security Credentials** menu. This is not a **Bucket Policy**.
 
 
 ## Backblaze B2
@@ -76,11 +75,11 @@ You [can't easily change which region (US, Europe) your Backblaze account stores
 
 After logging in to Backblaze:
 
-- create a new **private** bucket through its user interface (you can call it something like `matrix-DOMAIN-media-store`)
+- create a new **private** bucket through its user interface (you can call it something like `matrix-example-media-store`)
 - note the **Endpoint** for your bucket (something like `s3.us-west-002.backblazeb2.com`).
 - adjust its Lifecycle Rules to: Keep only the last version of the file
 - go to [App Keys](https://secure.backblaze.com/app_keys.htm) and use the **Add a New Application Key** to create a new one
-  - restrict it to the previously created bucket (e.g. `matrix-DOMAIN-media-store`)
+  - restrict it to the previously created bucket (e.g. `matrix-example-media-store`)
   - give it *Read & Write* access
 
 The `keyID` value is your **Access Key** and `applicationKey` is your **Secret Key**.

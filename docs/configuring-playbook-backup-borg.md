@@ -35,7 +35,7 @@ cat PUBKEY | ssh USER@HOST 'dd of=.ssh/authorized_keys oflag=append conv=notrunc
 
 ## Adjusting the playbook configuration
 
-Minimal working configuration (`inventory/host_vars/matrix.DOMAIN/vars.yml`) to enable borg backup:
+Minimal working configuration (`inventory/host_vars/matrix.example.com/vars.yml`) to enable borg backup:
 
 ```yaml
 backup_borg_enabled: true
@@ -68,7 +68,7 @@ Check the [backup_borg role](https://github.com/mother-of-all-self-hosting/ansib
 
 ## Installing
 
-After configuring the playbook, run the [installation](installing.md) command again:
+After configuring the playbook, run the [installation](installing.md) command:
 
 ```
 ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,start

@@ -1,15 +1,15 @@
 ---
 
 # The bare domain name which represents your Matrix identity.
-# Matrix user ids for your server will be of the form (`@user:<matrix-domain>`).
+# Matrix user ids for your server will be of the form (`@user:example.com`).
 #
 # Note: this playbook does not touch the server referenced here.
-# Installation happens on another server ("matrix.<matrix-domain>", see `matrix_server_fqn_matrix`).
+# Installation happens on another server ("matrix.example.com", see `matrix_server_fqn_matrix`).
 #
 # Example value: example.com
 matrix_domain: ~
 
-# The optional matrix admin MXID, used in bridges' configs to set bridge admin user
+# The optional Matrix admin MXID, used in bridges' configs to set bridge admin user
 # Example value: "@someone:{{ matrix_domain }}"
 matrix_admin: ''
 
@@ -77,7 +77,7 @@ matrix_server_fqn_hydrogen: "hydrogen.{{ matrix_domain }}"
 # This is where you access the Cinny web client from (if enabled via matrix_client_cinny_enabled; disabled by default).
 matrix_server_fqn_cinny: "cinny.{{ matrix_domain }}"
 
-# This is where you access the schildichat web client from (if enabled via matrix_client_schildichat_enabled; disabled by default).
+# This is where you access the SchildiChat web client from (if enabled via matrix_client_schildichat_enabled; disabled by default).
 matrix_server_fqn_schildichat: "schildichat.{{ matrix_domain }}"
 
 # This is where you access the buscarron bot from (if enabled via matrix_bot_buscarron_enabled; disabled by default).
@@ -86,7 +86,7 @@ matrix_server_fqn_buscarron: "buscarron.{{ matrix_domain }}"
 # This is where you access the Dimension.
 matrix_server_fqn_dimension: "dimension.{{ matrix_domain }}"
 
-# This is where you access the etherpad (if enabled via etherpad_enabled; disabled by default).
+# This is where you access the Etherpad (if enabled via etherpad_enabled; disabled by default).
 matrix_server_fqn_etherpad: "etherpad.{{ matrix_domain }}"
 
 # For use with Go-NEB! (github callback url for example)
@@ -139,8 +139,8 @@ matrix_user_username: "matrix"
 matrix_user_groupname: "matrix"
 
 # By default, the playbook creates the user (`matrix_user_username`)
-# and group (`matrix_user_groupname`) with a random id.
-# To use a specific user/group id, override these variables.
+# and group (`matrix_user_groupname`) with a random ID.
+# To use a specific user/group ID, override these variables.
 matrix_user_uid: ~
 matrix_user_gid: ~
 
@@ -289,7 +289,7 @@ matrix_playbook_public_matrix_federation_api_traefik_entrypoint_definition:
 # may wish to register their routes with this additional entrypoint and provide their services on it for internal (no-public-network and non-TLS) use.
 #
 # This entrypoint provides local addons (e.g. bridges, bots, etc.) with the ability to easily & quickly communicate with the homeserver and/or related software.
-# Such services can reach the homeserver over the public internet (e.g. https://matrix.DOMAIN), but this is slow due to networking and SSL-termination.
+# Such services can reach the homeserver over the public internet (e.g. https://matrix.example.com), but this is slow due to networking and SSL-termination.
 # Talking directly to the homeserver (e.g. `http://matrix-synapse:8008`) is another option, but does not allow other homeserver-related software
 # (e.g. identity servers like ma1sd, media repository servers like matrix-media-repo, firewalls like matrix-corporal)
 # to register itself for certain homeserver routes.

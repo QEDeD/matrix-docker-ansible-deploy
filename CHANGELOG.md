@@ -1,3 +1,16 @@
+# 2024-10-19
+
+## Support for Matrix Authentication Service
+
+The playbook now supports installing and configuring [Matrix Authentication Service](./docs/configuring-playbook-matrix-authentication-service.md) (MAS).
+
+Huge thanks to [Quentin Gliech](https://github.com/sandhose) from the [Element](https://element.io/) / [Matrix Authentication Service](https://github.com/element-hq/matrix-authentication-service) team for answering our numerous questions about MAS.
+
+This is an **experimental service** and there are **still certain issues with it** (see [Expectations](./docs/configuring-playbook-matrix-authentication-service.md#expectations)). Matrix server administrators should only consider switching if they identify with one or more [reasons to use Matrix Authentication Service](./docs/configuring-playbook-matrix-authentication-service.md#reasons-to-use-matrix-authentication-service). As MAS adoption improves and more services are adjusted to support it, we expect that using MAS will become the norm.
+
+Our [Setting up Matrix Authentication Service](./docs/configuring-playbook-matrix-authentication-service.md) documentation page has more details about this new service, what you might expect from the switch and how you can migrate your existing (Synapse) homeserver setup to MAS.
+
+
 # 2024-09-27
 
 ## (BC Break) Postgres & Traefik roles have been relocated and variable names need adjustments
@@ -195,7 +208,7 @@ matrix_synapse_admin_config_restrictBaseUrl: []
 
 ## The URL-prefix for Hookshot generic webhooks has changed
 
-Until now, generic Hookshot webhook URLs looked like this: `https://matrix.DOMAIN/hookshot/webhooks/:hookId`.
+Until now, generic Hookshot webhook URLs looked like this: `https://matrix.example.com/hookshot/webhooks/:hookId`.
 
 The `/hookshot/webhooks` common prefix gets stripped by Traefik automatically, so Hookshot only sees the part that comes after (`/:hookId`).
 
@@ -331,7 +344,7 @@ Refer to our new [Tuning caches and cache autotuning](docs/maintenance-synapse.m
 
 This only affects people who are [Serving a static website at the base domain](./docs/configuring-playbook-base-domain-serving.md#serving-a-static-website-at-the-base-domain), but not managing its `index.html` through the playbook.
 
-That is, for people who have `matrix_static_files_file_index_html_enabled: false` in their `vars.yml` configuration, the playbook has a new default behavior. Since the playbook is not managing the `index.html` file, it will default to a more sensible way of handling the base domain  - redirecting `https://DOMAIN/` to `https://matrix.DOMAIN/`, instead of serving a 404 page.
+That is, for people who have `matrix_static_files_file_index_html_enabled: false` in their `vars.yml` configuration, the playbook has a new default behavior. Since the playbook is not managing the `index.html` file, it will default to a more sensible way of handling the base domain  - redirecting `https://example.com/` to `https://matrix.example.com/`, instead of serving a 404 page.
 
 If you are managing your static website by yourself (by dropping files into `/matrix/static-files/public` somehow), then you probably don't wish for such redirection to happen. You can disable it by adding `matrix_static_files_container_labels_base_domain_root_path_redirection_enabled: false` to your `vars.yml` configuration file.
 
@@ -448,7 +461,7 @@ To perform this new role, Traefik now has a new internal [entrypoint](https://do
 
 Doing so, services can contact Traefik on this entrypoint's dedicated port (the URL defaults to `http://matrix-traefik:8008`) and reach the homeserver Client-Server API as they expect. Internally, Traefik takes care of the routing to the correct service.
 
-We've also considered keeping it simple and having services talk to the homeserver over the public internet (e.g. `https://matrix.DOMAIN`) thus reusing all existing Traefik routing labels. In this scenario, performance was incredibly poor (e.g. 70 rps, instead of 1400 rps) due to TLS and networking overhead. The need for fast internal communication (via the new internal non-TLS-enabled Traefik entrypoint) is definitely there. In our benchmarks, Traefik even proved more efficient than nginx at doing this: ~1200 rps for Traefik compared to ~900 rps for nginx (out of ~1400 rps when talking to the Synapse homeserver directly).
+We've also considered keeping it simple and having services talk to the homeserver over the public internet (e.g. `https://matrix.example.com`) thus reusing all existing Traefik routing labels. In this scenario, performance was incredibly poor (e.g. 70 rps, instead of 1400 rps) due to TLS and networking overhead. The need for fast internal communication (via the new internal non-TLS-enabled Traefik entrypoint) is definitely there. In our benchmarks, Traefik even proved more efficient than nginx at doing this: ~1200 rps for Traefik compared to ~900 rps for nginx (out of ~1400 rps when talking to the Synapse homeserver directly).
 
 Traefik serving this second purpose has a few downsides:
 
@@ -723,7 +736,7 @@ Here are **actions you may wish to take** as a result of this change:
 
 The playbook has provided some hints about [Tuning PostgreSQL](docs/maintenance-postgres.md#tuning-postgresql) for quite a while now.
 
-From now on, the [Postgres Ansible role](https://github.com/devture/com.devture.ansible.role.postgres) automatically tunes your Postgres configuration with the same [calculation logic](https://github.com/le0pard/pgtune/blob/master/src/features/configuration/configurationSlice.js) that powers https://pgtune.leopard.in.ua/.
+From now on, the [Postgres Ansible role](https://github.com/mother-of-all-self-hosting/ansible-role-postgres) automatically tunes your Postgres configuration with the same [calculation logic](https://github.com/le0pard/pgtune/blob/master/src/features/configuration/configurationSlice.js) that powers https://pgtune.leopard.in.ua/.
 
 Our [Tuning PostgreSQL](docs/maintenance-postgres.md#tuning-postgresql) documentation page has details about how you can turn auto-tuning off or adjust the automatically-determined Postgres configuration parameters manually.
 
@@ -914,7 +927,7 @@ Until now, we've been doing the migration gradually and keeping full backward co
 
 Each change we do and each new feature that comes in needs to support all these different ways of reverse-proxying. Because `matrix-nginx-proxy` was the default and pretty much everyone was (and still is) using it, means that new PRs also come with `matrix-nginx-proxy` as their main focus and Traefik as an afterthought, which means we need to spend hours fixing up Traefik support.
 
-We can't spend all this time maintaining so many different configurations anymore. Traefik support has been an option for 2 weeks and lots of people have  already migrated their server and have tested things out. Traefik is what we use and preferentially test for.
+We can't spend all this time maintaining so many different configurations anymore. Traefik support has been an option for 2 weeks and lots of people have already migrated their server and have tested things out. Traefik is what we use and preferentially test for.
 
 It's time for the **next step in our migration process** to Traefik and elimination of `matrix-nginx-proxy`:
 
@@ -1244,20 +1257,20 @@ See our [Setting up matrix-bot-chatgpt](docs/configuring-playbook-bot-chatgpt.md
 
 # 2022-11-30
 
-## matrix-postgres-backup has been replaced by the com.devture.ansible.role.postgres_backup external role
+## matrix-postgres-backup has been replaced by the ansible-role-postgres-backup external role
 
-Just like we've [replaced Postgres with an external role](#matrix-postgres-has-been-replaced-by-the-comdevtureansiblerolepostgres-external-role) on 2022-11-28, we're now replacing `matrix-postgres-backup` with an external role - [com.devture.ansible.role.postgres_backup](https://github.com/devture/com.devture.ansible.role.postgres_backup).
+Just like we've [replaced Postgres with an external role](#matrix-postgres-has-been-replaced-by-the-comdevtureansiblerolepostgres-external-role) on 2022-11-28, we're now replacing `matrix-postgres-backup` with an external role - [com.devture.ansible.role.postgres_backup](https://github.com/mother-of-all-self-hosting/ansible-role-postgres_backup).
 
 You'll need to rename your `matrix_postgres_backup`-prefixed variables such that they use a `postgres_backup` prefix.
 
 
 # 2022-11-28
 
-## matrix-postgres has been replaced by the com.devture.ansible.role.postgres external role
+## matrix-postgres has been replaced by the ansible-role-postgres external role
 
-**TLDR**: the tasks that install the integrated Postgres server now live in an external role - [com.devture.ansible.role.postgres](https://github.com/devture/com.devture.ansible.role.postgres). You'll need to run `make roles` to install it, and to also rename your `matrix_postgres`-prefixed variables to use a `devture_postgres` prefix (e.g. `matrix_postgres_connection_password` -> `postgres_connection_password`). All your data will still be there! Some scripts have moved (`/usr/local/bin/matrix-postgres-cli` -> `/matrix/postgres/bin/cli`).
+**TLDR**: the tasks that install the integrated Postgres server now live in an external role - [ansible-role-postgres](https://github.com/mother-of-all-self-hosting/ansible-role-postgres). You'll need to run `make roles` to install it, and to also rename your `matrix_postgres`-prefixed variables to use a `devture_postgres` prefix (e.g. `matrix_postgres_connection_password` -> `postgres_connection_password`). All your data will still be there! Some scripts have moved (`/usr/local/bin/matrix-postgres-cli` -> `/matrix/postgres/bin/cli`).
 
-The `matrix-postgres` role that has been part of the playbook for a long time has been replaced with the [com.devture.ansible.role.postgres](https://github.com/devture/com.devture.ansible.role.postgres) role. This was done as part of our work to [use external roles for some things](#the-playbook-now-uses-external-roles-for-some-things) for better code re-use and maintainability.
+The `matrix-postgres` role that has been part of the playbook for a long time has been replaced with the [ansible-role-postgres](https://github.com/mother-of-all-self-hosting/ansible-role-postgres) role. This was done as part of our work to [use external roles for some things](#the-playbook-now-uses-external-roles-for-some-things) for better code re-use and maintainability.
 
 The new role is an upgraded version of the old `matrix-postgres` role with these notable differences:
 
@@ -1378,15 +1391,15 @@ Various services (like Dimension, etc.) still talk to Synapse via `matrix-nginx-
 
 ## (Backward Compatibility Break) A new default standalone mode for Etherpad
 
-Until now, [Etherpad](https://etherpad.org/) (which [the playbook could install for you](docs/configuring-playbook-etherpad.md)) required the [Dimension integration manager](docs/configuring-playbook-dimension.md) to also be installed, because Etherpad was hosted on the Dimension domain (at `dimension.DOMAIN/etherpad`).
+Until now, [Etherpad](https://etherpad.org/) (which [the playbook could install for you](docs/configuring-playbook-etherpad.md)) required the [Dimension integration manager](docs/configuring-playbook-dimension.md) to also be installed, because Etherpad was hosted on the Dimension domain (at `dimension.example.com/etherpad`).
 
-From now on, Etherpad can be installed in `standalone` mode on `etherpad.DOMAIN` and used even without Dimension. This is much more versatile, so the playbook now defaults to this new mode (`etherpad_mode: standalone`).
+From now on, Etherpad can be installed in `standalone` mode on `etherpad.example.com` and used even without Dimension. This is much more versatile, so the playbook now defaults to this new mode (`etherpad_mode: standalone`).
 
 If you've already got both Etherpad and Dimension in use you could:
 
 - **either** keep hosting Etherpad under the Dimension domain by adding `etherpad_mode: dimension` to your `vars.yml` file. All your existing room widgets will continue working at the same URLs and no other changes will be necessary.
 
-- **or**, you could change to hosting Etherpad separately on `etherpad.DOMAIN`. You will need to [configure a DNS record](docs/configuring-dns.md) for this new domain. You will also need to reconfigure Dimension to use the new pad URLs (`https://etherpad.DOMAIN/...`) going forward (refer to our [configuring Etherpad documentation](docs/configuring-playbook-etherpad.md)). All your existing room widgets (which still use `https://dimension.DOMAIN/etherpad/...`) will break as Etherpad is not hosted there anymore. You will need to re-add them or to consider not using `standalone` mode
+- **or**, you could change to hosting Etherpad separately on `etherpad.example.com`. You will need to [configure a DNS record](docs/configuring-dns.md) for this new domain. You will also need to reconfigure Dimension to use the new pad URLs (`https://etherpad.example.com/...`) going forward (refer to our [configuring Etherpad documentation](docs/configuring-playbook-etherpad.md)). All your existing room widgets (which still use `https://dimension.example.com/etherpad/...`) will break as Etherpad is not hosted there anymore. You will need to re-add them or to consider not using `standalone` mode
 
 
 # 2022-11-04
@@ -1665,26 +1678,26 @@ See our [Setting up the ntfy push notifications server](docs/configuring-playboo
 
 **TLDR**: we've made extensive **changes to metrics exposure/collection, which concern people using an external Prometheus server**. If you don't know what that is, you don't need to read below.
 
-**Why do major changes to metrics**? Because various services were exposing metrics in different, hacky, ways. Synapse was exposing metrics at `/_synapse/metrics` and `/_synapse-worker-.../metrics` on the `matrix.DOMAIN`. The Hookshot role was **repurposing** the Granana web UI domain (`stats.DOMAIN`) for exposing its metrics on `stats.DOMAIN/hookshot/metrics`, while protecting these routes using Basic Authentication **normally used for Synapse** (`/_synapse/metrics`). Node-exporter and Postgres-exporter roles were advising for more `stats.DOMAIN` usage in manual ways. Each role was doing things differently and mixing variables from other roles. Each metrics endpoint was ending up in a different place, protected by who knows what Basic Authentication credentials (if protected at all).
+**Why do major changes to metrics**? Because various services were exposing metrics in different, hacky, ways. Synapse was exposing metrics at `/_synapse/metrics` and `/_synapse-worker-.../metrics` on the `matrix.example.com`. The Hookshot role was **repurposing** the Granana web UI domain (`stats.example.com`) for exposing its metrics on `stats.example.com/hookshot/metrics`, while protecting these routes using Basic Authentication **normally used for Synapse** (`/_synapse/metrics`). Node-exporter and Postgres-exporter roles were advising for more `stats.example.com` usage in manual ways. Each role was doing things differently and mixing variables from other roles. Each metrics endpoint was ending up in a different place, protected by who knows what Basic Authentication credentials (if protected at all).
 
-**The solution**: a completely revamped way to expose metrics to an external Prometheus server. We are **introducing new `https://matrix.DOMAIN/metrics/*` endpoints**, where various services *can* expose their metrics, for collection by external Prometheus servers. To enable the `/metrics/*` endpoints, use `matrix_nginx_proxy_proxy_matrix_metrics_enabled: true`. There's also a way to protect access using [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication). See the `matrix-nginx-proxy` role or our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation for additional variables around `matrix_nginx_proxy_proxy_matrix_metrics_enabled`.
+**The solution**: a completely revamped way to expose metrics to an external Prometheus server. We are **introducing new `https://matrix.example.com/metrics/*` endpoints**, where various services *can* expose their metrics, for collection by external Prometheus servers. To enable the `/metrics/*` endpoints, use `matrix_nginx_proxy_proxy_matrix_metrics_enabled: true`. There's also a way to protect access using [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication). See the `matrix-nginx-proxy` role or our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation for additional variables around `matrix_nginx_proxy_proxy_matrix_metrics_enabled`.
 
 **If you are using the [Hookshot bridge](docs/configuring-playbook-bridge-hookshot.md)**, you may find that:
 1. **Metrics may not be enabled by default anymore**:
   - If Prometheus is enabled (`prometheus_enabled: true`), then Hookshot metrics will be enabled automatically (`matrix_hookshot_metrics_enabled: true`). These metrics will be collected from the local (in-container) Prometheus over the container network.
   - **If Prometheus is not enabled** (you are either not using Prometheus or are using an external one), **Hookshot metrics will not be enabled by default anymore**. Feel free to enable them by setting `matrix_hookshot_metrics_enabled: true`. Also, see below.
-2. When metrics are meant to be **consumed by an external Prometheus server**, `matrix_hookshot_metrics_proxying_enabled` needs to be set to `true`, so that metrics would be exposed (proxied) "publicly" on `https://matrix.DOMAIN/metrics/hookshot`. To make use of this, you'll also need to enable the new `https://matrix.DOMAIN/metrics/*` endpoints mentioned above, using `matrix_nginx_proxy_proxy_matrix_metrics_enabled`. Learn more in our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation.
-3. **We've changed the URL we're exposing Hookshot metrics at** for external Prometheus servers. Until now, you were advised to consume Hookshot metrics from `https://stats.DOMAIN/hookshot/metrics` (working in conjunction with `matrix_nginx_proxy_proxy_synapse_metrics`). From now on, **this no longer works**. As described above, you need to start consuming metrics from `https://matrix.DOMAIN/metrics/hookshot`.
+2. When metrics are meant to be **consumed by an external Prometheus server**, `matrix_hookshot_metrics_proxying_enabled` needs to be set to `true`, so that metrics would be exposed (proxied) "publicly" on `https://matrix.example.com/metrics/hookshot`. To make use of this, you'll also need to enable the new `https://matrix.example.com/metrics/*` endpoints mentioned above, using `matrix_nginx_proxy_proxy_matrix_metrics_enabled`. Learn more in our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation.
+3. **We've changed the URL we're exposing Hookshot metrics at** for external Prometheus servers. Until now, you were advised to consume Hookshot metrics from `https://stats.example.com/hookshot/metrics` (working in conjunction with `matrix_nginx_proxy_proxy_synapse_metrics`). From now on, **this no longer works**. As described above, you need to start consuming metrics from `https://matrix.example.com/metrics/hookshot`.
 
-**If you're using node-exporter** (`matrix_prometheus_node_exporter_enabled: true`) and would like to collect its metrics from an external Prometheus server, see `matrix_prometheus_node_exporter_metrics_proxying_enabled` described in our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation. You will be able to collect its metrics from `https://matrix.DOMAIN/metrics/node-exporter`.
+**If you're using node-exporter** (`matrix_prometheus_node_exporter_enabled: true`) and would like to collect its metrics from an external Prometheus server, see `matrix_prometheus_node_exporter_metrics_proxying_enabled` described in our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation. You will be able to collect its metrics from `https://matrix.example.com/metrics/node-exporter`.
 
-**If you're using [postgres-exporter](docs/configuring-playbook-prometheus-postgres.md)** (`prometheus_postgres_exporter_enabled: true`) and would like to collect its metrics from an external Prometheus server, see `matrix_prometheus_services_proxy_connect_prometheus_postgres_exporter_metrics_proxying_enabled` described in our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation. You will be able to collect its metrics from `https://matrix.DOMAIN/metrics/postgres-exporter`.
+**If you're using [postgres-exporter](docs/configuring-playbook-prometheus-postgres.md)** (`prometheus_postgres_exporter_enabled: true`) and would like to collect its metrics from an external Prometheus server, see `matrix_prometheus_services_proxy_connect_prometheus_postgres_exporter_metrics_proxying_enabled` described in our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation. You will be able to collect its metrics from `https://matrix.example.com/metrics/postgres-exporter`.
 
 **If you're using Synapse** and would like to collect its metrics from an external Prometheus server, you may find that:
 
 1. Exposing metrics is now done using `matrix_synapse_metrics_proxying_enabled`, not `matrix_nginx_proxy_proxy_synapse_metrics: true`. You may still need to enable metrics using `matrix_synapse_metrics_enabled: true` before exposing them.
 2. Protecting metrics endpoints using [Basic Authentication](https://en.wikipedia.org/wiki/Basic_access_authentication) is now done in another way. See our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation
-3. If Synapse metrics are exposed, they will be made available at `https://matrix.DOMAIN/metrics/synapse/main-process` or `https://matrix.DOMAIN/metrics/synapse/worker/TYPE-ID` (when workers are enabled), not at `https://matrix.DOMAIN/_synapse/metrics` and `https://matrix.DOMAIN/_synapse-worker-.../metrics`
+3. If Synapse metrics are exposed, they will be made available at `https://matrix.example.com/metrics/synapse/main-process` or `https://matrix.example.com/metrics/synapse/worker/TYPE-ID` (when workers are enabled), not at `https://matrix.example.com/_synapse/metrics` and `https://matrix.example.com/_synapse-worker-.../metrics`
 4. The playbook still generates an `external_prometheus.yml.example` sample file for scraping Synapse from Prometheus as described in [Collecting Synapse worker metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-synapse-worker-metrics-to-an-external-prometheus-server), but it's now saved under `/matrix/synapse` (not `/matrix`).
 
 **If you where already using a external Prometheus server** before this change, and you gave a hashed version of the password as a variable, the playbook will now take care of hashing the password for you. Thus, you need to provide the non-hashed version now.
@@ -1968,7 +1981,7 @@ If you need to downgrade to the previous version, changing `matrix_sygnal_versio
 
 ## Hydrogen support
 
-Thanks to [Aaron Raimist](https://github.com/aaronraimist), the playbook now supports [Hydrogen](https://github.com/vector-im/hydrogen-web) - a new lightweight matrix client with legacy and mobile browser support.
+Thanks to [Aaron Raimist](https://github.com/aaronraimist), the playbook now supports [Hydrogen](https://github.com/vector-im/hydrogen-web) - a new lightweight Matrix client with legacy and mobile browser support.
 
 By default, we still install Element, as Hydrogen is still not fully-featured. Still, people who'd like to try Hydrogen out can now install it via the playbook.
 
@@ -2074,7 +2087,7 @@ Thanks to [@Peetz0r](https://github.com/Peetz0r), the playbook can now install a
 
 To get get these installed, follow our [Enabling metrics and graphs (Prometheus, Grafana) for your Matrix server](docs/configuring-playbook-prometheus-grafana.md) docs page.
 
-This update comes with a **potential breaking change** for people who were already exposing Synapse metrics (for consumption via another Prometheus installation). From now on, `matrix_synapse_metrics_enabled: true` no longer exposes metrics publicly via matrix-nginx-proxy (at `https://matrix.DOMAIN/_synapse/metrics`). To do so, you'd need to explicitly set `matrix_nginx_proxy_proxy_synapse_metrics: true`.
+This update comes with a **potential breaking change** for people who were already exposing Synapse metrics (for consumption via another Prometheus installation). From now on, `matrix_synapse_metrics_enabled: true` no longer exposes metrics publicly via matrix-nginx-proxy (at `https://matrix.example.com/_synapse/metrics`). To do so, you'd need to explicitly set `matrix_nginx_proxy_proxy_synapse_metrics: true`.
 
 
 # 2021-01-31
@@ -2122,7 +2135,7 @@ To migrate to the new setup, expect a few minutes of downtime, while you follow 
 
 2. Generate a strong password to be used for your superuser Postgres user (called `matrix`). You can use `pwgen -s 64 1` to generate it, or some other tool. The **maximum length** for a Postgres password is 100 bytes (characters). Don't go crazy!
 
-3. Update your playbook's `inventory/host_vars/matrix.DOMAIN/vars.yml` file, adding a line like this:
+3. Update your playbook's `inventory/host_vars/matrix.example.com/vars.yml` file, adding a line like this:
 ```yaml
 matrix_postgres_connection_password: 'YOUR_POSTGRES_PASSWORD_HERE'
 ```
@@ -2388,10 +2401,10 @@ The new version of [matrix-sms-bridge](https://github.com/benkuly/matrix-sms-bri
 
 1. Add the following to your `vars.yml` file: `matrix_sms_bridge_container_extra_arguments=['--env SPRING_PROFILES_ACTIVE=initialsync']`
 2. Login to your host shell and remove old systemd file from your host: `rm /etc/systemd/system/matrix-sms-bridge-database.service`
-2. Run `ansible-playbook -i inventory/hosts setup.yml --tags=setup-matrix-sms-bridge,start`
-3. Login to your host shell and check the logs with `journalctl -u matrix-sms-bridge` until the sync finished.
-4. Remove the var from the first step.
-5. Run `ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,start`.
+3. Run `ansible-playbook -i inventory/hosts setup.yml --tags=setup-matrix-sms-bridge,start`
+4. Login to your host shell and check the logs with `journalctl -u matrix-sms-bridge` until the sync finished.
+5. Remove the var from the first step.
+6. Run `ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,start`.
 
 # 2020-11-10
 
@@ -2404,11 +2417,11 @@ To learn more, follow our [Dynamic DNS docs page](docs/configuring-playbook-dyna
 
 # 2020-10-28
 
-## (Compatibility Break) https://matrix.DOMAIN/ now redirects to https://element.DOMAIN/
+## (Compatibility Break) https://matrix.example.com/ now redirects to https://element.example.com/
 
-Until now, we used to serve a static page coming from Synapse at `https://matrix.DOMAIN/`. This page was not very useful to anyone.
+Until now, we used to serve a static page coming from Synapse at `https://matrix.example.com/`. This page was not very useful to anyone.
 
-Since `matrix.DOMAIN` may be accessed by regular users in certain conditions, it's probably better to redirect them to a better place (e.g. to the [Element](docs/configuring-playbook-client-element.md) client).
+Since `matrix.example.com` may be accessed by regular users in certain conditions, it's probably better to redirect them to a better place (e.g. to the [Element](docs/configuring-playbook-client-element.md) client).
 
 If Element is installed (`matrix_client_element_enabled: true`, which it is by default), we now redirect people to it, instead of showing them a Synapse static page.
 
@@ -2420,7 +2433,7 @@ To restore the old behavior of not redirecting anywhere and serving the Synapse 
 
 ## (Compatibility Break) /_synapse/admin is no longer publicly exposed by default
 
-We used to expose the Synapse Admin APIs publicly (at `https://matrix.DOMAIN/_synapse/admin`).
+We used to expose the Synapse Admin APIs publicly (at `https://matrix.example.com/_synapse/admin`).
 These APIs require authentication with a valid access token, so it's not that big a deal to expose them.
 
 However, following [official Synapse's reverse-proxying recommendations](https://github.com/element-hq/synapse/blob/master/docs/reverse_proxy.md#synapse-administration-endpoints), we're no longer exposing `/_synapse/admin` by default.
@@ -3478,7 +3491,7 @@ By default, public registration is forbidden.
 
 You can also make people automatically get auto-joined to rooms (controlled via `matrix_synapse_auto_join_rooms`).
 
-## Support for changing the welcome user id (welcome bot)
+## Support for changing the welcome user ID (welcome bot)
 
 By default, `@riot-bot:matrix.org` is used to welcome newly registered users.
 This can be changed to something else (or disabled) via the new `matrix_riot_web_welcome_user_id` variable.

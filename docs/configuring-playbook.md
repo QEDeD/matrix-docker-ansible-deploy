@@ -8,21 +8,22 @@ To configure the playbook, you need to have done the following things:
 
 You can then follow these steps inside the playbook directory:
 
-1. create a directory to hold your configuration (`mkdir -p inventory/host_vars/matrix.<your-domain>`)
+1. create a directory to hold your configuration (`mkdir -p inventory/host_vars/matrix.example.com` where `example.com` is your "base domain")
 
-1. copy the sample configuration file (`cp examples/vars.yml inventory/host_vars/matrix.<your-domain>/vars.yml`)
+2. copy the sample configuration file (`cp examples/vars.yml inventory/host_vars/matrix.example.com/vars.yml`)
 
-1. edit the configuration file (`inventory/host_vars/matrix.<your-domain>/vars.yml`) to your liking. You may also take a look at the various `roles/*/ROLE_NAME_HERE/defaults/main.yml` files and see if there's something you'd like to copy over and override in your `vars.yml` configuration file.
+3. edit the configuration file (`inventory/host_vars/matrix.example.com/vars.yml`) to your liking. You may also take a look at the various `roles/*/ROLE_NAME_HERE/defaults/main.yml` files and see if there's something you'd like to copy over and override in your `vars.yml` configuration file.
 
-1. copy the sample inventory hosts file (`cp examples/hosts inventory/hosts`)
+4. copy the sample inventory hosts file (`cp examples/hosts inventory/hosts`)
 
-1. edit the inventory hosts file (`inventory/hosts`) to your liking
+5. edit the inventory hosts file (`inventory/hosts`) to your liking
 
-2. (optional, advanced) you may wish to keep your `inventory` directory under version control with [git](https://git-scm.com/) or any other version-control system.
+6. (optional, advanced) you may wish to keep your `inventory` directory under version control with [git](https://git-scm.com/) or any other version-control system.
 
-3. (optional, advanced) to run Ansible against multiple servers with different `sudo` credentials, you can copy the sample inventory hosts yaml file for each of your hosts: (`cp examples/host.yml inventory/my_host1.yml` …) and use the [`ansible-all-hosts.sh`](../bin/ansible-all-hosts.sh) script [in the installation step](installing.md).
+7. (optional, advanced) to run Ansible against multiple servers with different `sudo` credentials, you can copy the sample inventory hosts yaml file for each of your hosts: (`cp examples/host.yml inventory/my_host1.yml` …) and use the [`ansible-all-hosts.sh`](../bin/ansible-all-hosts.sh) script [in the installation step](installing.md).
 
 For a basic Matrix installation, that's all you need.
+
 For a more custom setup, see the [Other configuration options](#other-configuration-options) below.
 
 When you're done with all the configuration you'd like to do, continue with [Installing](installing.md).
@@ -80,7 +81,7 @@ When you're done with all the configuration you'd like to do, continue with [Ins
 
 - [Adjusting email-sending settings](configuring-playbook-email.md) (optional)
 
-- [Setting up Hydrogen](configuring-playbook-client-hydrogen.md) - a new lightweight matrix client with legacy and mobile browser support (optional)
+- [Setting up Hydrogen](configuring-playbook-client-hydrogen.md) - a new lightweight Matrix client with legacy and mobile browser support (optional)
 
 - [Setting up Cinny](configuring-playbook-client-cinny.md) - a web client focusing primarily on simple, elegant and secure interface (optional)
 
@@ -88,6 +89,8 @@ When you're done with all the configuration you'd like to do, continue with [Ins
 
 
 ### Authentication and user-related
+
+- [Setting up Matrix Authentication Service](configuring-playbook-matrix-authentication-service.md) (Next-generation auth for Matrix, based on OAuth 2.0/OIDC) (optional)
 
 - [Setting up Appservice Double Puppet](configuring-playbook-appservice-double-puppet.md) (optional)
 

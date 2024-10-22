@@ -48,7 +48,7 @@ matrix_static_files_container_labels_traefik_docker_network: "{{ matrix_static_f
 matrix_static_files_container_labels_traefik_entrypoints: web-secure
 matrix_static_files_container_labels_traefik_tls_certResolver: default  # noqa var-naming
 
-# Controls whether labels will be added that expose the well-known public endpoint on the matrix domain.
+# Controls whether labels will be added that expose the well-known public endpoint on the Matrix domain.
 matrix_static_files_container_labels_well_known_matrix_endpoint_enabled: true
 matrix_static_files_container_labels_well_known_matrix_endpoint_traefik_hostname: ''
 matrix_static_files_container_labels_well_known_matrix_endpoint_traefik_path_prefix: /.well-known/matrix
@@ -145,6 +145,13 @@ matrix_static_files_file_matrix_client_property_m_integrations_managers_ui_url: 
 # See: https://github.com/element-hq/element-web/blob/develop/docs/jitsi.md#configuring-element-to-use-your-self-hosted-jitsi-server
 matrix_static_files_file_matrix_client_property_io_element_jitsi_preferred_domain: ""
 
+# Controls if the org.matrix.msc3575.authentication section of the /.well-known/matrix/client file is enabled.
+matrix_static_files_file_matrix_client_property_org_matrix_msc2965_authentication_enabled: false
+# Controls the org.matrix.msc2965.authentication/issuer property in the /.well-known/matrix/client file
+matrix_static_files_file_matrix_client_property_org_matrix_msc2965_authentication_issuer: ""
+# Controls the org.matrix.msc2965.authentication/account property in the /.well-known/matrix/client file
+matrix_static_files_file_matrix_client_property_org_matrix_msc2965_authentication_account: ""
+
 # Controls the org.matrix.msc3575.proxy/url (sliding sync) property in the /.well-known/matrix/client file
 matrix_static_files_file_matrix_client_property_org_matrix_msc3575_proxy_url: ""
 
@@ -234,7 +241,7 @@ matrix_static_files_file_matrix_client_configuration: "{{ matrix_static_files_fi
 # If you wish to rely on DNS SRV records only, you can disable this.
 # Using DNS SRV records implies that you'll be handling Matrix Federation API traffic (tcp/8448)
 # using certificates for the base domain (`matrix_domain`) and not for the
-# matrix domain (`matrix_server_fqn_matrix`).
+# Matrix domain (`matrix_server_fqn_matrix`).
 matrix_static_files_file_matrix_server_enabled: true
 
 # Controls the m.server property in the /.well-known/matrix/server file
@@ -386,6 +393,6 @@ matrix_static_files_self_check_well_known_matrix_client_follow_redirects: none
 # TODO - review this one
 # Specifies where requests for the root URI (`/`) on the `matrix.` domain should be redirected.
 # If this has an empty value, they're just passed to the homeserver, which serves a static page.
-# If you'd like to make `https://matrix.DOMAIN` redirect to `https://element.DOMAIN` (or something of that sort), specify the domain name here.
-# Example value: `element.DOMAIN` (or `{{ matrix_server_fqn_element }}`).
+# If you'd like to make `https://matrix.example.com` redirect to `https://element.example.com` (or something of that sort), specify the domain name here.
+# Example value: `element.example.com` (or `{{ matrix_server_fqn_element }}`).
 matrix_static_files_client_redirect_root_uri_to_domain: ""

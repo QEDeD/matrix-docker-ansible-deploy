@@ -8,11 +8,11 @@ To install Matrix services using this Ansible playbook, you need:
   - **Debian** (10/Buster or newer)
   - **Ubuntu** (18.04 or newer, although [20.04 may be problematic](ansible.md#supported-ansible-versions) if you run the Ansible playbook on it)
 
-Generally, newer is better. We only strive to support released stable versions of distributions, not betas or pre-releases. This playbook can take over your whole server or co-exist with other services that you have there.
+  Generally, newer is better. We only strive to support released stable versions of distributions, not betas or pre-releases. This playbook can take over your whole server or co-exist with other services that you have there.
 
-This playbook somewhat supports running on non-`amd64` architectures like ARM. See [Alternative Architectures](alternative-architectures.md).
+  This playbook somewhat supports running on non-`amd64` architectures like ARM. See [Alternative Architectures](alternative-architectures.md).
 
-If your distro runs within an [LXC container](https://linuxcontainers.org/), you may hit [this issue](https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/703). It can be worked around, if absolutely necessary, but we suggest that you avoid running from within an LXC container.
+  If your distro runs within an [LXC container](https://linuxcontainers.org/), you may hit [this issue](https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/703). It can be worked around, if absolutely necessary, but we suggest that you avoid running from within an LXC container.
 
 - `root` access to your server (or a user capable of elevating to `root` via `sudo`).
 
@@ -28,9 +28,9 @@ If your distro runs within an [LXC container](https://linuxcontainers.org/), you
 
 - [`just`](https://github.com/casey/just) for running `just roles`, `just update`, etc. (see [`justfile`](../justfile)), although you can also run these commands manually
 
-- An HTTPS-capable web server at the base domain name (`<your-domain>`) which is capable of serving static files. Unless you decide to [Serve the base domain from the Matrix server](configuring-playbook-base-domain-serving.md) or alternatively, to use DNS SRV records for [Server Delegation](howto-server-delegation.md).
+- An HTTPS-capable web server at the base domain name (`example.com`) which is capable of serving static files. Unless you decide to [Serve the base domain from the Matrix server](configuring-playbook-base-domain-serving.md) or alternatively, to use DNS SRV records for [Server Delegation](howto-server-delegation.md).
 
-- Properly configured DNS records for `<your-domain>` (details in [Configuring DNS](configuring-dns.md)).
+- Properly configured DNS records for `example.com` (details in [Configuring DNS](configuring-dns.md)).
 
 - Some TCP/UDP ports open. This playbook (actually [Docker itself](https://docs.docker.com/network/iptables/)) configures the server's internal firewall for you. In most cases, you don't need to do anything special. But **if your server is running behind another firewall**, you'd need to open these ports:
 

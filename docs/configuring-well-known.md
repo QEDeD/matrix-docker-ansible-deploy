@@ -11,11 +11,11 @@ There are 2 types of well-known service discovery that Matrix makes use of:
 
 ## Introduction to Federation Server Discovery
 
-All services created by this playbook are meant to be installed on their own server (such as `matrix.<your-domain>`).
+All services created by this playbook are meant to be installed on their own server (such as `matrix.example.com`).
 
-As [per the Server-Server specification](https://matrix.org/docs/spec/server_server/r0.1.0.html#server-discovery), to use a Matrix user identifier like `@<username>:<your-domain>` while hosting services on a subdomain like `matrix.<your-domain>`, the Matrix network needs to be instructed of such delegation/redirection.
+As [per the Server-Server specification](https://matrix.org/docs/spec/server_server/r0.1.0.html#server-discovery), to use a Matrix user identifier like `@<username>:example.com` while hosting services on a subdomain like `matrix.example.com`, the Matrix network needs to be instructed of such delegation/redirection.
 
-Server delegation can be configured using DNS SRV records or by setting up a `/.well-known/matrix/server` file on the base domain (`<your-domain>`).
+Server delegation can be configured using DNS SRV records or by setting up a `/.well-known/matrix/server` file on the base domain (`example.com`).
 
 Both methods have their place and will continue to do so. You only need to use just one of these delegation methods.
 For simplicity reasons, our setup advocates for the `/.well-known/matrix/server` method and guides you into using that.
@@ -25,7 +25,7 @@ To learn how to set up `/.well-known/matrix/server`, read the Installing section
 
 ## Introduction to Client Server Discovery
 
-Client Server Service discovery lets various client programs which support it, to receive a full user id (e.g. `@username:example.com`) and determine where the Matrix server is automatically (e.g. `https://matrix.example.com`).
+Client Server Service discovery lets various client programs which support it, to receive a full user ID (e.g. `@username:example.com`) and determine where the Matrix server is automatically (e.g. `https://matrix.example.com`).
 
 This lets you (and your users) easily connect to your Matrix server without having to customize connection URLs. When using client programs that support it, you won't need to point them to `https://matrix.example.com` in Custom Server options manually anymore. The connection URL would be discovered automatically from your full username.
 
@@ -50,15 +50,16 @@ matrix_static_files_file_matrix_support_enabled: true
 # Homeserver admin contacts as per MSC 1929 https://github.com/matrix-org/matrix-spec-proposals/pull/1929
 matrix_static_files_file_matrix_support_property_m_contacts:
   - matrix_id: "@admin1:{{ matrix_domain }}"
-    email_address: admin@domain.tld
+    email_address: admin@example.com
     role: m.role.admin
   - matrix_id: "@admin2:{{ matrix_domain }}"
-    email_address: admin2@domain.tld
+    email_address: admin2@example.com
     role: m.role.admin
-  - email_address: security@domain.tld
+  - email_address: security@example.com
     role: m.role.security
 
-matrix_static_files_file_matrix_support_property_m_support_page: "https://example.domain.tld/support"
+# Your organization's support page on the base (or another) domain, if any
+matrix_static_files_file_matrix_support_property_m_support_page: "https://example.com/support"
 ```
 
 To learn how to set up `/.well-known/matrix/support` for the base domain, read the Installing section below.
@@ -160,7 +161,7 @@ frontend www-https
 	# Use the challenge backend if the challenge is set
 	use_backend matrix-backend if matrix-acl
 backend matrix-backend
-	# Redirects the .well-known matrix to the matrix server for federation.
+	# Redirects the .well-known Matrix to the Matrix server for federation.
 	http-request set-header Host matrix.example.com
 	server matrix matrix.example.com:80
 	# Map url path as ProxyPass does
@@ -178,8 +179,8 @@ backend matrix-backend
 
 **For AWS CloudFront**
 
-   1. Add a custom origin with matrix.<your-domain> to your distribution
-   1. Add two behaviors, one for `.well-known/matrix/client` and one for `.well-known/matrix/server` and point them to your new origin.
+   1. Add a custom origin with matrix.example.com to your distribution
+   2. Add two behaviors, one for `.well-known/matrix/client` and one for `.well-known/matrix/server` and point them to your new origin.
 
 Make sure to:
 
@@ -191,8 +192,8 @@ Make sure to:
 
 No matter which method you've used to set up the well-known files, if you've done it correctly you should be able to see a JSON file at these URLs:
 
-- `https://<domain>/.well-known/matrix/server`
-- `https://<domain>/.well-known/matrix/client`
-- `https://<domain>/.well-known/matrix/support`
+- `https://example.com/.well-known/matrix/server`
+- `https://example.com/.well-known/matrix/client`
+- `https://example.com/.well-known/matrix/support`
 
 You can also check if everything is configured correctly, by [checking if services work](maintenance-checking-services.md).

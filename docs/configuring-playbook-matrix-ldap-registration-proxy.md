@@ -4,12 +4,12 @@ The playbook can install and configure [matrix-ldap-registration-proxy](https://
 
 This proxy handles Matrix registration requests and forwards them to LDAP.
 
-**Please note:** This does support the full Matrix specification for registrations. It only provide a very coarse
+**Note**: This does support the full Matrix specification for registrations. It only provide a very coarse
 implementation of a basic password registration.
 
 ## Quickstart
 
-Add the following configuration to your `inventory/host_vars/matrix.DOMAIN/vars.yml` file:
+Add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 
 ```yaml
 matrix_ldap_registration_proxy_enabled: true
@@ -34,3 +34,6 @@ matrix_ldap_registration_proxy_systemd_wanted_services_list_custom:
   - matrix-synapse.service
 ```
 
+## Installing
+
+After configuring the playbook, run the [installation](installing.md) command: `just install-all` or `just setup-all`

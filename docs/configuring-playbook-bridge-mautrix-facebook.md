@@ -6,6 +6,10 @@ The playbook can install and configure [mautrix-facebook](https://github.com/mau
 
 See the project's [documentation](https://github.com/mautrix/facebook/blob/master/ROADMAP.md) to learn what it does and why it might be useful to you.
 
+## Adjusting the playbook configuration
+
+To enable the bridge, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
+
 ```yaml
 matrix_mautrix_facebook_enabled: true
 ```
@@ -43,6 +47,9 @@ matrix_mautrix_facebook_configuration_extension_yaml: |
 
 You may wish to look at `roles/custom/matrix-bridge-mautrix-facebook/templates/config.yaml.j2` and `roles/custom/matrix-bridge-mautrix-facebook/defaults/main.yml` to find other things you would like to configure.
 
+## Installing
+
+After configuring the playbook, run the [installation](installing.md) command: `just install-all` or `just setup-all`
 
 ## Set up Double Puppeting
 
@@ -69,7 +76,7 @@ When using this method, **each user** that wishes to enable Double Puppeting nee
 
 ## Usage
 
-You then need to start a chat with `@facebookbot:YOUR_DOMAIN` (where `YOUR_DOMAIN` is your base domain, not the `matrix.` domain).
+You then need to start a chat with `@facebookbot:example.com` (where `example.com` is your base domain, not the `matrix.` domain).
 
 Send `login YOUR_FACEBOOK_EMAIL_ADDRESS` to the bridge bot to enable bridging for your Facebook Messenger account. You can learn more here about authentication from the bridge's [official documentation on Authentication](https://docs.mau.fi/bridges/python/facebook/authentication.html).
 
@@ -91,7 +98,7 @@ The easiest way to do this may be to use [sshuttle](https://sshuttle.readthedocs
 Example command for proxying your traffic through the Matrix server:
 
 ```
-sshuttle -r root@matrix.DOMAIN:22 0/0
+sshuttle -r root@matrix.example.com:22 0/0
 ```
 
 Once connected, you should be able to verify that you're browsing the web through the Matrix server's IP by checking [icanhazip](https://icanhazip.com/).
@@ -100,4 +107,4 @@ Then proceed to log in to [Facebook/Messenger](https://www.facebook.com/).
 
 Once logged in, proceed to [set up bridging](#usage).
 
-If that doesn't work, enable 2FA [Facebook help page on enabling 2FA](https://www.facebook.com/help/148233965247823) and try to login again with a new password, and entering the 2FA code when prompted, it may take more then one try, in between attempts, check facebook.com to see if they are requiring another password change
+If that doesn't work, enable 2FA (see: [Facebook help page on enabling 2FA](https://www.facebook.com/help/148233965247823)) and try to login again with a new password, and entering the 2FA code when prompted, it may take more then one try, in between attempts, check facebook.com to see if they are requiring another password change

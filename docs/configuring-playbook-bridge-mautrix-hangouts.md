@@ -1,4 +1,4 @@
-# The [Mautrix Hangouts Bridge](https://mau.dev/mautrix/hangouts) is no longer maintained.  It has changed to a [Google Chat Bridge](https://github.com/mautrix/googlechat). Setup instructions for the Google Chat Bridge can be [found here](configuring-playbook-bridge-mautrix-googlechat.md). 
+# The [Mautrix Hangouts Bridge](https://mau.dev/mautrix/hangouts) is no longer maintained.  It has changed to a [Google Chat Bridge](https://github.com/mautrix/googlechat). Setup instructions for the Google Chat Bridge can be [found here](configuring-playbook-bridge-mautrix-googlechat.md).
 
 # Setting up Mautrix Hangouts (optional)
 
@@ -6,13 +6,17 @@ The playbook can install and configure [mautrix-hangouts](https://github.com/mau
 
 See the project's [documentation](https://docs.mau.fi/bridges/python/hangouts/index.html) to learn what it does and why it might be useful to you.
 
-To enable the [Google Hangouts](https://hangouts.google.com/) bridge just use the following playbook configuration:
+## Adjusting the playbook configuration
 
+To enable the [Google Hangouts](https://hangouts.google.com/) bridge, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 
 ```yaml
 matrix_mautrix_hangouts_enabled: true
 ```
 
+## Installing
+
+After configuring the playbook, run the [installation](installing.md) command: `just install-all` or `just setup-all`
 
 ## Set up Double Puppeting
 
@@ -40,7 +44,7 @@ When using this method, **each user** that wishes to enable Double Puppeting nee
 
 ## Usage
 
-Once the bot is enabled you need to start a chat with `Hangouts bridge bot` with handle `@hangoutsbot:YOUR_DOMAIN` (where `YOUR_DOMAIN` is your base domain, not the `matrix.` domain).
+Once the bot is enabled you need to start a chat with `Hangouts bridge bot` with handle `@hangoutsbot:example.com` (where `example.com` is your base domain, not the `matrix.` domain).
 
 Send `login` to the bridge bot to receive a link to the portal from which you can enable the bridging. Open the link sent by the bot and follow the instructions.
 
@@ -51,4 +55,3 @@ Once logged in, recent chats should show up as new conversations automatically. 
 You can learn more about authentication from the bridge's [official documentation on Authentication](https://docs.mau.fi/bridges/python/hangouts/authentication.html).
 
 After successfully enabling bridging, you may wish to [set up Double Puppeting](#set-up-double-puppeting), if you haven't already done so.
-

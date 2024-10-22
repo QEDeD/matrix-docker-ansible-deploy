@@ -11,13 +11,13 @@ does and why it might be useful to you.
 
 ## Configuration
 
-To enable the bot, add the following configuration to your `inventory/host_vars/matrix.DOMAIN/vars.yml` file:
+To enable the bot, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 
 ```yaml
 matrix_bot_matrix_registration_bot_enabled: true
 
-# By default, the playbook will set use the bot with a username like this: `@bot.matrix-registration-bot:DOMAIN`.
-# To use a different username, uncomment & adjust the variable below:
+# By default, the playbook will set use the bot with a username like this: `@bot.matrix-registration-bot:example.com`.
+# Uncomment and adjust this part if you'd like to use a username different than the default
 # matrix_bot_matrix_registration_bot_matrix_user_id_localpart: bot.matrix-registration-bot
 
 # Generate a strong password here. Consider generating it with `pwgen -s 64 1`
@@ -34,11 +34,11 @@ The bot account will be created automatically.
 
 ## Installing
 
-After configuring the playbook, re-run the [installation](installing.md) command again: `just install-all` or `just setup-all`
+After configuring the playbook, run the [installation](installing.md) command: `just install-all` or `just setup-all`
 
 ## Usage
 
-To use the bot, message `@bot.matrix-registration-bot:DOMAIN` (where `DOMAIN` is your base domain, not the `matrix.` domain).
+To use the bot, start a chat with `@bot.matrix-registration-bot:example.com` (where `example.com` is your base domain, not the `matrix.` domain).
 
 In this room send `help` and the bot will reply with all options.
 
@@ -46,7 +46,7 @@ You can also refer to the upstream [Usage documentation](https://github.com/moan
 If you have any questions, or if you need help setting it up, read the [troublshooting guide](https://github.com/moan0s/matrix-registration-bot/blob/main/docs/troubleshooting.md)
 or join [#matrix-registration-bot:hyteck.de](https://matrix.to/#/#matrix-registration-bot:hyteck.de).
 
-To clean the cache (session&encryption data) after you changed the bot's username, changed the login methon form access_token to password etc.. you can use
+To clean the cache (session & encryption data) after you changed the bot's username, changed the login method from access_token to password etc... you can use:
 
 ```bash
 just run-tags bot-matrix-registration-bot-clean-cache

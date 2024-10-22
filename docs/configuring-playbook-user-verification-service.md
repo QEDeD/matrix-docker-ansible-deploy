@@ -3,7 +3,7 @@
 **[Matrix User Verification Service](https://github.com/matrix-org/matrix-user-verification-service) (hereafter: UVS) can only be installed after Matrix services are installed and running.**
 If you're just installing Matrix services for the first time, please continue with the [Configuration](configuring-playbook.md) / [Installation](installing.md) flow and come back here later.
 
-Currently, the main purpose of this role is to allow Jitsi to authenticate matrix users and check if they are authorized to join a conference. Please refer to the documentation of the [Matrix User Verification Service](https://github.com/matrix-org/matrix-user-verification-service) to understand how it works.
+Currently, the main purpose of this role is to allow Jitsi to authenticate Matrix users and check if they are authorized to join a conference. Please refer to the documentation of the [Matrix User Verification Service](https://github.com/matrix-org/matrix-user-verification-service) to understand how it works.
 
 **Note**: enabling Matrix User Verification Service, means that the `openid` API endpoints will be exposed on the Matrix Federation port (usually `8448`), even if [federation](configuring-playbook-federation.md) is disabled.
 
@@ -11,12 +11,12 @@ If the Jitsi server is also configured by this playbook, all plugging of variabl
 
 __Some general concepts of UVS may be helpful to understand the rest, so here they are:__
 
-UVS can be used to verify two claims: 
+UVS can be used to verify two claims:
 
 * (A) Whether a given OpenID token is valid for a given server and
 * (B) whether a user is member of a given room and the corresponding PowerLevel
 
-Verifying an OpenID token id done by finding the corresponding Homeserver via  '.well-known/matrix/server' for the given domain.
+Verifying an OpenID token ID done by finding the corresponding Homeserver via  '.well-known/matrix/server' for the given domain.
 The configured `matrix_user_verification_service_uvs_homeserver_url` does **not** factor into this.
 By default, this playbook only checks against `matrix_server_fqn_matrix`.
 Therefore, the request will be made against the public openid API for `matrix_server_fqn_matrix`.
@@ -30,8 +30,7 @@ In order to use UVS, an admin token for the configured homeserver must be suppli
 
 ## Enable
 
-[Matrix User Verification Service](https://github.com/matrix-org/matrix-user-verification-service) installation is disabled by default.
-You can enable it in your configuration file (`inventory/host_vars/matrix.<your-domain>/vars.yml`):
+To enable Matrix User Verification Service, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 
 ```yaml
 matrix_user_verification_service_enabled: true
@@ -95,12 +94,12 @@ matrix_user_verification_service_uvs_pin_openid_verify_server_name: false
 
 in your host_vars.
 
-This will instruct UVS to verify the OpenID token against any domain given in a request. 
+This will instruct UVS to verify the OpenID token against any domain given in a request.
 Homeserver discovery is done via '.well-known/matrix/server' of the given domain.
 
-## Installation
+## Installing
 
-After these variables have been set, please run the following command to re-run setup and to restart UVS:
+After these variables have been set, run the [installation](installing.md) command to restart UVS:
 
 ```
 ansible-playbook -i inventory/hosts setup.yml --tags=setup-matrix-user-verification-service,start
@@ -108,13 +107,13 @@ ansible-playbook -i inventory/hosts setup.yml --tags=setup-matrix-user-verificat
 
 ## Logging
 
-The configuration variable `UVS_LOG_LEVEL` can be set to: 
+The configuration variable `UVS_LOG_LEVEL` can be set to:
 - warning
 - info
 - debug
 
 ## TLS Certificate Checking
-If the matrix Homeserver does not provide a valid TLS certificate, UVS will fail with the following error message:
+If the Matrix Homeserver does not provide a valid TLS certificate, UVS will fail with the following error message:
 
 > message: 'No response received: [object Object]',
 
