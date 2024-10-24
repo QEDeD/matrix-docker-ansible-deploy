@@ -45,8 +45,8 @@ traefik_config_certificatesResolvers_acme_email: '{{admin_user_email}}'
 traefik_dashboard_enabled: true
 traefik_dashboard_hostname: "{{ matrix_server_fqn_matrix }}"
 traefik_dashboard_basicauth_enabled: true
-traefik_dashboard_basicauth_user: "{{devture_traefik_dashboard_basicauth_user}}"
-traefik_dashboard_basicauth_password: "{{devture_traefik_dashboard_basicauth_password}}"
+traefik_dashboard_basicauth_user: "{{traefik_dashboard_basicauth_user}}"
+traefik_dashboard_basicauth_password: "{{traefik_dashboard_basicauth_password}}"
 
 # By default, the playbook manages its own Traefik (https://doc.traefik.io/traefik/) reverse-proxy server.
 # It will retrieve SSL certificates for you on-demand and forward requests to all other components.
@@ -72,7 +72,7 @@ matrix_synapse_macaroon_secret_key: "{{matrix_synapse_macaroon_secret_key}}"
 #
 # The playbook creates additional Postgres users and databases (one for each enabled service)
 # using this superuser account.
-postgres_connection_password: "{{devture_postgres_connection_password}}"
+postgres_connection_password: "{{postgres_connection_password}}"
 
 ## added things ## 
 
