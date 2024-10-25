@@ -870,13 +870,13 @@ See our [Setting up synapse-auto-compressor](docs/configuring-playbook-synapse-a
 
 # 2023-03-07
 
-## Sliding Sync Proxy (Element X) support
+## Sliding Sync proxy (Element X) support
 
 Thanks to [Benjamin Kampmann](https://github.com/gnunicorn) for [getting it started](https://github.com/spantaleev/matrix-docker-ansible-deploy/pull/2515), [FSG-Cat](https://github.com/FSG-Cat) for fixing it up and me ([Slavi](https://github.com/spantaleev)) for polishing it up, the playbook can now install and configure the [sliding-sync proxy](https://github.com/matrix-org/sliding-sync).
 
 The upcoming Element X clients ([Element X iOS](https://github.com/vector-im/element-x-ios) and [Element X Android](https://github.com/vector-im/element-x-android)) require the `sliding-sync` proxy to do their job. **These clients are still in beta** (especially Element X Android, which requires manual compilation to get it working with a non-`matrix.org` homeseserver). Playbook users can now easily give these clients a try and help test them thanks to us having `sliding-sync` support.
 
-To get started, see our [Setting up Sliding Sync Proxy](docs/configuring-playbook-sliding-sync-proxy.md) documentation page.
+To get started, see our [Setting up Sliding Sync proxy](docs/configuring-playbook-sliding-sync-proxy.md) documentation page.
 
 
 # 2023-03-02
@@ -972,11 +972,11 @@ We recommend that you follow the guide for [Fronting the integrated reverse-prox
 
 # 2023-02-25
 
-## Rageshake support
+## rageshake support
 
-Thanks to [Benjamin Kampmann](https://github.com/gnunicorn), the playbook can now install and configure the [Rageshake](https://github.com/matrix-org/rageshake) bug report server.
+Thanks to [Benjamin Kampmann](https://github.com/gnunicorn), the playbook can now install and configure the [rageshake](https://github.com/matrix-org/rageshake) bug report server.
 
-Additional details are available in [Setting up Rageshake](docs/configuring-playbook-rageshake.md).
+Additional details are available in [Setting up rageshake](docs/configuring-playbook-rageshake.md).
 
 
 # 2023-02-17
@@ -1021,9 +1021,9 @@ You need to **update your roles** (`just roles` or `make roles`) regardless of w
 
 **TLDR**: the `matrix-backup-borg` role is now included from another repository. Some variables have been renamed. All functionality remains intact.
 
-Thanks to [moan0s](https://github.com/moan0s), the `matrix-backup-borg` role (which configures [Borg backups](docs/configuring-playbook-backup-borg.md)) has been extracted from the playbook and now lives in its [own repository](https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg). This makes it possible to easily use it in other Ansible playbooks and will become part of [nextcloud-docker-ansible-deploy](https://github.com/spantaleev/nextcloud-docker-ansible-deploy) soon.
+Thanks to [moan0s](https://github.com/moan0s), the `matrix-backup-borg` role (which configures [BorgBackup](docs/configuring-playbook-backup-borg.md)) has been extracted from the playbook and now lives in its [own repository](https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg). This makes it possible to easily use it in other Ansible playbooks and will become part of [nextcloud-docker-ansible-deploy](https://github.com/spantaleev/nextcloud-docker-ansible-deploy) soon.
 
-You need to **update your roles** (`just roles` or `make roles`) regardless of whether you're enabling Borg backup functionality or not. If you're making use of Borg backups via this playbook, you will need to update variable references in your `vars.yml` file (`matrix_backup_borg_` -> `backup_borg_`).
+You need to **update your roles** (`just roles` or `make roles`) regardless of whether you're enabling Borg's backup functionality or not. If you're making use of BorgBackup via this playbook, you will need to update variable references in your `vars.yml` file (`matrix_backup_borg_` -> `backup_borg_`).
 
 
 # 2023-02-12
@@ -1684,8 +1684,8 @@ See our [Setting up the ntfy push notifications server](docs/configuring-playboo
 
 **If you are using the [Hookshot bridge](docs/configuring-playbook-bridge-hookshot.md)**, you may find that:
 1. **Metrics may not be enabled by default anymore**:
-  - If Prometheus is enabled (`prometheus_enabled: true`), then Hookshot metrics will be enabled automatically (`matrix_hookshot_metrics_enabled: true`). These metrics will be collected from the local (in-container) Prometheus over the container network.
-  - **If Prometheus is not enabled** (you are either not using Prometheus or are using an external one), **Hookshot metrics will not be enabled by default anymore**. Feel free to enable them by setting `matrix_hookshot_metrics_enabled: true`. Also, see below.
+    - If Prometheus is enabled (`prometheus_enabled: true`), then Hookshot metrics will be enabled automatically (`matrix_hookshot_metrics_enabled: true`). These metrics will be collected from the local (in-container) Prometheus over the container network.
+    - **If Prometheus is not enabled** (you are either not using Prometheus or are using an external one), **Hookshot metrics will not be enabled by default anymore**. Feel free to enable them by setting `matrix_hookshot_metrics_enabled: true`. Also, see below.
 2. When metrics are meant to be **consumed by an external Prometheus server**, `matrix_hookshot_metrics_proxying_enabled` needs to be set to `true`, so that metrics would be exposed (proxied) "publicly" on `https://matrix.example.com/metrics/hookshot`. To make use of this, you'll also need to enable the new `https://matrix.example.com/metrics/*` endpoints mentioned above, using `matrix_nginx_proxy_proxy_matrix_metrics_enabled`. Learn more in our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation.
 3. **We've changed the URL we're exposing Hookshot metrics at** for external Prometheus servers. Until now, you were advised to consume Hookshot metrics from `https://stats.example.com/hookshot/metrics` (working in conjunction with `matrix_nginx_proxy_proxy_synapse_metrics`). From now on, **this no longer works**. As described above, you need to start consuming metrics from `https://matrix.example.com/metrics/hookshot`.
 
@@ -1775,11 +1775,11 @@ See our [Setting up matrix-registration-bot](docs/configuring-playbook-bot-matri
 
 # 2022-04-19
 
-## Borg backup support
+## BorgBackup support
 
 Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook can now set up [Borg](https://www.borgbackup.org/) backups with [borgmatic](https://torsion.org/borgmatic/) of your Matrix server.
 
-See our [Setting up borg backup](docs/configuring-playbook-backup-borg.md) documentation to get started.
+See our [Setting up BorgBackup](docs/configuring-playbook-backup-borg.md) documentation to get started.
 
 
 ## (Compatibility Break) Upgrading to Synapse v1.57 on setups using workers may require manual action
@@ -2136,9 +2136,9 @@ To migrate to the new setup, expect a few minutes of downtime, while you follow 
 2. Generate a strong password to be used for your superuser Postgres user (called `matrix`). You can use `pwgen -s 64 1` to generate it, or some other tool. The **maximum length** for a Postgres password is 100 bytes (characters). Don't go crazy!
 
 3. Update your playbook's `inventory/host_vars/matrix.example.com/vars.yml` file, adding a line like this:
-```yaml
-matrix_postgres_connection_password: 'YOUR_POSTGRES_PASSWORD_HERE'
-```
+    ```yaml
+    matrix_postgres_connection_password: 'YOUR_POSTGRES_PASSWORD_HERE'
+    ```
 
 .. where `YOUR_POSTGRES_PASSWORD_HERE` is to be replaced with the password you generated during step #2.
 
@@ -2148,31 +2148,31 @@ matrix_postgres_connection_password: 'YOUR_POSTGRES_PASSWORD_HERE'
 7. Open a Postgres shell: `/usr/local/bin/matrix-postgres-cli`
 8. Execute the following query, while making sure to **change the password inside** (**don't forget the ending `;`**):
 
-```sql
-CREATE ROLE matrix LOGIN SUPERUSER PASSWORD 'YOUR_POSTGRES_PASSWORD_HERE';
-```
+    ```sql
+    CREATE ROLE matrix LOGIN SUPERUSER PASSWORD 'YOUR_POSTGRES_PASSWORD_HERE';
+    ```
 
 .. where `YOUR_POSTGRES_PASSWORD_HERE` is to be replaced with the password you generated during step #2.
 
 9. Execute the following queries as you see them (no modifications necessary, so you can just **paste them all at once**):
 
-```sql
-CREATE DATABASE matrix OWNER matrix;
+    ```sql
+    CREATE DATABASE matrix OWNER matrix;
 
-ALTER DATABASE postgres OWNER TO matrix;
-ALTER DATABASE template0 OWNER TO matrix;
-ALTER DATABASE template1 OWNER TO matrix;
+    ALTER DATABASE postgres OWNER TO matrix;
+    ALTER DATABASE template0 OWNER TO matrix;
+    ALTER DATABASE template1 OWNER TO matrix;
 
-\c matrix;
+    \c matrix;
 
-ALTER DATABASE homeserver RENAME TO synapse;
+    ALTER DATABASE homeserver RENAME TO synapse;
 
-ALTER ROLE synapse NOSUPERUSER NOCREATEDB NOCREATEROLE;
+    ALTER ROLE synapse NOSUPERUSER NOCREATEDB NOCREATEROLE;
 
-\quit
-```
+    \quit
+    ```
 
-You may need to press *Enter* after pasting the lines above.
+    You may need to press *Enter* after pasting the lines above.
 
 10. Re-run the playbook normally: `ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,start`
 
@@ -3197,10 +3197,9 @@ There's a new `matrix_nginx_proxy_data_path` variable, which has a different use
 
 # 2019-03-10
 
-## Dimension Integration Manager support
+## Dimension integration manager support
 
-Thanks to [NullIsNot0](https://github.com/NullIsNot0), the playbook can now (optionally) install the [Dimension](https://dimension.t2bot.io/) Integration Manager.
-To learn more, see the [Setting up Dimension](docs/configuring-playbook-dimension.md) documentation page.
+Thanks to [NullIsNot0](https://github.com/NullIsNot0), the playbook can now (optionally) install the [Dimension](https://dimension.t2bot.io/) integration manager. To learn more, see the [Setting up Dimension](docs/configuring-playbook-dimension.md) documentation page.
 
 
 # 2019-03-07
@@ -3527,7 +3526,7 @@ matrix_riot_web_integrations_widgets_urls: "https://scalar.vector.im/api"
 matrix_riot_web_integrations_jitsi_widget_url: "https://scalar.vector.im/api/widgets/jitsi.html"
 ```
 
-This now allows you use a custom integrations manager like [Dimesion](https://dimension.t2bot.io). For example, if you wish to use the Dimension instance hosted at dimension.t2bot.io, you can set the following in your vars.yml file:
+This now allows you use a custom integration manager like [Dimension](https://dimension.t2bot.io). For example, if you wish to use the Dimension instance hosted at dimension.t2bot.io, you can set the following in your vars.yml file:
 
 ```
 matrix_riot_web_integrations_ui_url: "https://dimension.t2bot.io/riot"
