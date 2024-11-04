@@ -1,3 +1,9 @@
+# 2024-10-28
+
+## (BC Break) Postmoogle's variable names need adjustments
+
+Due to the recategorization of [Postmoogle](./docs/configuring-playbook-bridge-postmoogle.md) from the bot to the bridge, its variables were renamed (`matrix_bot_postmoogle_` -> `matrix_postmoogle_`). You need to adjust your `vars.yml` configuration accordingly.
+
 # 2024-10-19
 
 ## Support for Matrix Authentication Service
@@ -876,7 +882,7 @@ Thanks to [Benjamin Kampmann](https://github.com/gnunicorn) for [getting it star
 
 The upcoming Element X clients ([Element X iOS](https://github.com/vector-im/element-x-ios) and [Element X Android](https://github.com/vector-im/element-x-android)) require the `sliding-sync` proxy to do their job. **These clients are still in beta** (especially Element X Android, which requires manual compilation to get it working with a non-`matrix.org` homeseserver). Playbook users can now easily give these clients a try and help test them thanks to us having `sliding-sync` support.
 
-To get started, see our [Setting up Sliding Sync proxy](docs/configuring-playbook-sliding-sync-proxy.md) documentation page.
+To get started, see our [Setting up the Sliding Sync proxy](docs/configuring-playbook-sliding-sync-proxy.md) documentation page.
 
 
 # 2023-03-02
@@ -1110,7 +1116,7 @@ Switching to Traefik will obtain new SSL certificates from Let's Encrypt (stored
 
 Treafik directly reverse-proxies to **some** services right now, but for most other services it goes through `matrix-nginx-proxy` (e.g. Traefik -> `matrix-nginx-proxy` -> [Ntfy](docs/configuring-playbook-ntfy.md)). So, even if you opt into Traefik, you'll still see `matrix-nginx-proxy` being installed in local-only mode. This will improve with time.
 
-Some services (like [Coturn](docs/configuring-playbook-turn.md) and [Postmoogle](docs/configuring-playbook-bot-postmoogle.md)) cannot be reverse-proxied to directly from Traefik, so they require direct access to SSL certificate files extracted out of Traefik. The playbook does this automatically thanks to a new [com.devture.ansible.role.traefik_certs_dumper](https://github.com/devture/com.devture.ansible.role.traefik_certs_dumper) role utilizing the [traefik-certs-dumper](https://github.com/ldez/traefik-certs-dumper) tool.
+Some services (like [Coturn](docs/configuring-playbook-turn.md) and [Postmoogle](docs/configuring-playbook-bridge-postmoogle.md)) cannot be reverse-proxied to directly from Traefik, so they require direct access to SSL certificate files extracted out of Traefik. The playbook does this automatically thanks to a new [com.devture.ansible.role.traefik_certs_dumper](https://github.com/devture/com.devture.ansible.role.traefik_certs_dumper) role utilizing the [traefik-certs-dumper](https://github.com/ldez/traefik-certs-dumper) tool.
 
 Our Traefik setup mostly works, but certain esoteric features may not work. If you have a default setup, we expect you to have a good experience.
 
@@ -1310,7 +1316,7 @@ Recently, a few large optimizations have been done to this playbook and its exte
 
 1. Replacing Ansible `import_tasks` calls with `include_tasks`, which decreased runtime in half. Using `import_tasks` is slower and causes Ansible to go through and skip way too many tasks (tasks which could have been skipped altogether by not having Ansible include them in the first place). On an experimental VM, **deployment time was decreased from ~530 seconds to ~250 seconds**.
 
-2. Introducing new `install-*` tags (`install-all` and `install-COMPONENT`, e.g. `install-synapse`, `install-bot-postmoogle`), which only run Ansible tasks pertaining to installation, while skipping uninstallation tasks. In most cases, people are maintaining the same setup or they're *adding* new components. Removing components is rare. Running thousands of uninstallation tasks each time is wasteful. On an experimental VM, **deployment time was decreased from ~250 seconds (`--tags=setup-all`) to ~100 seconds (`--tags=install-all`)**.
+2. Introducing new `install-*` tags (`install-all` and `install-COMPONENT`, e.g. `install-synapse`, `install-bot-mjolnir`), which only run Ansible tasks pertaining to installation, while skipping uninstallation tasks. In most cases, people are maintaining the same setup or they're *adding* new components. Removing components is rare. Running thousands of uninstallation tasks each time is wasteful. On an experimental VM, **deployment time was decreased from ~250 seconds (`--tags=setup-all`) to ~100 seconds (`--tags=install-all`)**.
 
 You can still use `--tags=setup-all`. In fact, that's the best way to ensure your server is reconciled with the `vars.yml` configuration.
 
@@ -1464,7 +1470,7 @@ With the new Synapse-customization feature in the playbook, we use the original 
 
 Thanks to [@TheOneWithTheBraid](https://github.com/TheOneWithTheBraid), we now support installing [matrix-ldap-registration-proxy](https://gitlab.com/activism.international/matrix_ldap_registration_proxy) - a proxy which handles Matrix registration requests and forwards them to LDAP.
 
-See our [Setting up the ldap-registration-proxy](docs/configuring-playbook-matrix-ldap-registration-proxy.md) documentation to get started.
+See our [Setting up matrix-ldap-registration-proxy](docs/configuring-playbook-matrix-ldap-registration-proxy.md) documentation to get started.
 
 
 # 2022-09-15
@@ -1564,16 +1570,16 @@ Below we'll discuss **potential backward incompatibilities**.
 
 Thanks to [Julian-Samuel Gebühr (@moan0s)](https://github.com/moan0s), the playbook can now set up [Cactus Comments](https://cactus.chat) - federated comment system for the web based on Matrix.
 
-See our [Setting up a Cactus Comments server](docs/configuring-playbook-cactus-comments.md) documentation to get started.
+See our [Setting up Cactus Comments](docs/configuring-playbook-cactus-comments.md) documentation to get started.
 
 
 # 2022-08-23
 
 ## Postmoogle email bridge support
 
-Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook can now set up the new [Postmoogle](https://github.com/etkecc/postmoogle) email bridge/bot. Postmoogle is like the [email2matrix bridge](https://github.com/devture/email2matrix) (also [already supported by the playbook](docs/configuring-playbook-email2matrix.md)), but more capable and with the intention to soon support *sending* emails, not just receiving.
+Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook can now set up the new [Postmoogle](https://github.com/etkecc/postmoogle) email bridge. Postmoogle is like the [email2matrix bridge](https://github.com/devture/email2matrix) (also [already supported by the playbook](docs/configuring-playbook-email2matrix.md)), but more capable and with the intention to soon support *sending* emails, not just receiving.
 
-See our [Setting up Postmoogle email bridging](docs/configuring-playbook-bot-postmoogle.md) documentation to get started.
+See our [Setting up Postmoogle email bridging](docs/configuring-playbook-bridge-postmoogle.md) documentation to get started.
 
 
 # 2022-08-10
@@ -1635,7 +1641,7 @@ See our [Setting up maubot](docs/configuring-playbook-bot-maubot.md) documentati
 
 ## mx-puppet-skype removal
 
-The playbook no longer includes the [mx-puppet-skype](https://github.com/Sorunome/mx-puppet-skype) bridge, because it has been broken and unmaintaned for a long time. Users that have `matrix_mx_puppet_skype_enabled` in their configuration files will encounter an error when running the playbook until they remove references to this bridge from their configuration.
+The playbook no longer includes the [mx-puppet-skype](https://github.com/Sorunome/mx-puppet-skype) bridge, because it has been broken and unmaintained for a long time. Users that have `matrix_mx_puppet_skype_enabled` in their configuration files will encounter an error when running the playbook until they remove references to this bridge from their configuration.
 
 To completely clean up your server from `mx-puppet-skype`'s presence on it:
 
@@ -1708,7 +1714,7 @@ See our [Setting up the ntfy push notifications server](docs/configuring-playboo
 
 Thanks to [CyberShadow](https://github.com/CyberShadow), the playbook can now install the [go-skype-bridge](https://github.com/kelaresg/go-skype-bridge) bridge for bridging Matrix to [Skype](https://www.skype.com/).
 
-See our [Setting up Go Skype Bridge](docs/configuring-playbook-bridge-go-skype-bridge.md) documentation to get started.
+See our [Setting up Go Skype Bridge bridging](docs/configuring-playbook-bridge-go-skype-bridge.md) documentation to get started.
 
 The playbook has supported [mx-puppet-skype](https://github.com/Sorunome/mx-puppet-skype) bridging (see [Setting up MX Puppet Skype bridging](docs/configuring-playbook-bridge-mx-puppet-skype.md)) since [2020-04-09](#2020-04-09), but `mx-puppet-skype` is reportedly broken.
 
@@ -1757,7 +1763,7 @@ You could then restart services: `ansible-playbook -i inventory/hosts setup.yml 
 
 # 2022-04-25
 
-## buscarron bot support
+## Buscarron bot support
 
 Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook can now set up [the Buscarron bot](https://github.com/etkecc/buscarron). It's a bot you can use to send any form (HTTP POST, HTML) to a (encrypted) Matrix room
 
@@ -1844,7 +1850,7 @@ To enable this module (and prevent encryption from being used on your homserver)
 
 ## matrix-hookshot bridging support
 
-Thanks to [HarHarLinks](https://github.com/HarHarLinks), the playbook can now install the [matrix-hookshot](https://github.com/Half-Shot/matrix-hookshot) bridge for bridging Matrix to multiple project management services, such as GitHub, GitLab and JIRA.
+Thanks to [HarHarLinks](https://github.com/HarHarLinks), the playbook can now install the [matrix-hookshot](https://github.com/matrix-org/matrix-hookshot) bridge for bridging Matrix to multiple project management services, such as GitHub, GitLab and JIRA.
 See our [Setting up matrix-hookshot](docs/configuring-playbook-bridge-hookshot.md) documentation to get started.
 
 
@@ -2038,7 +2044,7 @@ The playbook can now install the [Sygnal](https://github.com/matrix-org/sygnal) 
 
 This is only useful to people who develop/build their own Matrix client applications.
 
-Additional details are available in our [Setting up Sygnal](docs/configuring-playbook-sygnal.md) docs.
+Additional details are available in our [Setting up the Sygnal push gateway](docs/configuring-playbook-sygnal.md) docs.
 
 
 # 2021-03-16
@@ -2717,7 +2723,7 @@ It forces a [Postgres database upgrade](docs/maintenance-postgres.md#upgrading-p
 
 Thanks to a contribution from [Björn Marten](https://github.com/tripleawwy) from [netresearch](https://www.netresearch.de/), the playbook can now install and configure [matrix-appservice-webhooks](https://github.com/turt2live/matrix-appservice-webhooks) for you. This bridge provides support for Slack-compatible webhooks.
 
-Learn more in [Setting up Appservice Webhooks](docs/configuring-playbook-bridge-appservice-webhooks.md).
+Learn more in [Setting up Appservice Webhooks bridging](docs/configuring-playbook-bridge-appservice-webhooks.md).
 
 
 # 2020-01-12
@@ -3214,7 +3220,7 @@ To learn more, see the [Customizing email templates](docs/configuring-playbook-m
 
 ## Discord bridging support
 
-[@Lionstiger](https://github.com/Lionstiger) has done some great work adding Discord bridging support via [matrix-appservice-discord](https://github.com/Half-Shot/matrix-appservice-discord).
+[@Lionstiger](https://github.com/Lionstiger) has done some great work adding Discord bridging support via [matrix-appservice-discord](https://github.com/matrix-org/matrix-appservice-discord).
 To learn more, see the [Setting up Appservice Discord bridging](docs/configuring-playbook-bridge-appservice-discord.md) documentation page.
 
 
@@ -3292,7 +3298,7 @@ When using:
 ## IRC bridging support
 
 [Devon Maloney (@Plailect)](https://github.com/Plailect) has done some great work bringing IRC bridging support via [matrix-appservice-irc](https://github.com/TeDomum/matrix-appservice-irc).
-To learn more, see the [Setting up Appservice IRC](docs/configuring-playbook-bridge-appservice-irc.md) documentation page.
+To learn more, see the [Setting up Appservice IRC bridging](docs/configuring-playbook-bridge-appservice-irc.md) documentation page.
 
 
 # 2019-01-29
@@ -3757,7 +3763,7 @@ The Client APIs run only on the http port (8008) now.
 ## mxisd Identity Server support
 
 The playbook now sets up an [mxisd](https://github.com/kamax-io/mxisd) Identity Server for you by default.
-Additional details are available in [Adjusting mxisd Identity Server configuration](docs/configuring-playbook-mxisd.md).
+Additional details are available in [Setting up ma1sd Identity Server](docs/configuring-playbook-mxisd.md).
 
 
 # 2018-08-14

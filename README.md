@@ -24,10 +24,11 @@ If you like the [FOSS](https://en.wikipedia.org/wiki/Free_and_open-source_softwa
 
 Using this playbook, you can get the following list of services configured on your server. Basically, this playbook aims to get you up-and-running with all the necessities around Matrix, without you having to do anything else.
 
-**Note**: the list below is exhaustive. It includes optional or even some advanced components that you will most likely not need.
-Sticking with the defaults (which install a subset of the above components) is the best choice, especially for a new installation.
-You can always re-run the playbook later to add or remove components.
+**Notes**:
 
+- The list below is exhaustive. It includes optional or even some advanced components that you will most likely not need. Sticking with the defaults (which install a subset of the above components) is the best choice, especially for a new installation. You can always re-run the playbook later to add or remove components.
+
+- Deprecated or unmaintained services are not listed. You can find documentations for them [here](docs/configuring-playbook.md#deprecated--unmaintained--removed-services).
 
 ### Homeserver
 
@@ -62,11 +63,9 @@ Services that run on the server to make the various parts of your installation w
 | [Coturn](https://github.com/coturn/coturn) | ✓ | STUN/TURN server for WebRTC audio/video calls | [Link](docs/configuring-playbook-turn.md) |
 | [Traefik](https://doc.traefik.io/traefik/) | ✓ | Web server, listening on ports 80, 443 and 8448 - standing in front of all the other services. Using your own webserver [is possible](docs/configuring-playbook-own-webserver.md) | [Link](docs/configuring-playbook-traefik.md) |
 | [Let's Encrypt](https://letsencrypt.org/) | ✓ | Free SSL certificate, which secures the connection to all components | [Link](docs/configuring-playbook-ssl-certificates.md) |
-| [ma1sd](https://github.com/ma1uta/ma1sd) | x | Matrix Identity Server | [Link](docs/configuring-playbook-ma1sd.md)
 | [Exim](https://www.exim.org/) | ✓ | Mail server, through which all Matrix services send outgoing email (can be configured to relay through another SMTP server) | [Link](docs/configuring-playbook-email.md) |
-| [Dimension](https://github.com/turt2live/matrix-dimension) | x | An open source integration manager for Matrix clients | [Link](docs/configuring-playbook-dimension.md) |
-| [Sygnal](https://github.com/matrix-org/sygnal) | x | Push gateway | [Link](docs/configuring-playbook-sygnal.md) |
-| [ntfy](https://ntfy.sh) | x | Push notifications server | [Link](docs/configuring-playbook-ntfy.md) |
+| [ma1sd](https://github.com/ma1uta/ma1sd) | x | Matrix Identity Server | [Link](docs/configuring-playbook-ma1sd.md)
+| [ddclient](https://github.com/linuxserver/docker-ddclient) | x | Dynamic DNS | [Link](docs/configuring-playbook-dynamic-dns.md) |
 
 
 ### Authentication
@@ -80,6 +79,8 @@ Extend and modify how users are authenticated on your homeserver.
 | [matrix-synapse-ldap3](https://github.com/matrix-org/matrix-synapse-ldap3) (advanced) | x | LDAP Auth password provider module | [Link](docs/configuring-playbook-ldap-auth.md) |
 | [matrix-ldap-registration-proxy](https://gitlab.com/activism.international/matrix_ldap_registration_proxy) (advanced) | x | A proxy that handles Matrix registration requests and forwards them to LDAP. | [Link](docs/configuring-playbook-matrix-ldap-registration-proxy.md) |
 | [matrix-registration](https://github.com/ZerataX/matrix-registration) | x | A simple python application to have a token based Matrix registration | [Link](docs/configuring-playbook-matrix-registration.md) |
+| [Matrix User Verification Service](https://github.com/matrix-org/matrix-user-verification-service) (UVS) | x | Service to verify details of a user based on an Open ID token | [Link](docs/configuring-playbook-user-verification-service.md) |
+| [synapse-simple-antispam](https://github.com/t2bot/synapse-simple-antispam) (advanced) | x | A spam checker module | [Link](docs/configuring-playbook-synapse-simple-antispam.md) |
 
 
 ### File Storage
@@ -103,28 +104,29 @@ Bridges can be used to connect your Matrix installation with third-party communi
 | [mautrix-telegram](https://github.com/mautrix/telegram) | x | Bridge to [Telegram](https://telegram.org/) | [Link](docs/configuring-playbook-bridge-mautrix-telegram.md) |
 | [mautrix-gmessages](https://github.com/mautrix/gmessages) | x | Bridge to [Google Messages](https://messages.google.com/) | [Link](docs/configuring-playbook-bridge-mautrix-gmessages.md) |
 | [mautrix-whatsapp](https://github.com/mautrix/whatsapp) | x | Bridge to [WhatsApp](https://www.whatsapp.com/) | [Link](docs/configuring-playbook-bridge-mautrix-whatsapp.md) |
-| [mautrix-facebook](https://github.com/mautrix/facebook) | x | Bridge to [Facebook](https://facebook.com/) | [Link](docs/configuring-playbook-bridge-mautrix-facebook.md) |
+| [mautrix-wsproxy](https://github.com/mautrix/wsproxy) | x | Bridge to Android SMS or Apple iMessage | [Link](docs/configuring-playbook-bridge-mautrix-wsproxy.md) |
 | [mautrix-twitter](https://github.com/mautrix/twitter) | x | Bridge to [Twitter](https://twitter.com/) | [Link](docs/configuring-playbook-bridge-mautrix-twitter.md) |
-| [mautrix-hangouts](https://github.com/mautrix/hangouts) | x | Bridge to [Google Hangouts](https://en.wikipedia.org/wiki/Google_Hangouts) | [Link](docs/configuring-playbook-bridge-mautrix-hangouts.md) |
 | [mautrix-googlechat](https://github.com/mautrix/googlechat) | x | Bridge to [Google Chat](https://en.wikipedia.org/wiki/Google_Chat) | [Link](docs/configuring-playbook-bridge-mautrix-googlechat.md) |
-| [mautrix-instagram](https://github.com/mautrix/instagram) | x | Bridge to [Instagram](https://instagram.com/) | [Link](docs/configuring-playbook-bridge-mautrix-instagram.md) |
+| [mautrix-meta](https://github.com/mautrix/instagram) | x | Bridge to [Messenger](https://messenger.com/) and [Instagram](https://instagram.com/) | Link for [Messenger](docs/configuring-playbook-bridge-mautrix-meta-messenger.md) / [Instagram](docs/configuring-playbook-bridge-mautrix-meta-instagram.md) |
 | [mautrix-signal](https://github.com/mautrix/signal) | x | Bridge to [Signal](https://www.signal.org/) | [Link](docs/configuring-playbook-bridge-mautrix-signal.md) |
 | [beeper-linkedin](https://github.com/beeper/linkedin) | x | Bridge to [LinkedIn](https://www.linkedin.com/) | [Link](docs/configuring-playbook-bridge-beeper-linkedin.md) |
 | [matrix-appservice-irc](https://github.com/matrix-org/matrix-appservice-irc) | x | Bridge to [IRC](https://wikipedia.org/wiki/Internet_Relay_Chat) | [Link](docs/configuring-playbook-bridge-appservice-irc.md) |
-| [matrix-appservice-discord](https://github.com/Half-Shot/matrix-appservice-discord) | x | Bridge to [Discord](https://discordapp.com/) | [Link](docs/configuring-playbook-bridge-appservice-discord.md) |
+| [matrix-appservice-kakaotalk](https://src.miscworks.net/fair/matrix-appservice-kakaotalk) | x | Bridge to [Kakaotalk](https://www.kakaocorp.com/page/service/service/KakaoTalk?lang=ENG) | [Link](docs/configuring-playbook-bridge-appservice-kakaotalk.md) |
+| [matrix-appservice-discord](https://github.com/matrix-org/matrix-appservice-discord) | x | Bridge to [Discord](https://discordapp.com/) | [Link](docs/configuring-playbook-bridge-appservice-discord.md) |
 | [matrix-appservice-slack](https://github.com/matrix-org/matrix-appservice-slack) | x | Bridge to [Slack](https://slack.com/) | [Link](docs/configuring-playbook-bridge-appservice-slack.md) |
-| [matrix-appservice-webhooks](https://github.com/turt2live/matrix-appservice-webhooks) | x | Bridge for slack compatible webhooks ([ConcourseCI](https://concourse-ci.org/), [Slack](https://slack.com/) etc. pp.) | [Link](docs/configuring-playbook-bridge-appservice-webhooks.md) |
-| [matrix-hookshot](https://github.com/Half-Shot/matrix-hookshot) | x | Bridge for generic webhooks and multiple project management services, such as GitHub, GitLab, Figma, and Jira in particular | [Link](docs/configuring-playbook-bridge-hookshot.md) |
+| [matrix-hookshot](https://github.com/matrix-org/matrix-hookshot) | x | Bridge for generic webhooks and multiple project management services, such as GitHub, GitLab, Figma, and Jira in particular | [Link](docs/configuring-playbook-bridge-hookshot.md) |
 | [matrix-sms-bridge](https://github.com/benkuly/matrix-sms-bridge) | x | Bridge to SMS | [Link](docs/configuring-playbook-bridge-matrix-bridge-sms.md) |
+| [matrix-wechat](https://github.com/duo/matrix-wechat) | x | Bridge to [WeChat](https://www.wechat.com/) | [Link](docs/configuring-playbook-bridge-wechat.md) |
 | [Heisenbridge](https://github.com/hifi/heisenbridge) | x | Bouncer-style bridge to [IRC](https://wikipedia.org/wiki/Internet_Relay_Chat) | [Link](docs/configuring-playbook-bridge-heisenbridge.md) |
 | [go-skype-bridge](https://github.com/kelaresg/go-skype-bridge) | x | Bridge to [Skype](https://www.skype.com) | [Link](docs/configuring-playbook-bridge-go-skype-bridge.md) |
-| [mx-puppet-slack](https://hub.docker.com/r/sorunome/mx-puppet-slack) | x | Bridge to [Slack](https://slack.com) | [Link](docs/configuring-playbook-bridge-mx-puppet-slack.md) |
+| [mx-puppet-slack](https://gitlab.com/mx-puppet/slack/mx-puppet-slack) | x | Bridge to [Slack](https://slack.com) | [Link](docs/configuring-playbook-bridge-mx-puppet-slack.md) |
 | [mx-puppet-instagram](https://github.com/Sorunome/mx-puppet-instagram) | x | Bridge for Instagram-DMs ([Instagram](https://www.instagram.com/)) | [Link](docs/configuring-playbook-bridge-mx-puppet-instagram.md) |
 | [mx-puppet-twitter](https://github.com/Sorunome/mx-puppet-twitter) | x | Bridge for Twitter-DMs ([Twitter](https://twitter.com/)) | [Link](docs/configuring-playbook-bridge-mx-puppet-twitter.md) |
-| [mx-puppet-discord](https://github.com/matrix-discord/mx-puppet-discord) | x | Bridge to [Discord](https://discordapp.com/) | [Link](docs/configuring-playbook-bridge-mx-puppet-discord.md) |
+| [mx-puppet-discord](https://gitlab.com/mx-puppet/discord/mx-puppet-discord) | x | Bridge to [Discord](https://discordapp.com/) | [Link](docs/configuring-playbook-bridge-mx-puppet-discord.md) |
 | [mx-puppet-groupme](https://gitlab.com/xangelix-pub/matrix/mx-puppet-groupme) | x | Bridge to [GroupMe](https://groupme.com/) | [Link](docs/configuring-playbook-bridge-mx-puppet-groupme.md) |
 | [mx-puppet-steam](https://github.com/icewind1991/mx-puppet-steam) | x | Bridge to [Steam](https://steamapp.com/) | [Link](docs/configuring-playbook-bridge-mx-puppet-steam.md) |
 | [Email2Matrix](https://github.com/devture/email2matrix) | x | Bridge for relaying emails to Matrix rooms | [Link](docs/configuring-playbook-email2matrix.md) |
+| [Postmoogle](https://github.com/etkecc/postmoogle) | x | Email to Matrix bridge | [Link](docs/configuring-playbook-bridge-postmoogle.md) |
 
 
 ### Bots
@@ -137,13 +139,10 @@ Bots provide various additional functionality to your installation.
 | [matrix-reminder-bot](https://github.com/anoadragon453/matrix-reminder-bot) | x | Bot for scheduling one-off & recurring reminders and alarms | [Link](docs/configuring-playbook-bot-matrix-reminder-bot.md) |
 | [matrix-registration-bot](https://github.com/moan0s/matrix-registration-bot) | x | Bot for invitations by creating and managing registration tokens | [Link](docs/configuring-playbook-bot-matrix-registration-bot.md) |
 | [maubot](https://github.com/maubot/maubot) | x | A plugin-based Matrix bot system | [Link](docs/configuring-playbook-bot-maubot.md) |
-| [honoroit](https://github.com/etkecc/honoroit) | x | A helpdesk bot | [Link](docs/configuring-playbook-bot-honoroit.md) |
-| [Postmoogle](https://github.com/etkecc/postmoogle) | x | Email to Matrix bot | [Link](docs/configuring-playbook-bot-postmoogle.md) |
-| [Go-NEB](https://github.com/matrix-org/go-neb) | x | A multi functional bot written in Go | [Link](docs/configuring-playbook-bot-go-neb.md) |
+| [Honoroit](https://github.com/etkecc/honoroit) | x | A helpdesk bot | [Link](docs/configuring-playbook-bot-honoroit.md) |
 | [Mjolnir](https://github.com/matrix-org/mjolnir) | x | A moderation tool for Matrix | [Link](docs/configuring-playbook-bot-mjolnir.md) |
-| [Draupnir](https://github.com/the-draupnir-project/Draupnir) | x | A moderation tool for Matrix (Fork of Mjolnir) | [Link](docs/configuring-playbook-bot-draupnir.md) |
+| [Draupnir](https://github.com/the-draupnir-project/Draupnir) | x | A moderation tool for Matrix (Fork of Mjolnir) | [Link](docs/configuring-playbook-bot-draupnir.md) (for [appservice mode](docs/configuring-playbook-appservice-draupnir-for-all.md))|
 | [Buscarron](https://github.com/etkecc/buscarron) | x | Web forms (HTTP POST) to Matrix | [Link](docs/configuring-playbook-bot-buscarron.md) |
-| [matrix-chatgpt-bot](https://github.com/matrixgpt/matrix-chatgpt-bot) | x | ChatGPT from Matrix | [Link](docs/configuring-playbook-bot-chatgpt.md) |
 
 ### Administration
 
@@ -152,27 +151,30 @@ Services that help you in administrating and monitoring your Matrix installation
 
 | Name | Default? | Description | Documentation |
 | ---- | -------- | ----------- | ------------- |
-| [synapse-admin](https://github.com/Awesome-Technologies/synapse-admin) | x | A web UI tool for administrating users and rooms on your Matrix server | [Link](docs/configuring-playbook-synapse-admin.md) |
-| Metrics and Graphs | x | Consists of the [Prometheus](https://prometheus.io) time-series database server, the Prometheus [node-exporter](https://prometheus.io/docs/guides/node-exporter/) host metrics exporter, and the [Grafana](https://grafana.com/) web UI | [Link](docs/configuring-playbook-prometheus-grafana.md) |
+| [matrix-alertmanager-receiver](https://github.com/metio/matrix-alertmanager-receiver) | x | Prometheus' [Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager/) client | [Link](docs/configuring-playbook-alertmanager-receiver.md) |
+| [Matrix Authentication Service](https://github.com/element-hq/matrix-authentication-service/) | x | OAuth 2.0 and OpenID Provider server | [Link](docs/configuring-playbook-matrix-authentication-service.md) |
+| [synapse-admin](https://github.com/etkecc/synapse-admin) | x | A web UI tool for administrating users and rooms on your Matrix server | [Link](docs/configuring-playbook-synapse-admin.md) |
+| Metrics and Graphs | x | Consists of the [Prometheus](https://prometheus.io) time-series database server, the Prometheus [node-exporter](https://prometheus.io/docs/guides/node-exporter/) host metrics exporter, and the [Grafana](https://grafana.com/) web UI, with [prometheus-nginxlog-exporter](https://github.com/martin-helmich/prometheus-nginxlog-exporter/) being available too | [Link](docs/configuring-playbook-prometheus-grafana.md) (for [prometheus-nginxlog-exporter](docs/configuring-playbook-prometheus-nginxlog.md)) |
 | [Borg](https://borgbackup.org) | x | Backups | [Link](docs/configuring-playbook-backup-borg.md) |
 | [rageshake](https://github.com/matrix-org/rageshake) | x | Bug report server | [Link](docs/configuring-playbook-rageshake.md) |
 | [synapse-usage-exporter](https://github.com/loelkes/synapse-usage-exporter) | x | Export the usage statistics of a Synapse homeserver to be scraped by Prometheus. | [Link](docs/configuring-playbook-synapse-usage-exporter.md) |
 
 ### Misc
 
-Various services that don't fit any other category.
+Various services that don't fit any other categories.
 
 | Name | Default? | Description | Documentation |
 | ---- | -------- | ----------- | ------------- |
 | [sliding-sync](https://github.com/matrix-org/sliding-sync)| x | Sliding Sync support for clients which require it (e.g. Element X) | [Link](docs/configuring-playbook-sliding-sync-proxy.md) |
 | [synapse_auto_accept_invite](https://github.com/matrix-org/synapse-auto-accept-invite) | x | A Synapse module to automatically accept invites. | [Link](docs/configuring-playbook-synapse-auto-accept-invite.md) |
 | [synapse_auto_compressor](https://github.com/matrix-org/rust-synapse-compress-state/#automated-tool-synapse_auto_compressor) | x | A cli tool that automatically compresses `state_groups` database table in background. | [Link](docs/configuring-playbook-synapse-auto-compressor.md) |
-| [synapse-simple-antispam](https://github.com/t2bot/synapse-simple-antispam) (advanced) | x | A spam checker module | [Link](docs/configuring-playbook-synapse-simple-antispam.md) |
 | [Matrix Corporal](https://github.com/devture/matrix-corporal) (advanced) | x | Reconciliator and gateway for a managed Matrix server | [Link](docs/configuring-playbook-matrix-corporal.md) |
 | [Etherpad](https://etherpad.org) | x | An open source collaborative text editor | [Link](docs/configuring-playbook-etherpad.md) |
 | [Jitsi](https://jitsi.org/) | x | An open source video-conferencing platform | [Link](docs/configuring-playbook-jitsi.md) |
 | [Cactus Comments](https://cactus.chat) | x | A federated comment system built on Matrix | [Link](docs/configuring-playbook-cactus-comments.md) |
 | [Pantalaimon](https://github.com/matrix-org/pantalaimon) | x | An E2EE aware proxy daemon | [Link](docs/configuring-playbook-pantalaimon.md) |
+| [Sygnal](https://github.com/matrix-org/sygnal) | x | Push gateway | [Link](docs/configuring-playbook-sygnal.md) |
+| [ntfy](https://ntfy.sh) | x | Push notifications server | [Link](docs/configuring-playbook-ntfy.md) |
 
 
 ## Installation

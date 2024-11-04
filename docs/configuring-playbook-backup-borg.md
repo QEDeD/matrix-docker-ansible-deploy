@@ -10,10 +10,13 @@ The backup will run based on `backup_borg_schedule` var (systemd timer calendar)
 
 By default, if you're using the integrated Postgres database server (as opposed to [an external Postgres server](configuring-playbook-external-postgres.md)), backups with BorgBackup will also include dumps of your Postgres database. An alternative solution for backing up the Postgres database is [postgres backup](configuring-playbook-postgres-backup.md). If you decide to go with another solution, you can disable Postgres-backup support for BorgBackup using the `backup_borg_postgresql_enabled` variable.
 
+**Note**: the component is not managed by this repository but its [own repository](https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg).
 
 ## Prerequisites
 
-1. Create a new SSH key:
+1. If you do not disable Postgres-backup support, make sure that the Postgres version of your homeserver's database is compatible with borgmatic.
+
+2. Create a new SSH key:
 
     ```bash
     ssh-keygen -t ed25519 -N '' -f matrix-borg-backup -C matrix
@@ -21,7 +24,7 @@ By default, if you're using the integrated Postgres database server (as opposed 
 
     This can be done on any machine and you don't need to place the key in the `.ssh` folder. It will be added to the Ansible config later.
 
-2. Add the **public** part of this SSH key (the `matrix-borg-backup.pub` file) to your BorgBackup provider/server:
+3. Add the **public** part of this SSH key (the `matrix-borg-backup.pub` file) to your BorgBackup provider/server:
 
     If you plan to use a hosted solution, follow their instructions. If you have your own server, copy the key over:
 
@@ -64,7 +67,7 @@ To backup without encryption, add `backup_borg_encryption: 'none'` to your vars.
 
 `backup_borg_location_source_directories` defines the list of directories to back up: it's set to `{{ matrix_base_data_path }}` by default, which is the base directory for every service's data, such as Synapse, Postgres and the bridges. You might want to exclude certain directories or file patterns from the backup using the `backup_borg_location_exclude_patterns` variable.
 
-Check the [backup_borg role](https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg)'s [defaults/main.yml](https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg/-/blob/main/defaults/main.yml) file for the full list of available options.
+Check the [backup_borg role](https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg)'s [defaults/main.yml](https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg/blob/main/defaults/main.yml) file for the full list of available options.
 
 ## Installing
 

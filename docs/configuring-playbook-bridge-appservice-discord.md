@@ -1,17 +1,17 @@
-# Setting up Appservice Discord (optional)
+# Setting up Appservice Discord bridging (optional)
 
 **Note**: bridging to [Discord](https://discordapp.com/) can also happen via the [mx-puppet-discord](configuring-playbook-bridge-mx-puppet-discord.md) and [mautrix-discord](configuring-playbook-bridge-mautrix-discord.md) bridges supported by the playbook.
 - For using as a Bot we are recommend the Appservice Discord bridge (the one being discussed here), because it supports plumbing.
 - For personal use we recommend the [mautrix-discord](configuring-playbook-bridge-mautrix-discord.md) bridge, because it is the most fully-featured and stable of the 3 Discord bridges supported by the playbook.
 
-The playbook can install and configure [matrix-appservice-discord](https://github.com/Half-Shot/matrix-appservice-discord) for you.
+The playbook can install and configure [matrix-appservice-discord](https://github.com/matrix-org/matrix-appservice-discord) for you.
 
-See the project's [documentation](https://github.com/Half-Shot/matrix-appservice-discord/blob/master/README.md) to learn what it does and why it might be useful to you.
+See the project's [documentation](https://github.com/matrix-org/matrix-appservice-discord/blob/master/README.md) to learn what it does and why it might be useful to you.
 
 
 ## Setup Instructions
 
-Instructions loosely based on [this](https://github.com/Half-Shot/matrix-appservice-discord#setting-up).
+Instructions loosely based on [this](https://github.com/matrix-org/matrix-appservice-discord#setting-up).
 
 1. Create a Discord Application [here](https://discordapp.com/developers/applications).
 2. Retrieve Client ID.
@@ -80,7 +80,7 @@ By default, you won't have Administrator access in rooms created by the bridge.
 
 To adjust room access privileges or do various other things (change the room name subsequently, etc.), you'd wish to become an Administrator.
 
-There's the Discord bridge's guide for [setting privileges on bridge managed rooms](https://github.com/Half-Shot/matrix-appservice-discord/blob/master/docs/howto.md#set-privileges-on-bridge-managed-rooms). To do the same with our container setup, run the following command on the server:
+There's the Discord bridge's guide for [setting privileges on bridge managed rooms](https://github.com/matrix-org/matrix-appservice-discord/blob/master/docs/howto.md#set-privileges-on-bridge-managed-rooms). To do the same with our container setup, run the following command on the server:
 
 ```sh
 docker exec -it matrix-appservice-discord \
