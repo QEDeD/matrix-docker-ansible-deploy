@@ -14,7 +14,7 @@ matrix_synapse_admin_container_image_self_build: false
 matrix_synapse_admin_container_image_self_build_repo: "https://github.com/etkecc/synapse-admin.git"
 
 # renovate: datasource=docker depName=ghcr.io/etkecc/synapse-admin
-matrix_synapse_admin_version: v0.10.3-etke26
+matrix_synapse_admin_version: v0.10.3-etke29
 matrix_synapse_admin_docker_image: "{{ matrix_synapse_admin_docker_image_name_prefix }}etkecc/synapse-admin:{{ matrix_synapse_admin_version }}"
 matrix_synapse_admin_docker_image_name_prefix: "{{ 'localhost/' if matrix_synapse_admin_container_image_self_build else 'ghcr.io/' }}"
 matrix_synapse_admin_docker_image_force_pull: "{{ matrix_synapse_admin_docker_image.endswith(':latest') }}"
@@ -146,7 +146,11 @@ matrix_synapse_admin_path_prefix: /synapse-admin
 #
 # The side-effect of this lookup is that Ansible would even parse the JSON for us, returning a dict.
 # This is unlike what it does when looking up YAML template files (no automatic parsing there).
-matrix_synapse_admin_configuration_default: "{{ lookup('template', 'templates/config.json.j2') }}"
+matrix_synapse_admin_configuration_default:
+  restrictBaseUrl: "{{ matrix_synapse_admin_config_restrictBaseUrl }}"
+  asManagedUsers: "{{ matrix_synapse_admin_config_asManagedUsers }}"
+  supportURL: "{{ matrix_synapse_admin_config_supportURL }}"
+  menu: "{{ matrix_synapse_admin_config_menu }}"
 
 # Your custom JSON configuration for synapse-admin should go to `matrix_synapse_admin_configuration_extension_json`.
 # This configuration extends the default starting configuration (`matrix_synapse_admin_configuration_default`).

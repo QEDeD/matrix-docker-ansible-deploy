@@ -1,5 +1,7 @@
 # Configuring your DNS server
 
+<sup>⚡️[Quick start](README.md) | [Prerequisites](prerequisites.md) > Configuring your DNS server > [Getting the playbook](getting-the-playbook.md) > [Configuring the playbook](configuring-playbook.md) > [Installing](installing.md) </sup>
+
 To set up Matrix on your domain, you'd need to do some DNS configuration.
 
 To use an identifier like `@<username>:example.com`, you don't actually need to install anything on the actual `example.com` server.
@@ -24,8 +26,6 @@ Be mindful as to how long it will take for the DNS records to propagate.
 
 If you are using Cloudflare DNS, make sure to disable the proxy and set all records to `DNS only`. Otherwise, fetching certificates will fail.
 
-When you're done configuring DNS, proceed to [Configuring the playbook](configuring-playbook.md).
-
 ## DNS settings for optional services/features
 
 | Used by component                                                                                                          | Type  | Host                           | Priority | Weight | Port | Target                      |
@@ -40,7 +40,7 @@ When you're done configuring DNS, proceed to [Configuring the playbook](configur
 | [Etherpad](configuring-playbook-etherpad.md) collaborative text editor                                                     | CNAME | `etherpad`                     | -        | -      | -    | `matrix.example.com`      |
 | [Hydrogen](configuring-playbook-client-hydrogen.md) web client                                                             | CNAME | `hydrogen`                     | -        | -      | -    | `matrix.example.com`      |
 | [Cinny](configuring-playbook-client-cinny.md) web client                                                                   | CNAME | `cinny`                        | -        | -      | -    | `matrix.example.com`      |
-| [SchildiChat](configuring-playbook-client-schildichat.md) web client                                                       | CNAME | `schildichat`                  | -        | -      | -    | `matrix.example.com`      |
+| [SchildiChat Web](configuring-playbook-client-schildichat-web.md) client                                                       | CNAME | `schildichat`                  | -        | -      | -    | `matrix.example.com`      |
 | [wsproxy](configuring-playbook-bridge-mautrix-wsproxy.md) sms bridge                                                       | CNAME | `wsproxy`                      | -        | -      | -    | `matrix.example.com`      |
 | [Buscarron](configuring-playbook-bot-buscarron.md) helpdesk bot                                                            | CNAME | `buscarron`                    | -        | -      | -    | `matrix.example.com`      |
 | [rageshake](docs/configuring-playbook-rageshake.md) bug report server                                                      | CNAME | `rageshake`                    | -        | -      | -    | `matrix.example.com`      |
@@ -55,7 +55,7 @@ When setting up a SRV record, if you are asked for a service and protocol instea
 
 As the table above illustrates, you need to create 2 subdomains (`matrix.example.com` and `element.example.com`) and point both of them to your new server's IP address (DNS `A` record or `CNAME` record is fine).
 
-The `element.example.com` subdomain may be necessary, because this playbook installs the [Element](https://github.com/element-hq/element-web) web client for you. If you'd rather instruct the playbook not to install Element (`matrix_client_element_enabled: false` when [Configuring the playbook](configuring-playbook.md) later), feel free to skip the `element.example.com` DNS record.
+The `element.example.com` subdomain may be necessary, because this playbook installs the [Element Web](https://github.com/element-hq/element-web) client for you. If you'd rather instruct the playbook not to install Element Web (`matrix_client_element_enabled: false` when [Configuring the playbook](configuring-playbook.md) later), feel free to skip the `element.example.com` DNS record.
 
 The `dimension.example.com` subdomain may be necessary, because this playbook could install the [Dimension integration manager](http://dimension.t2bot.io/) for you. The installation of Dimension is disabled by default, because it's only possible to install it after the other Matrix services are working (see [Setting up Dimension integration manager](configuring-playbook-dimension.md) later). If you do not wish to set up Dimension, feel free to skip the `dimension.example.com` DNS record.
 
@@ -75,7 +75,7 @@ The `hydrogen.example.com` subdomain may be necessary, because this playbook cou
 
 The `cinny.example.com` subdomain may be necessary, because this playbook could install the [Cinny](https://github.com/ajbura/cinny) web client. The installation of Cinny is disabled by default, it is not a core required component. To learn how to install it, see our [configuring Cinny guide](configuring-playbook-client-cinny.md). If you do not wish to set up Cinny, feel free to skip the `cinny.example.com` DNS record.
 
-The `schildichat.example.com` subdomain may be necessary, because this playbook could install the [SchildiChat](https://github.com/SchildiChat/schildichat-desktop) web client. The installation of SchildiChat is disabled by default, it is not a core required component. To learn how to install it, see our [configuring SchildiChat guide](configuring-playbook-client-schildichat.md). If you do not wish to set up SchildiChat, feel free to skip the `schildichat.example.com` DNS record.
+The `schildichat.example.com` subdomain may be necessary, because this playbook could install the [SchildiChat Web](https://github.com/SchildiChat/schildichat-desktop) client. The installation of SchildiChat Web is disabled by default, it is not a core required component. To learn how to install it, see our [configuring SchildiChat Web guide](configuring-playbook-client-schildichat-web.md). If you do not wish to set up SchildiChat Web, feel free to skip the `schildichat.example.com` DNS record.
 
 The `wsproxy.example.com` subdomain may be necessary, because this playbook could install the [wsproxy](https://github.com/mautrix/wsproxy) web client. The installation of wsproxy is disabled by default, it is not a core required component. To learn how to install it, see our [configuring wsproxy guide](configuring-playbook-bridge-mautrix-wsproxy.md). If you do not wish to set up wsproxy, feel free to skip the `wsproxy.example.com` DNS record.
 
@@ -97,5 +97,6 @@ This is an optional feature for the optionally-installed [ma1sd service](configu
 
 To make the [postmoogle](configuring-playbook-bridge-postmoogle.md) email bridge enable its email sending features, you need to configure SPF (TXT), DMARC (TXT), DKIM (TXT) and MX records
 
----
+---------------------------------------------
+
 When you're done with the DNS configuration and ready to proceed, continue with [Getting the playbook](getting-the-playbook.md).

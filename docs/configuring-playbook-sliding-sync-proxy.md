@@ -1,16 +1,11 @@
 # Setting up the Sliding Sync proxy (optional)
 
+**Note**: The sliding-sync proxy is **not required** anymore as it's been replaced with a different method (called Simplified Sliding Sync) which is integrated into newer homeservers by default (**Conduit** homeserver from version `0.6.0` or **Synapse** from version `1.114`). This component and documentation remain here for historical purposes, but **installing this old sliding-sync proxy is generally not recommended anymore**.
+
 The playbook can install and configure [sliding-sync](https://github.com/matrix-org/sliding-sync) proxy for you.
 
-Sliding Sync is an implementation of [MSC3575](https://github.com/matrix-org/matrix-spec-proposals/blob/kegan/sync-v3/proposals/3575-sync.md) and a prerequisite for running the new (**still beta**) Element X clients ([Element X iOS](https://github.com/element-hq/element-x-ios) and [Element X Android](https://github.com/element-hq/element-x-android)).
+Sliding Sync is an implementation of [MSC3575](https://github.com/matrix-org/matrix-spec-proposals/blob/kegan/sync-v3/proposals/3575-sync.md) and a prerequisite for running Element X clients ([Element X iOS](https://github.com/element-hq/element-x-ios) and [Element X Android](https://github.com/element-hq/element-x-android)). See the project's [documentation](https://github.com/matrix-org/sliding-sync) to learn more.
 
-See the project's [documentation](https://github.com/matrix-org/sliding-sync) to learn more.
-
-Element X iOS is [available on TestFlight](https://testflight.apple.com/join/uZbeZCOi).
-
-Element X Android is [available on the Github Releases page](https://github.com/element-hq/element-x-android/releases).
-
-**Note**: The sliding-sync proxy is **not required** when using the **Conduit homeserver**. Starting from version `0.6.0` Conduit has native support for some sliding sync features. If there are issues with the native implementation, you might have a better experience when enabling the sliding-sync proxy anyway.
 
 ## Adjusting the playbook configuration
 

@@ -1,7 +1,7 @@
 ---
 
 # The bare domain name which represents your Matrix identity.
-# Matrix user ids for your server will be of the form (`@user:example.com`).
+# Matrix user IDs for your server will be of the form (`@user:example.com`).
 #
 # Note: this playbook does not touch the server referenced here.
 # Installation happens on another server ("matrix.example.com", see `matrix_server_fqn_matrix`).
@@ -54,7 +54,7 @@ matrix_homeserver_enabled: true
 # By default, we use Synapse, because it's the only full-featured Matrix server at the moment.
 #
 # This value automatically influences other variables (`matrix_synapse_enabled`, `matrix_dendrite_enabled`, etc.).
-# The homeserver implementation of an existing server cannot be changed without data loss.
+# Note that the homeserver implementation of a server will not be able to be changed without data loss.
 matrix_homeserver_implementation: synapse
 
 # This contains a secret, which is used for generating various other secrets later on.
@@ -67,7 +67,7 @@ matrix_server_fqn_matrix: "matrix.{{ matrix_domain }}"
 # This is where you access federation API.
 matrix_server_fqn_matrix_federation: '{{ matrix_server_fqn_matrix }}'
 
-# This is where you access the Element web UI from (if enabled via matrix_client_element_enabled; enabled by default).
+# This is where you access the Element Web from (if enabled via matrix_client_element_enabled; enabled by default).
 # This and the Matrix FQN (see above) are expected to be on the same server.
 matrix_server_fqn_element: "element.{{ matrix_domain }}"
 
@@ -77,7 +77,7 @@ matrix_server_fqn_hydrogen: "hydrogen.{{ matrix_domain }}"
 # This is where you access the Cinny web client from (if enabled via matrix_client_cinny_enabled; disabled by default).
 matrix_server_fqn_cinny: "cinny.{{ matrix_domain }}"
 
-# This is where you access the SchildiChat web client from (if enabled via matrix_client_schildichat_enabled; disabled by default).
+# This is where you access the SchildiChat Web from (if enabled via matrix_client_schildichat_enabled; disabled by default).
 matrix_server_fqn_schildichat: "schildichat.{{ matrix_domain }}"
 
 # This is where you access the Buscarron bot from (if enabled via matrix_bot_buscarron_enabled; disabled by default).

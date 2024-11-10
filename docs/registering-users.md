@@ -16,7 +16,7 @@ Table of contents:
 
 **Note**: in the commands below, `<your-username>` is just a plain username (like `john`), not your full `@<username>:example.com` identifier.
 
-After registering a user (using one of the methods below), **you can log in with that user** via the [Element](configuring-playbook-client-element.md) service that this playbook has installed for you at a URL like this: `https://element.example.com/`.
+After registering a user (using one of the methods below), **you can log in with that user** via the [Element Web](configuring-playbook-client-element-web.md) service that this playbook has installed for you at a URL like this: `https://element.example.com/`.
 
 ### Registering users via the Ansible playbook
 
@@ -100,8 +100,16 @@ If you'd rather **keep your server private** (public registration closed, as is 
 
 To **open up user registration publicly** (usually **not recommended**), add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 
+For Synapse:
+
 ```yaml
 matrix_synapse_enable_registration: true
+```
+
+For Dendrite:
+
+```yaml
+matrix_dendrite_client_api_registration_disabled: false
 ```
 
 After configuring the playbook, run the [installation](installing.md) command: `just install-all` or `just setup-all`

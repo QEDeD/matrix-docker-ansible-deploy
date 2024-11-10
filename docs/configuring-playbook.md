@@ -1,6 +1,8 @@
-# Configuring the Ansible playbook
+# Configuring the playbook
 
-To configure the playbook, you need to have done the following things:
+<sup>⚡️[Quick start](README.md) | [Prerequisites](prerequisites.md) > [Configuring your DNS server](configuring-dns.md) > [Getting the playbook](getting-the-playbook.md) > Configuring the playbook > [Installing](installing.md) </sup>
+
+To configure the Ansible playbook, you need to have done the following things:
 
 - have a server where Matrix services will run
 - [configured your DNS records](configuring-dns.md)
@@ -68,13 +70,13 @@ When you're done with all the configuration you'd like to do, continue with [Ins
 
 Web clients for Matrix that you can host on your own domains.
 
-- [Configuring Element](configuring-playbook-client-element.md), if you're going with the default/recommended client
+- [Configuring Element Web](configuring-playbook-client-element-web.md), if you're going with the default/recommended client
 
 - [Setting up Hydrogen](configuring-playbook-client-hydrogen.md), if you've enabled [Hydrogen](https://github.com/element-hq/hydrogen-web), a lightweight Matrix client with legacy and mobile browser support
 
 - [Setting up Cinny](configuring-playbook-client-cinny.md), if you've enabled [Cinny](https://github.com/ajbura/cinny), a web client focusing primarily on simple, elegant and secure interface
 
-- [Setting up SchildiChat](configuring-playbook-client-schildichat.md), if you've enabled [SchildiChat](https://schildi.chat/), a web client based on [Element](https://element.io/) with some extras and tweaks
+- [Setting up SchildiChat Web](configuring-playbook-client-schildichat-web.md), if you've enabled [SchildiChat Web](https://schildi.chat/), a web client based on [Element Web](https://element.io/) with some extras and tweaks
 
 ### Authentication and user-related
 
@@ -218,8 +220,6 @@ Services that help you in administrating and monitoring your Matrix installation
 
 Various services that don't fit any other categories.
 
-- [Setting up the Sliding Sync proxy](configuring-playbook-sliding-sync-proxy.md) for clients which require Sliding Sync support (like Element X)
-
 - [Setting up Synapse Auto Invite Accept](configuring-playbook-synapse-auto-accept-invite.md)
 
 - [Setting up synapse-auto-compressor](configuring-playbook-synapse-auto-compressor.md) for compressing the database on Synapse homeservers
@@ -241,6 +241,8 @@ Various services that don't fit any other categories.
 ### Deprecated / unmaintained / removed services
 
 **Note**: since a deprecated or unmaintained service will not be updated, its bug or vulnerability will be unlikely to get patched. It is recommended to migrate from the service to an alternative if any, and make sure to do your own research before you decide to keep it running nonetheless.
+
+- [Setting up the Sliding Sync proxy](configuring-playbook-sliding-sync-proxy.md) for clients which require Sliding Sync support (like old Element X versions, before it got switched to Simplified Sliding Sync)
 
 - [Setting up Appservice Webhooks bridging](configuring-playbook-bridge-appservice-webhooks.md) (deprecated; the bridge's author suggests taking a look at [matrix-hookshot](https://github.com/matrix-org/matrix-hookshot) as a replacement, which can also be installed using [this playbook](configuring-playbook-bridge-hookshot.md))
 

@@ -362,6 +362,9 @@ matrix_synapse_media_retention_local_media_lifetime:
 # should be empty to disable
 matrix_synapse_media_retention_remote_media_lifetime:
 
+# Controls the list of additional oembed providers to be added to the homeserver.
+matrix_synapse_oembed_additional_providers: []
+
 # The tmpfs at /tmp needs to be large enough to handle multiple concurrent file uploads.
 matrix_synapse_tmp_directory_size_mb: "{{ matrix_synapse_max_upload_size_mb * 50 }}"
 
@@ -1176,6 +1179,10 @@ matrix_synapse_experimental_features_msc3861_admin_token: ''
 
 # URL to advertise to clients where users can self-manage their account.
 matrix_synapse_experimental_features_msc3861_account_management_url: ''
+
+# Controls whether to enable the "QR code login" experimental feature.
+# Enabling this requires that MSC3861 (see `matrix_synapse_experimental_features_msc3861_enabled`) is also enabled.
+matrix_synapse_experimental_features_msc4108_enabled: false
 
 ################################################################################
 #
