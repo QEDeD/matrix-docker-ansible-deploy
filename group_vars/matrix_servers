@@ -35,6 +35,9 @@ matrix_playbook_traefik_labels_enabled: "{{ matrix_playbook_reverse_proxy_type i
 matrix_playbook_reverse_proxy_container_network: "{{ traefik_container_network if traefik_enabled else 'traefik' }}"
 matrix_playbook_reverse_proxy_hostname: "{{ traefik_identifier if traefik_enabled else 'traefik' }}"
 
+matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled: "{{ traefik_config_http_middlewares_compression_enabled if (traefik_enabled and traefik_config_http_middlewares_compression_enabled) else false }}"
+matrix_playbook_reverse_proxy_traefik_middleware_compession_name: "{{ (traefik_config_http_middlewares_compression_middleware_name + '@file') if traefik_enabled else '' }}"
+
 # A separate Matrix Federation entrypoint is always enabled, unless the federation port matches one of the ports for existing (default) entrypoints
 matrix_playbook_public_matrix_federation_api_traefik_entrypoint_enabled: "{{ matrix_federation_public_port not in [traefik_config_entrypoint_web_port, traefik_config_entrypoint_web_secure_port] }}"
 
@@ -4464,6 +4467,9 @@ matrix_client_element_container_labels_traefik_docker_network: "{{ matrix_playbo
 matrix_client_element_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
 matrix_client_element_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
 
+matrix_client_element_container_labels_traefik_compression_middleware_enabled: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled }}"
+matrix_client_element_container_labels_traefik_compression_middleware_name: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compession_name if matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled else '' }}"
+
 matrix_client_element_default_hs_url: "{{ matrix_homeserver_url }}"
 matrix_client_element_default_is_url: "{{ matrix_identity_server_url }}"
 
@@ -4513,6 +4519,9 @@ matrix_client_hydrogen_container_labels_traefik_docker_network: "{{ matrix_playb
 matrix_client_hydrogen_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
 matrix_client_hydrogen_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
 
+matrix_client_hydrogen_container_labels_traefik_compression_middleware_enabled: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled }}"
+matrix_client_hydrogen_container_labels_traefik_compression_middleware_name: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compession_name if matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled else '' }}"
+
 matrix_client_hydrogen_scheme: "{{ 'https' if matrix_playbook_ssl_enabled else 'http' }}"
 
 matrix_client_hydrogen_default_hs_url: "{{ matrix_homeserver_url }}"
@@ -4545,6 +4554,9 @@ matrix_client_cinny_container_labels_traefik_enabled: "{{ matrix_playbook_revers
 matrix_client_cinny_container_labels_traefik_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
 matrix_client_cinny_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
 matrix_client_cinny_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
+
+matrix_client_cinny_container_labels_traefik_compression_middleware_enabled: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled }}"
+matrix_client_cinny_container_labels_traefik_compression_middleware_name: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compession_name if matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled else '' }}"
 
 matrix_client_cinny_scheme: "{{ 'https' if matrix_playbook_ssl_enabled else 'http' }}"
 
@@ -4663,6 +4675,9 @@ matrix_synapse_container_labels_traefik_docker_network: "{{ matrix_playbook_reve
 matrix_synapse_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
 matrix_synapse_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
 matrix_synapse_container_labels_traefik_hostname: "{{ matrix_server_fqn_matrix }}"
+
+matrix_synapse_container_labels_traefik_compression_middleware_enabled: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled }}"
+matrix_synapse_container_labels_traefik_compression_middleware_name: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compession_name if matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled else '' }}"
 
 matrix_synapse_container_labels_matrix_labels_enabled: "{{ not matrix_synapse_workers_enabled }}"
 
@@ -4853,6 +4868,9 @@ matrix_synapse_reverse_proxy_companion_container_labels_traefik_docker_network: 
 matrix_synapse_reverse_proxy_companion_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
 matrix_synapse_reverse_proxy_companion_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
 matrix_synapse_reverse_proxy_companion_container_labels_traefik_hostname: "{{ matrix_server_fqn_matrix }}"
+
+matrix_synapse_reverse_proxy_companion_container_labels_traefik_compression_middleware_enabled: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled }}"
+matrix_synapse_reverse_proxy_companion_container_labels_traefik_compression_middleware_name: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compession_name if matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled else '' }}"
 
 matrix_synapse_reverse_proxy_companion_container_labels_public_client_synapse_client_api_enabled: "{{ matrix_synapse_container_labels_public_client_synapse_client_api_enabled }}"
 matrix_synapse_reverse_proxy_companion_container_labels_public_client_synapse_admin_api_enabled: "{{ matrix_synapse_container_labels_public_client_synapse_admin_api_enabled }}"
@@ -5941,6 +5959,10 @@ traefik_base_path: "{{ matrix_base_data_path }}/traefik"
 
 traefik_uid: "{{ matrix_user_uid }}"
 traefik_gid: "{{ matrix_user_gid }}"
+
+# It's common for setups to deal with large file uploads which may take longer than the default readTimeout (60s).
+# This override (for the `web` entrypoint) also cascades to overriding the `web-secure` entrypoint and the `matrix-federation` entrypoint.
+traefik_config_entrypoint_web_transport_respondingTimeouts_readTimeout: 300s
 
 traefik_additional_entrypoints_auto: |
   {{

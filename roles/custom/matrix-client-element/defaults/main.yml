@@ -11,7 +11,7 @@ matrix_client_element_container_image_self_build_repo: "https://github.com/eleme
 matrix_client_element_container_image_self_build_low_memory_system_patch_enabled: "{{ ansible_memtotal_mb < 4096 }}"
 
 # renovate: datasource=docker depName=vectorim/element-web
-matrix_client_element_version: v1.11.84
+matrix_client_element_version: v1.11.85
 
 matrix_client_element_docker_image: "{{ matrix_client_element_docker_image_name_prefix }}vectorim/element-web:{{ matrix_client_element_version }}"
 matrix_client_element_docker_image_name_prefix: "{{ 'localhost/' if matrix_client_element_container_image_self_build else matrix_container_global_registry_prefix }}"
@@ -47,6 +47,11 @@ matrix_client_element_container_labels_traefik_priority: 0
 matrix_client_element_container_labels_traefik_entrypoints: web-secure
 matrix_client_element_container_labels_traefik_tls: "{{ matrix_client_element_container_labels_traefik_entrypoints != 'web' }}"
 matrix_client_element_container_labels_traefik_tls_certResolver: default  # noqa var-naming
+
+# Controls whether a compression middleware will be injected into the middlewares list.
+# This compression middleware is supposed to be defined elsewhere (using labels or a File provider, etc.) and is merely referenced by this router.
+matrix_client_element_container_labels_traefik_compression_middleware_enabled: false
+matrix_client_element_container_labels_traefik_compression_middleware_name: ""
 
 # Controls which additional headers to attach to all HTTP responses.
 # To add your own headers, use `matrix_client_element_container_labels_traefik_additional_response_headers_custom`

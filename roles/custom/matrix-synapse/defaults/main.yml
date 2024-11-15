@@ -16,7 +16,7 @@ matrix_synapse_enabled: true
 matrix_synapse_github_org_and_repo: element-hq/synapse
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/synapse
-matrix_synapse_version: v1.118.0
+matrix_synapse_version: v1.119.0
 
 matrix_synapse_username: ''
 matrix_synapse_uid: ''
@@ -186,6 +186,11 @@ matrix_synapse_container_labels_traefik_entrypoints: web-secure
 matrix_synapse_container_labels_traefik_tls_certResolver: default  # noqa var-naming
 matrix_synapse_container_labels_traefik_hostname: ''
 
+# Controls whether a compression middleware will be injected into the middlewares list.
+# This compression middleware is supposed to be defined elsewhere (using labels or a File provider, etc.) and is merely referenced by this router.
+matrix_synapse_container_labels_traefik_compression_middleware_enabled: false
+matrix_synapse_container_labels_traefik_compression_middleware_name: ""
+
 # Controls whether Matrix-related labels will be added.
 #
 # When set to false, variables like the following take no effect:
@@ -335,7 +340,7 @@ matrix_synapse_goofys_systemd_required_services_list_custom: []
 # This can be set to 0 to remove the delay.
 matrix_synapse_systemd_service_post_start_delay_seconds: 10
 
-matrix_synapse_in_container_python_packages_path: "/usr/local/lib/python3.11/site-packages"
+matrix_synapse_in_container_python_packages_path: "/usr/local/lib/python3.12/site-packages"
 
 # Specifies which template files to use when configuring Synapse.
 # If you'd like to have your own different configuration, feel free to copy and paste
