@@ -1,5 +1,7 @@
 # Prerequisites
 
+<sup>⚡️[Quick start](README.md) | Prerequisites > [Configuring your DNS server](configuring-dns.md) > [Getting the playbook](getting-the-playbook.md) > [Configuring the playbook](configuring-playbook.md) > [Installing](installing.md) </sup>
+
 To install Matrix services using this Ansible playbook, you need:
 
 - (Recommended) An **x86** server ([What kind of server specs do I need?](faq.md#what-kind-of-server-specs-do-i-need)) running one of these operating systems that make use of [systemd](https://systemd.io/):
@@ -43,5 +45,7 @@ To install Matrix services using this Ansible playbook, you need:
   - `8448/tcp` and `8448/udp`: Matrix Federation API HTTPS webserver. In some cases, this **may necessary even with federation disabled**. Integration Servers (like Dimension) and Identity Servers (like ma1sd) may need to access `openid` APIs on the federation port.
   - the range `49152-49172/udp`: TURN over UDP
   - potentially some other ports, depending on the additional (non-default) services that you enable in the **configuring the playbook** step (later on). Consult each service's documentation page in `docs/` for that.
+
+---------------------------------------------
 
 When ready to proceed, continue with [Configuring DNS](configuring-dns.md).

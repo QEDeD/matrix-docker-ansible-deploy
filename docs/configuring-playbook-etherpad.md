@@ -1,6 +1,6 @@
 # Setting up Etherpad (optional)
 
-[Etherpad](https://etherpad.org) is an open source collaborative text editor that can be embedded in a Matrix chat room using the [Dimension integrations manager](https://dimension.t2bot.io) or used as standalone web app.
+[Etherpad](https://etherpad.org) is an open source collaborative text editor that can be embedded in a Matrix chat room using the [Dimension integration manager](https://dimension.t2bot.io) or used as standalone web app.
 
 When enabled together with the Jitsi audio/video conferencing system (see [our docs on Jitsi](configuring-playbook-jitsi.md)), it will be made available as an option during the conferences.
 
@@ -60,9 +60,9 @@ If you want to manage and remove old unused pads from Etherpad, you will first n
 Then from the plugin manager page (`https://etherpad.example.com/admin/plugins`, install the `adminpads2` plugin. Once installed, you should have a "Manage pads" section in the Admin web-UI.
 
 
-### How to use Etherpad widgets without an Integration Manager (like Dimension)
+### How to use Etherpad widgets without an integration manager (like Dimension)
 
-This is how it works in Element, it might work quite similar with other clients:
+This is how it works in Element Web, it might work quite similar with other clients:
 
 To integrate a standalone Etherpad in a room, create your pad by visiting `https://etherpad.example.com`. When the pad opens, copy the URL and send a command like this to the room: `/addwidget URL`. You will then find your integrated Etherpad within the right sidebar in the `Widgets` section.
 
@@ -71,7 +71,7 @@ To integrate a standalone Etherpad in a room, create your pad by visiting `https
 
 If you decided to install [Dimension integration manager](configuring-playbook-dimension.md) alongside Etherpad, the Dimension administrator users can configure the default URL template.
 
-The Dimension configuration menu can be accessed with the sprocket icon as you begin to add a widget to a room in Element. There you will find the Etherpad Widget Configuration action beneath the _Widgets_ tab.
+The Dimension configuration menu can be accessed with the sprocket icon as you begin to add a widget to a room in Element Web. There you will find the Etherpad Widget Configuration action beneath the _Widgets_ tab.
 
 
 #### Removing the integrated Etherpad chat

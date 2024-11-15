@@ -10,7 +10,7 @@ ansible-playbook -i inventory/hosts setup.yml --extra-vars='username=<your-usern
 
 **Note**: `<your-username>` is just a plain username (like `john`), not your full `@<username>:example.com` identifier.
 
-**You can then log in with that user** via the Element service that this playbook has created for you at a URL like this: `https://element.example.com/`.
+**You can then log in with that user** via Element Web that this playbook has created for you at a URL like this: `https://element.example.com/`.
 
 
 ## Option 2 (if you are using an external Postgres server):
@@ -23,8 +23,8 @@ docker exec -it matrix-synapse /usr/local/bin/hash_password -c /data/homeserver.
 
 and then connecting to the postgres server and executing:
 
-```
-UPDATE users SET password_hash = '<password-hash>' WHERE name = '@someone:example.com'
+```sql
+UPDATE users SET password_hash = '<password-hash>' WHERE name = '@someone:example.com';
 ```
 
 where `<password-hash>` is the hash returned by the docker command above.

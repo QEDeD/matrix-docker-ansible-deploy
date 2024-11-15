@@ -1,6 +1,8 @@
-# Setting up Appservice Slack (optional)
+# Setting up Appservice Slack bridging (optional)
 
-**Note**: bridging to [Slack](https://slack.com) can also happen via the [mx-puppet-slack](configuring-playbook-bridge-mx-puppet-slack.md) and [mautrix-slack](configuring-playbook-bridge-mautrix-slack.md) bridges supported by the playbook.
+**Notes**:
+- Bridging to [Slack](https://slack.com) can also happen via the [mx-puppet-slack](configuring-playbook-bridge-mx-puppet-slack.md) and [mautrix-slack](configuring-playbook-bridge-mautrix-slack.md) bridges supported by the playbook.
+- Currently (as of November, 2024) this component is not available for new installation unless you have already created a classic Slack application (which the bridge makes use of in order to enable bridging between Slack and Matrix), because the creation of classic Slack applications has been discontinued since June 4 2024. The author of the bridge claims [here](https://github.com/matrix-org/matrix-appservice-slack/issues/789#issuecomment-2172947787) that he plans to support the modern Slack application and until then "the best (and only) option for new installations is to use the webhook bridging".
 
 The playbook can install and configure [matrix-appservice-slack](https://github.com/matrix-org/matrix-appservice-slack) for you.
 
@@ -10,7 +12,7 @@ See the project's [documentation](https://github.com/matrix-org/matrix-appservic
 
 loosely based on [this](https://github.com/matrix-org/matrix-appservice-slack#Setup)
 
-1. Create a new Matrix room to act as the administration control room. Note its internal room ID. This can be done in Element by sending a message, opening the options for that message and choosing "view source". The room ID will be displayed near the top.
+1. Create a new Matrix room to act as the administration control room. Note its internal room ID. This can be done in Element Web by sending a message, opening the options for that message and choosing "view source". The room ID will be displayed near the top.
 
 2. Enable the bridge by adding the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 

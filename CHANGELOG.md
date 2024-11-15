@@ -1,3 +1,66 @@
+# 2024-11-14
+
+## HTTP-compression support for Traefik-based setups
+
+The playbook now **automatically enables HTTP-compression support** for major services powered by the playbook, like [Cinny](./docs/configuring-playbook-client-cinny.md), [Element Web](./docs/configuring-playbook-client-element-web.md), [Hydrogen](./docs/configuring-playbook-client-hydrogen.md), as well as for Matrix Client-Server and Federation APIs (`matrix.example.com`).
+
+Other services installed by the playbook are currently not compression-enabled, but may become so over time.
+This change is rolled out on a per-service basis (as opposed to doing it globally, at the Traefik entrypoint level) to allow certain services or route endpoints which do not behave well when compressed (e.g. [issue 3749](https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/3749)) to be excluded from compression.
+
+A long time ago, various services were operating with `gzip`-compression enabled at the nginx level. Since the switch to Traefik (see [Goodbye, `matrix-nginx-proxy` 🪦](https://github.com/spantaleev/matrix-docker-ansible-deploy/blob/57c5271d9d6265a34a9d9cceb93365f685074f96/CHANGELOG.md#goodbye-matrix-nginx-proxy-)), all services (with the exception of Matrix APIs for Synapse worker-enabled setups which are powered by `nginx` via `synapse-reverse-proxy-companion`) have been operating without HTTP-compression support.
+
+HTTP-compression is now done via Traefik's [compress](https://doc.traefik.io/traefik/middlewares/http/compress/) middleware. We use the default configuration for this middleware, which enables `zstd`, `br` and `gzip` support (in this order).
+This middleware's configuration can be configured via variables in the Traefik role (see `traefik_config_http_middlewares_compression_middleware_options`).
+
+If you're using your own Traefik reverse-proxy server ([Traefik managed by you](./docs/configuring-playbook-own-webserver.md#traefik-managed-by-you)) instead of the playbook's integrated Traefik service, you can benefit from the same by:
+
+- defining a [compress](https://doc.traefik.io/traefik/middlewares/http/compress/) middleware (via the [file](https://doc.traefik.io/traefik/providers/file/) or [Docker](https://doc.traefik.io/traefik/providers/docker/) providers)
+- setting `matrix_playbook_reverse_proxy_traefik_middleware_compession_enabled` to `true`
+- specifying the middleware's name in `matrix_playbook_reverse_proxy_traefik_middleware_compession_name` (e.g. `matrix_playbook_reverse_proxy_traefik_middleware_compession_name: my-compression-middleware@file`)
+
+## Timeout adjustments for Traefik-based setups
+
+The playbook now supports configuring various [transport.respondingTimeouts](https://doc.traefik.io/traefik/routing/entrypoints/#respondingtimeouts) timeout values (`readTimeout`, `writeTimeout`, `idleTimeout`) for the `web`, `web-secure` and `matrix-federation` entrypoints.
+
+If you're using your own Traefik reverse-proxy server ([Traefik managed by you](./docs/configuring-playbook-own-webserver.md#traefik-managed-by-you)) instead of the playbook's integrated Traefik service, you may wish to do similar configuration changes to your setup manually.
+
+The most interesting of these is the `readTimeout` configuration value (the maximum duration for reading the entire request, including the body), which used to default to `60s`.
+For large and slowly progressing file uploads, `60s` would often not be enough for the transfer to finish and uploads would end up being interrupted.
+The playbook now raises the `readTimeout` value to 5 minutes (`300s`) to improve this use-case.
+
+The `traefik_config_entrypoint_web_transport_respondingTimeouts_*` variables (for the `web` entrypoint) cascade to affecting the timeout values for the `web-secure` and `matrix-federation` entrypoints, so you can easily adjust all timeout values using them.
+
+Example of the default timeout values used by the playbook:
+
+```yml
+traefik_config_entrypoint_web_transport_respondingTimeouts_readTimeout: 300s
+
+# 0s means "no timeout"
+traefik_config_entrypoint_web_transport_respondingTimeouts_writeTimeout: 0s
+
+traefik_config_entrypoint_web_transport_respondingTimeouts_idleTimeout: 180s
+```
+
+Alternatively, you may adjust the timeout values for specific entrypoints (like `web-secure` and `matrix-federation`) using dedicated variables (like `traefik_config_entrypoint_web_secure_transport_respondingTimeouts_readTimeout` and `matrix_playbook_public_matrix_federation_api_traefik_entrypoint_config_transport_respondingTimeouts_readTimeout`).
+
+
+# 2024-11-08
+
+## Support for synapse-admin auto-configuration via /.well-known/matrix/client
+
+You can administrate your Synapse-powered homeserver using synapse-admin hosted externally (e.g. [admin.etke.cc](https://admin.etke.cc/)) and the synapse-admin instance would still auto-configure itself correctly for your server by [reading its `/.well-known/matrix/client` file](https://github.com/etkecc/synapse-admin/pull/126).
+
+The playbook now configures the `/.well-known/matrix/client` file for this by default, injecting into it a `cc.etke.synapse-admin` section that contains the full synapse-admin configuration. This is done even if you don't enable the synapse-admin service in your configuration. The reason for always doing it is to allow users to skip the (small) overhead of self-hosting the non-core synapse-admin service, yet still be able to use it from elsewhere when needed.
+
+If you don't ever plan on using synapse-admin from other servers (besides your own due to [self-hosting synapse-admin](./docs/configuring-playbook-synapse-admin.md)), you **can disable this** `/.well-known/matrix/client` configuration via `matrix_static_files_file_matrix_client_property_cc_etke_synapse_admin_enabled: false`
+
+
+# 2024-10-28
+
+## (BC Break) Postmoogle's variable names need adjustments
+
+Due to the recategorization of [Postmoogle](./docs/configuring-playbook-bridge-postmoogle.md) from the bot to the bridge, its variables were renamed (`matrix_bot_postmoogle_` -> `matrix_postmoogle_`). You need to adjust your `vars.yml` configuration accordingly.
+
 # 2024-10-19
 
 ## Support for Matrix Authentication Service
@@ -725,7 +788,7 @@ Here are **actions you may wish to take** as a result of this change:
 
 - (recommended) embrace the new default. If your Matrix server is federating, your public rooms have always been joinable across federation anyway. Exposing the list of public rooms does no harm and more-so does good by contributing to the usefulness of the Matrix network by facilitating room discovery.
 
-- (switch to a better way of doings things on your semi-private server) The problem that the Synapse team appears to have solved by flipping the `allow_public_rooms_over_federation` default in Synapse v1.7.0 seems to for "mostly private" servers, which federate and have a bunch of rooms made public (and published in their room directory) in an effort to allow people on the same homeserver to easily find and join them (self-onboarding). With the introduction of Matrix Spaces, you can reorganize your flow around spaces - you can auto-join your users to a Matrix Space (via Synapse's `auto_join_rooms` setting - controlled by our `matrix_synapse_auto_join_rooms` variable), then add a bunch of rooms to the space and make them joinable by people belonging to the space. That is to say, do not make rooms public and do not publish them to the room directory unless they are really public. Instead, use other mechanisms for semi-public rooms or private rooms. One alternative is to stick to what you're doing (public rooms published to your rooms directory) but having a `m.federate: true` flag set during creation (clients like Element have a nice UI checkbox for this) to explicitly disable federation for them.
+- (switch to a better way of doings things on your semi-private server) The problem that the Synapse team appears to have solved by flipping the `allow_public_rooms_over_federation` default in Synapse v1.7.0 seems to for "mostly private" servers, which federate and have a bunch of rooms made public (and published in their room directory) in an effort to allow people on the same homeserver to easily find and join them (self-onboarding). With the introduction of Matrix Spaces, you can reorganize your flow around spaces - you can auto-join your users to a Matrix Space (via Synapse's `auto_join_rooms` setting - controlled by our `matrix_synapse_auto_join_rooms` variable), then add a bunch of rooms to the space and make them joinable by people belonging to the space. That is to say, do not make rooms public and do not publish them to the room directory unless they are really public. Instead, use other mechanisms for semi-public rooms or private rooms. One alternative is to stick to what you're doing (public rooms published to your rooms directory) but having a `m.federate: true` flag set during creation (clients like Element Web have a nice UI checkbox for this) to explicitly disable federation for them.
 
 - (keeping the old behavior) if you wish to keep doing what you're doing (keeping your Matrix server federating, but hiding its public rooms list), add `matrix_synapse_allow_public_rooms_over_federation: false` to your `vars.yml` configuration. This restores the old behavior. You may also consider [disabling federation](docs/configuring-playbook-federation.md#disabling-federation) completely instead of relying on security-by-obscurity measures.
 
@@ -745,11 +808,11 @@ People who [enable load-balancing with Synapse workers](docs/configuring-playboo
 
 # 2023-08-31
 
-## SchildiChat support
+## SchildiChat Web support
 
-Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook can now set up the [SchildiChat](https://github.com/SchildiChat/schildichat-desktop) client.
+Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook can now set up the [SchildiChat Web](https://github.com/SchildiChat/schildichat-desktop) client.
 
-See our [Configuring SchildiChat](docs/configuring-playbook-client-schildichat.md) documentation to get started.
+See our [Configuring SchildiChat Web](docs/configuring-playbook-client-schildichat-web.md) documentation to get started.
 
 
 # 2023-08-23
@@ -870,13 +933,13 @@ See our [Setting up synapse-auto-compressor](docs/configuring-playbook-synapse-a
 
 # 2023-03-07
 
-## Sliding Sync Proxy (Element X) support
+## Sliding Sync proxy (Element X) support
 
 Thanks to [Benjamin Kampmann](https://github.com/gnunicorn) for [getting it started](https://github.com/spantaleev/matrix-docker-ansible-deploy/pull/2515), [FSG-Cat](https://github.com/FSG-Cat) for fixing it up and me ([Slavi](https://github.com/spantaleev)) for polishing it up, the playbook can now install and configure the [sliding-sync proxy](https://github.com/matrix-org/sliding-sync).
 
 The upcoming Element X clients ([Element X iOS](https://github.com/vector-im/element-x-ios) and [Element X Android](https://github.com/vector-im/element-x-android)) require the `sliding-sync` proxy to do their job. **These clients are still in beta** (especially Element X Android, which requires manual compilation to get it working with a non-`matrix.org` homeseserver). Playbook users can now easily give these clients a try and help test them thanks to us having `sliding-sync` support.
 
-To get started, see our [Setting up Sliding Sync Proxy](docs/configuring-playbook-sliding-sync-proxy.md) documentation page.
+To get started, see our [Setting up the Sliding Sync proxy](docs/configuring-playbook-sliding-sync-proxy.md) documentation page.
 
 
 # 2023-03-02
@@ -972,11 +1035,11 @@ We recommend that you follow the guide for [Fronting the integrated reverse-prox
 
 # 2023-02-25
 
-## Rageshake support
+## rageshake support
 
-Thanks to [Benjamin Kampmann](https://github.com/gnunicorn), the playbook can now install and configure the [Rageshake](https://github.com/matrix-org/rageshake) bug report server.
+Thanks to [Benjamin Kampmann](https://github.com/gnunicorn), the playbook can now install and configure the [rageshake](https://github.com/matrix-org/rageshake) bug report server.
 
-Additional details are available in [Setting up Rageshake](docs/configuring-playbook-rageshake.md).
+Additional details are available in [Setting up rageshake](docs/configuring-playbook-rageshake.md).
 
 
 # 2023-02-17
@@ -1021,9 +1084,9 @@ You need to **update your roles** (`just roles` or `make roles`) regardless of w
 
 **TLDR**: the `matrix-backup-borg` role is now included from another repository. Some variables have been renamed. All functionality remains intact.
 
-Thanks to [moan0s](https://github.com/moan0s), the `matrix-backup-borg` role (which configures [Borg backups](docs/configuring-playbook-backup-borg.md)) has been extracted from the playbook and now lives in its [own repository](https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg). This makes it possible to easily use it in other Ansible playbooks and will become part of [nextcloud-docker-ansible-deploy](https://github.com/spantaleev/nextcloud-docker-ansible-deploy) soon.
+Thanks to [moan0s](https://github.com/moan0s), the `matrix-backup-borg` role (which configures [BorgBackup](docs/configuring-playbook-backup-borg.md)) has been extracted from the playbook and now lives in its [own repository](https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg). This makes it possible to easily use it in other Ansible playbooks and will become part of [nextcloud-docker-ansible-deploy](https://github.com/spantaleev/nextcloud-docker-ansible-deploy) soon.
 
-You need to **update your roles** (`just roles` or `make roles`) regardless of whether you're enabling Borg backup functionality or not. If you're making use of Borg backups via this playbook, you will need to update variable references in your `vars.yml` file (`matrix_backup_borg_` -> `backup_borg_`).
+You need to **update your roles** (`just roles` or `make roles`) regardless of whether you're enabling Borg's backup functionality or not. If you're making use of BorgBackup via this playbook, you will need to update variable references in your `vars.yml` file (`matrix_backup_borg_` -> `backup_borg_`).
 
 
 # 2023-02-12
@@ -1110,7 +1173,7 @@ Switching to Traefik will obtain new SSL certificates from Let's Encrypt (stored
 
 Treafik directly reverse-proxies to **some** services right now, but for most other services it goes through `matrix-nginx-proxy` (e.g. Traefik -> `matrix-nginx-proxy` -> [Ntfy](docs/configuring-playbook-ntfy.md)). So, even if you opt into Traefik, you'll still see `matrix-nginx-proxy` being installed in local-only mode. This will improve with time.
 
-Some services (like [Coturn](docs/configuring-playbook-turn.md) and [Postmoogle](docs/configuring-playbook-bot-postmoogle.md)) cannot be reverse-proxied to directly from Traefik, so they require direct access to SSL certificate files extracted out of Traefik. The playbook does this automatically thanks to a new [com.devture.ansible.role.traefik_certs_dumper](https://github.com/devture/com.devture.ansible.role.traefik_certs_dumper) role utilizing the [traefik-certs-dumper](https://github.com/ldez/traefik-certs-dumper) tool.
+Some services (like [Coturn](docs/configuring-playbook-turn.md) and [Postmoogle](docs/configuring-playbook-bridge-postmoogle.md)) cannot be reverse-proxied to directly from Traefik, so they require direct access to SSL certificate files extracted out of Traefik. The playbook does this automatically thanks to a new [com.devture.ansible.role.traefik_certs_dumper](https://github.com/devture/com.devture.ansible.role.traefik_certs_dumper) role utilizing the [traefik-certs-dumper](https://github.com/ldez/traefik-certs-dumper) tool.
 
 Our Traefik setup mostly works, but certain esoteric features may not work. If you have a default setup, we expect you to have a good experience.
 
@@ -1310,7 +1373,7 @@ Recently, a few large optimizations have been done to this playbook and its exte
 
 1. Replacing Ansible `import_tasks` calls with `include_tasks`, which decreased runtime in half. Using `import_tasks` is slower and causes Ansible to go through and skip way too many tasks (tasks which could have been skipped altogether by not having Ansible include them in the first place). On an experimental VM, **deployment time was decreased from ~530 seconds to ~250 seconds**.
 
-2. Introducing new `install-*` tags (`install-all` and `install-COMPONENT`, e.g. `install-synapse`, `install-bot-postmoogle`), which only run Ansible tasks pertaining to installation, while skipping uninstallation tasks. In most cases, people are maintaining the same setup or they're *adding* new components. Removing components is rare. Running thousands of uninstallation tasks each time is wasteful. On an experimental VM, **deployment time was decreased from ~250 seconds (`--tags=setup-all`) to ~100 seconds (`--tags=install-all`)**.
+2. Introducing new `install-*` tags (`install-all` and `install-COMPONENT`, e.g. `install-synapse`, `install-bot-mjolnir`), which only run Ansible tasks pertaining to installation, while skipping uninstallation tasks. In most cases, people are maintaining the same setup or they're *adding* new components. Removing components is rare. Running thousands of uninstallation tasks each time is wasteful. On an experimental VM, **deployment time was decreased from ~250 seconds (`--tags=setup-all`) to ~100 seconds (`--tags=install-all`)**.
 
 You can still use `--tags=setup-all`. In fact, that's the best way to ensure your server is reconciled with the `vars.yml` configuration.
 
@@ -1464,7 +1527,7 @@ With the new Synapse-customization feature in the playbook, we use the original 
 
 Thanks to [@TheOneWithTheBraid](https://github.com/TheOneWithTheBraid), we now support installing [matrix-ldap-registration-proxy](https://gitlab.com/activism.international/matrix_ldap_registration_proxy) - a proxy which handles Matrix registration requests and forwards them to LDAP.
 
-See our [Setting up the ldap-registration-proxy](docs/configuring-playbook-matrix-ldap-registration-proxy.md) documentation to get started.
+See our [Setting up matrix-ldap-registration-proxy](docs/configuring-playbook-matrix-ldap-registration-proxy.md) documentation to get started.
 
 
 # 2022-09-15
@@ -1564,16 +1627,16 @@ Below we'll discuss **potential backward incompatibilities**.
 
 Thanks to [Julian-Samuel Gebühr (@moan0s)](https://github.com/moan0s), the playbook can now set up [Cactus Comments](https://cactus.chat) - federated comment system for the web based on Matrix.
 
-See our [Setting up a Cactus Comments server](docs/configuring-playbook-cactus-comments.md) documentation to get started.
+See our [Setting up Cactus Comments](docs/configuring-playbook-cactus-comments.md) documentation to get started.
 
 
 # 2022-08-23
 
 ## Postmoogle email bridge support
 
-Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook can now set up the new [Postmoogle](https://github.com/etkecc/postmoogle) email bridge/bot. Postmoogle is like the [email2matrix bridge](https://github.com/devture/email2matrix) (also [already supported by the playbook](docs/configuring-playbook-email2matrix.md)), but more capable and with the intention to soon support *sending* emails, not just receiving.
+Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook can now set up the new [Postmoogle](https://github.com/etkecc/postmoogle) email bridge. Postmoogle is like the [email2matrix bridge](https://github.com/devture/email2matrix) (also [already supported by the playbook](docs/configuring-playbook-email2matrix.md)), but more capable and with the intention to soon support *sending* emails, not just receiving.
 
-See our [Setting up Postmoogle email bridging](docs/configuring-playbook-bot-postmoogle.md) documentation to get started.
+See our [Setting up Postmoogle email bridging](docs/configuring-playbook-bridge-postmoogle.md) documentation to get started.
 
 
 # 2022-08-10
@@ -1635,7 +1698,7 @@ See our [Setting up maubot](docs/configuring-playbook-bot-maubot.md) documentati
 
 ## mx-puppet-skype removal
 
-The playbook no longer includes the [mx-puppet-skype](https://github.com/Sorunome/mx-puppet-skype) bridge, because it has been broken and unmaintaned for a long time. Users that have `matrix_mx_puppet_skype_enabled` in their configuration files will encounter an error when running the playbook until they remove references to this bridge from their configuration.
+The playbook no longer includes the [mx-puppet-skype](https://github.com/Sorunome/mx-puppet-skype) bridge, because it has been broken and unmaintained for a long time. Users that have `matrix_mx_puppet_skype_enabled` in their configuration files will encounter an error when running the playbook until they remove references to this bridge from their configuration.
 
 To completely clean up your server from `mx-puppet-skype`'s presence on it:
 
@@ -1684,8 +1747,8 @@ See our [Setting up the ntfy push notifications server](docs/configuring-playboo
 
 **If you are using the [Hookshot bridge](docs/configuring-playbook-bridge-hookshot.md)**, you may find that:
 1. **Metrics may not be enabled by default anymore**:
-  - If Prometheus is enabled (`prometheus_enabled: true`), then Hookshot metrics will be enabled automatically (`matrix_hookshot_metrics_enabled: true`). These metrics will be collected from the local (in-container) Prometheus over the container network.
-  - **If Prometheus is not enabled** (you are either not using Prometheus or are using an external one), **Hookshot metrics will not be enabled by default anymore**. Feel free to enable them by setting `matrix_hookshot_metrics_enabled: true`. Also, see below.
+    - If Prometheus is enabled (`prometheus_enabled: true`), then Hookshot metrics will be enabled automatically (`matrix_hookshot_metrics_enabled: true`). These metrics will be collected from the local (in-container) Prometheus over the container network.
+    - **If Prometheus is not enabled** (you are either not using Prometheus or are using an external one), **Hookshot metrics will not be enabled by default anymore**. Feel free to enable them by setting `matrix_hookshot_metrics_enabled: true`. Also, see below.
 2. When metrics are meant to be **consumed by an external Prometheus server**, `matrix_hookshot_metrics_proxying_enabled` needs to be set to `true`, so that metrics would be exposed (proxied) "publicly" on `https://matrix.example.com/metrics/hookshot`. To make use of this, you'll also need to enable the new `https://matrix.example.com/metrics/*` endpoints mentioned above, using `matrix_nginx_proxy_proxy_matrix_metrics_enabled`. Learn more in our [Collecting metrics to an external Prometheus server](docs/configuring-playbook-prometheus-grafana.md#collecting-metrics-to-an-external-prometheus-server) documentation.
 3. **We've changed the URL we're exposing Hookshot metrics at** for external Prometheus servers. Until now, you were advised to consume Hookshot metrics from `https://stats.example.com/hookshot/metrics` (working in conjunction with `matrix_nginx_proxy_proxy_synapse_metrics`). From now on, **this no longer works**. As described above, you need to start consuming metrics from `https://matrix.example.com/metrics/hookshot`.
 
@@ -1708,7 +1771,7 @@ See our [Setting up the ntfy push notifications server](docs/configuring-playboo
 
 Thanks to [CyberShadow](https://github.com/CyberShadow), the playbook can now install the [go-skype-bridge](https://github.com/kelaresg/go-skype-bridge) bridge for bridging Matrix to [Skype](https://www.skype.com/).
 
-See our [Setting up Go Skype Bridge](docs/configuring-playbook-bridge-go-skype-bridge.md) documentation to get started.
+See our [Setting up Go Skype Bridge bridging](docs/configuring-playbook-bridge-go-skype-bridge.md) documentation to get started.
 
 The playbook has supported [mx-puppet-skype](https://github.com/Sorunome/mx-puppet-skype) bridging (see [Setting up MX Puppet Skype bridging](docs/configuring-playbook-bridge-mx-puppet-skype.md)) since [2020-04-09](#2020-04-09), but `mx-puppet-skype` is reportedly broken.
 
@@ -1757,7 +1820,7 @@ You could then restart services: `ansible-playbook -i inventory/hosts setup.yml 
 
 # 2022-04-25
 
-## buscarron bot support
+## Buscarron bot support
 
 Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook can now set up [the Buscarron bot](https://github.com/etkecc/buscarron). It's a bot you can use to send any form (HTTP POST, HTML) to a (encrypted) Matrix room
 
@@ -1775,11 +1838,11 @@ See our [Setting up matrix-registration-bot](docs/configuring-playbook-bot-matri
 
 # 2022-04-19
 
-## Borg backup support
+## BorgBackup support
 
 Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook can now set up [Borg](https://www.borgbackup.org/) backups with [borgmatic](https://torsion.org/borgmatic/) of your Matrix server.
 
-See our [Setting up borg backup](docs/configuring-playbook-backup-borg.md) documentation to get started.
+See our [Setting up BorgBackup](docs/configuring-playbook-backup-borg.md) documentation to get started.
 
 
 ## (Compatibility Break) Upgrading to Synapse v1.57 on setups using workers may require manual action
@@ -1820,9 +1883,9 @@ The playbook *could* correct these permissions automatically, but that requires 
 
 The playbook no longer installs the [ma1sd](https://github.com/ma1uta/ma1sd) identity server by default. The next time you run the playbook, ma1sd will be uninstalled from your server, unless you explicitly enable the ma1sd service (see how below).
 
-The main reason we used to install ma1sd by default in the past was to prevent Element from talking to the `matrix.org` / `vector.im` identity servers, by forcing it to talk to our own self-hosted (but otherwise useless) identity server instead, thus preventing contact list leaks.
+The main reason we used to install ma1sd by default in the past was to prevent Element clients from talking to the `matrix.org` / `vector.im` identity servers, by forcing it to talk to our own self-hosted (but otherwise useless) identity server instead, thus preventing contact list leaks.
 
-Since Element no longer defaults to using a public identity server if another one is not provided, we can stop installing ma1sd.
+Since Element clients no longer default to using a public identity server if another one is not provided, we can stop installing ma1sd.
 
 If you need to install the ma1sd identity server for some reason, you can explicitly enable it by adding this to your `vars.yml` file:
 
@@ -1844,7 +1907,7 @@ To enable this module (and prevent encryption from being used on your homserver)
 
 ## matrix-hookshot bridging support
 
-Thanks to [HarHarLinks](https://github.com/HarHarLinks), the playbook can now install the [matrix-hookshot](https://github.com/Half-Shot/matrix-hookshot) bridge for bridging Matrix to multiple project management services, such as GitHub, GitLab and JIRA.
+Thanks to [HarHarLinks](https://github.com/HarHarLinks), the playbook can now install the [matrix-hookshot](https://github.com/matrix-org/matrix-hookshot) bridge for bridging Matrix to multiple project management services, such as GitHub, GitLab and JIRA.
 See our [Setting up matrix-hookshot](docs/configuring-playbook-bridge-hookshot.md) documentation to get started.
 
 
@@ -1911,7 +1974,7 @@ See our [Setting up Honoroit](docs/configuring-playbook-bot-honoroit.md) documen
 
 Thanks to [Aine](https://gitlab.com/etke.cc) of [etke.cc](https://etke.cc/), the playbook now supports [Cinny](https://cinny.in/) - a new simple, elegant and secure Matrix client.
 
-By default, we still install Element. Still, people who'd like to try Cinny out can now install it via the playbook.
+By default, we still install Element Web. Still, people who'd like to try Cinny out can now install it via the playbook.
 
 Additional details are available in [Setting up Cinny](docs/configuring-playbook-client-cinny.md).
 
@@ -1983,7 +2046,7 @@ If you need to downgrade to the previous version, changing `matrix_sygnal_versio
 
 Thanks to [Aaron Raimist](https://github.com/aaronraimist), the playbook now supports [Hydrogen](https://github.com/vector-im/hydrogen-web) - a new lightweight Matrix client with legacy and mobile browser support.
 
-By default, we still install Element, as Hydrogen is still not fully-featured. Still, people who'd like to try Hydrogen out can now install it via the playbook.
+By default, we still install Element Web, as Hydrogen is still not fully-featured. Still, people who'd like to try Hydrogen out can now install it via the playbook.
 
 Additional details are available in [Setting up Hydrogen](docs/configuring-playbook-client-hydrogen.md).
 
@@ -2038,7 +2101,7 @@ The playbook can now install the [Sygnal](https://github.com/matrix-org/sygnal) 
 
 This is only useful to people who develop/build their own Matrix client applications.
 
-Additional details are available in our [Setting up Sygnal](docs/configuring-playbook-sygnal.md) docs.
+Additional details are available in our [Setting up the Sygnal push gateway](docs/configuring-playbook-sygnal.md) docs.
 
 
 # 2021-03-16
@@ -2136,9 +2199,9 @@ To migrate to the new setup, expect a few minutes of downtime, while you follow 
 2. Generate a strong password to be used for your superuser Postgres user (called `matrix`). You can use `pwgen -s 64 1` to generate it, or some other tool. The **maximum length** for a Postgres password is 100 bytes (characters). Don't go crazy!
 
 3. Update your playbook's `inventory/host_vars/matrix.example.com/vars.yml` file, adding a line like this:
-```yaml
-matrix_postgres_connection_password: 'YOUR_POSTGRES_PASSWORD_HERE'
-```
+    ```yaml
+    matrix_postgres_connection_password: 'YOUR_POSTGRES_PASSWORD_HERE'
+    ```
 
 .. where `YOUR_POSTGRES_PASSWORD_HERE` is to be replaced with the password you generated during step #2.
 
@@ -2148,31 +2211,31 @@ matrix_postgres_connection_password: 'YOUR_POSTGRES_PASSWORD_HERE'
 7. Open a Postgres shell: `/usr/local/bin/matrix-postgres-cli`
 8. Execute the following query, while making sure to **change the password inside** (**don't forget the ending `;`**):
 
-```sql
-CREATE ROLE matrix LOGIN SUPERUSER PASSWORD 'YOUR_POSTGRES_PASSWORD_HERE';
-```
+    ```sql
+    CREATE ROLE matrix LOGIN SUPERUSER PASSWORD 'YOUR_POSTGRES_PASSWORD_HERE';
+    ```
 
 .. where `YOUR_POSTGRES_PASSWORD_HERE` is to be replaced with the password you generated during step #2.
 
 9. Execute the following queries as you see them (no modifications necessary, so you can just **paste them all at once**):
 
-```sql
-CREATE DATABASE matrix OWNER matrix;
+    ```sql
+    CREATE DATABASE matrix OWNER matrix;
 
-ALTER DATABASE postgres OWNER TO matrix;
-ALTER DATABASE template0 OWNER TO matrix;
-ALTER DATABASE template1 OWNER TO matrix;
+    ALTER DATABASE postgres OWNER TO matrix;
+    ALTER DATABASE template0 OWNER TO matrix;
+    ALTER DATABASE template1 OWNER TO matrix;
 
-\c matrix;
+    \c matrix;
 
-ALTER DATABASE homeserver RENAME TO synapse;
+    ALTER DATABASE homeserver RENAME TO synapse;
 
-ALTER ROLE synapse NOSUPERUSER NOCREATEDB NOCREATEROLE;
+    ALTER ROLE synapse NOSUPERUSER NOCREATEDB NOCREATEROLE;
 
-\quit
-```
+    \quit
+    ```
 
-You may need to press *Enter* after pasting the lines above.
+    You may need to press *Enter* after pasting the lines above.
 
 10. Re-run the playbook normally: `ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,start`
 
@@ -2421,9 +2484,9 @@ To learn more, follow our [Dynamic DNS docs page](docs/configuring-playbook-dyna
 
 Until now, we used to serve a static page coming from Synapse at `https://matrix.example.com/`. This page was not very useful to anyone.
 
-Since `matrix.example.com` may be accessed by regular users in certain conditions, it's probably better to redirect them to a better place (e.g. to the [Element](docs/configuring-playbook-client-element.md) client).
+Since `matrix.example.com` may be accessed by regular users in certain conditions, it's probably better to redirect them to a better place (e.g. to [Element Web](docs/configuring-playbook-client-element-web.md)).
 
-If Element is installed (`matrix_client_element_enabled: true`, which it is by default), we now redirect people to it, instead of showing them a Synapse static page.
+If Element Web is installed (`matrix_client_element_enabled: true`, which it is by default), we now redirect people to it, instead of showing them a Synapse static page.
 
 If you'd like to control where the redirect goes, use the `matrix_nginx_proxy_proxy_matrix_client_redirect_root_uri_to_domain` variable.
 To restore the old behavior of not redirecting anywhere and serving the Synapse static page, set it to an empty value (`matrix_nginx_proxy_proxy_matrix_client_redirect_root_uri_to_domain: ""`).
@@ -2508,7 +2571,7 @@ As per the official announcement, [Riot has been rebraned to Element](https://el
 
 The playbook follows suit. Existing installations have a few options for how to handle this.
 
-See our [Migrating to Element](docs/configuring-playbook-riot-web.md#migrating-to-element) documentation page for more details.
+See our [Migrating to Element Web](docs/configuring-playbook-riot-web.md#migrating-to-element) documentation page for more details.
 
 
 # 2020-07-03
@@ -2717,7 +2780,7 @@ It forces a [Postgres database upgrade](docs/maintenance-postgres.md#upgrading-p
 
 Thanks to a contribution from [Björn Marten](https://github.com/tripleawwy) from [netresearch](https://www.netresearch.de/), the playbook can now install and configure [matrix-appservice-webhooks](https://github.com/turt2live/matrix-appservice-webhooks) for you. This bridge provides support for Slack-compatible webhooks.
 
-Learn more in [Setting up Appservice Webhooks](docs/configuring-playbook-bridge-appservice-webhooks.md).
+Learn more in [Setting up Appservice Webhooks bridging](docs/configuring-playbook-bridge-appservice-webhooks.md).
 
 
 # 2020-01-12
@@ -3197,10 +3260,9 @@ There's a new `matrix_nginx_proxy_data_path` variable, which has a different use
 
 # 2019-03-10
 
-## Dimension Integration Manager support
+## Dimension integration manager support
 
-Thanks to [NullIsNot0](https://github.com/NullIsNot0), the playbook can now (optionally) install the [Dimension](https://dimension.t2bot.io/) Integration Manager.
-To learn more, see the [Setting up Dimension](docs/configuring-playbook-dimension.md) documentation page.
+Thanks to [NullIsNot0](https://github.com/NullIsNot0), the playbook can now (optionally) install the [Dimension](https://dimension.t2bot.io/) integration manager. To learn more, see the [Setting up Dimension](docs/configuring-playbook-dimension.md) documentation page.
 
 
 # 2019-03-07
@@ -3215,7 +3277,7 @@ To learn more, see the [Customizing email templates](docs/configuring-playbook-m
 
 ## Discord bridging support
 
-[@Lionstiger](https://github.com/Lionstiger) has done some great work adding Discord bridging support via [matrix-appservice-discord](https://github.com/Half-Shot/matrix-appservice-discord).
+[@Lionstiger](https://github.com/Lionstiger) has done some great work adding Discord bridging support via [matrix-appservice-discord](https://github.com/matrix-org/matrix-appservice-discord).
 To learn more, see the [Setting up Appservice Discord bridging](docs/configuring-playbook-bridge-appservice-discord.md) documentation page.
 
 
@@ -3293,7 +3355,7 @@ When using:
 ## IRC bridging support
 
 [Devon Maloney (@Plailect)](https://github.com/Plailect) has done some great work bringing IRC bridging support via [matrix-appservice-irc](https://github.com/TeDomum/matrix-appservice-irc).
-To learn more, see the [Setting up Appservice IRC](docs/configuring-playbook-bridge-appservice-irc.md) documentation page.
+To learn more, see the [Setting up Appservice IRC bridging](docs/configuring-playbook-bridge-appservice-irc.md) documentation page.
 
 
 # 2019-01-29
@@ -3527,7 +3589,7 @@ matrix_riot_web_integrations_widgets_urls: "https://scalar.vector.im/api"
 matrix_riot_web_integrations_jitsi_widget_url: "https://scalar.vector.im/api/widgets/jitsi.html"
 ```
 
-This now allows you use a custom integrations manager like [Dimesion](https://dimension.t2bot.io). For example, if you wish to use the Dimension instance hosted at dimension.t2bot.io, you can set the following in your vars.yml file:
+This now allows you use a custom integration manager like [Dimension](https://dimension.t2bot.io). For example, if you wish to use the Dimension instance hosted at dimension.t2bot.io, you can set the following in your vars.yml file:
 
 ```
 matrix_riot_web_integrations_ui_url: "https://dimension.t2bot.io/riot"
@@ -3758,7 +3820,7 @@ The Client APIs run only on the http port (8008) now.
 ## mxisd Identity Server support
 
 The playbook now sets up an [mxisd](https://github.com/kamax-io/mxisd) Identity Server for you by default.
-Additional details are available in [Adjusting mxisd Identity Server configuration](docs/configuring-playbook-mxisd.md).
+Additional details are available in [Setting up ma1sd Identity Server](docs/configuring-playbook-mxisd.md).
 
 
 # 2018-08-14

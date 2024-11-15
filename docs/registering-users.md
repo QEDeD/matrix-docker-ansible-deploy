@@ -16,7 +16,7 @@ Table of contents:
 
 **Note**: in the commands below, `<your-username>` is just a plain username (like `john`), not your full `@<username>:example.com` identifier.
 
-After registering a user (using one of the methods below), **you can log in with that user** via the [Element](configuring-playbook-client-element.md) service that this playbook has installed for you at a URL like this: `https://element.example.com/`.
+After registering a user (using one of the methods below), **you can log in with that user** via the [Element Web](configuring-playbook-client-element-web.md) service that this playbook has installed for you at a URL like this: `https://element.example.com/`.
 
 ### Registering users via the Ansible playbook
 
@@ -70,8 +70,7 @@ If you're using the [Matrix Authentication Service](./configuring-playbook-matri
 # Example: `/matrix/matrix-authentication-service/bin/register-user john secret-password 1`
 ```
 
-This `register-user` script actually invokes the `mas-cli manage register-user` command under the hood.
-If you'd like more control over the registration process, consider invoking the `mas-cli` command directly:
+This `register-user` script actually invokes the `mas-cli manage register-user` command under the hood. If you'd like more control over the registration process, consider invoking the `mas-cli` command directly:
 
 ```sh
 /matrix/matrix-authentication-service/bin/mas-cli manage register-user --help
@@ -101,8 +100,16 @@ If you'd rather **keep your server private** (public registration closed, as is 
 
 To **open up user registration publicly** (usually **not recommended**), add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 
+For Synapse:
+
 ```yaml
 matrix_synapse_enable_registration: true
+```
+
+For Dendrite:
+
+```yaml
+matrix_dendrite_client_api_registration_disabled: false
 ```
 
 After configuring the playbook, run the [installation](installing.md) command: `just install-all` or `just setup-all`
