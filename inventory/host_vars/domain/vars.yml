@@ -94,13 +94,13 @@ grafana_anonymous_access: false
 #                                                                      #
 ########################################################################
 
-exim_relay_sender_address: "matrix@{{domain}}"
+exim_relay_sender_address: "servadmupinhere@gmail.com" #matrix@{{domain}}"
 exim_relay_relay_use: true
 exim_relay_relay_host_name: "smtp.sendgrid.net"
 exim_relay_relay_host_port: 587
 exim_relay_relay_auth: true
 exim_relay_relay_auth_username: "apikey"
-exim_relay_relay_auth_password: "{{vault_exim_relay_relay_auth_password}}"
+exim_relay_relay_auth_password: "{vault_exim_relay_relay_auth_password}}"
 
 
 
