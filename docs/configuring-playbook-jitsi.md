@@ -6,14 +6,12 @@ Jitsi installation is **not enabled by default**, because it's not a core compon
 
 The setup done by the playbook is very similar to [docker-jitsi-meet](https://github.com/jitsi/docker-jitsi-meet). You can refer to the documentation there for many of the options here.
 
-
 ## Prerequisites
 
 You may need to open the following ports to your server:
 
 - `4443/tcp` - RTP media fallback over TCP
 - `10000/udp` - RTP media over UDP. Depending on your firewall/NAT setup, incoming RTP packets on port `10000` may have the external IP of your firewall as destination address, due to the usage of STUN in JVB (see [`jitsi_jvb_stun_servers`](https://github.com/mother-of-all-self-hosting/ansible-role-jitsi/blob/main/defaults/main.yml)).
-
 
 ## Adjusting the playbook configuration
 
@@ -46,7 +44,7 @@ By default, you will need to create a CNAME record for `jitsi`. See [Configuring
 
 By default the Jitsi Meet instance does not require any kind of login and is open to use for anyone without registration.
 
-If you're fine with such an open Jitsi instance, please skip to [Apply changes](#apply-changes).
+If you're fine with such an open Jitsi instance, please skip to [Installing](#installing).
 
 If you would like to control who is allowed to open meetings on your new Jitsi instance, then please follow the following steps to enable Jitsi's authentication and optionally guests mode.
 
@@ -114,7 +112,6 @@ jitsi_ldap_start_tls: false
 
 For more information refer to the [docker-jitsi-meet](https://github.com/jitsi/docker-jitsi-meet#authentication-using-ldap) and the [saslauthd `LDAP_SASLAUTHD`](https://github.com/winlibs/cyrus-sasl/blob/master/saslauthd/LDAP_SASLAUTHD) documentation.
 
-
 ## (Optional) Making your Jitsi server work on a LAN
 
 By default the Jitsi Meet instance does not work with a client in LAN (Local Area Network), even if others are connected from WAN. There are no video and audio. In the case of WAN to WAN everything is ok.
@@ -172,18 +169,19 @@ By default, a single JVB ([Jitsi VideoBridge](https://github.com/jitsi/jitsi-vid
 There is an ansible playbook that can be run with the following tag: `ansible-playbook -i inventory/hosts --limit jitsi_jvb_servers jitsi_jvb.yml --tags=common,setup-additional-jitsi-jvb,start`
 
 For this role to work you will need an additional section in the ansible hosts file with the details of the JVB hosts, for example:
-```
+
+```INI
 [jitsi_jvb_servers]
 <your jvb hosts> ansible_host=<ip address of the jvb host>
 ```
 
 Each JVB will require a server ID to be set so that it can be uniquely identified and this allows Jitsi to keep track of which conferences are on which JVB. The server ID is set with the variable `jitsi_jvb_server_id` which ends up as the JVB_WS_SERVER_ID environment variables in the JVB docker container. This variable can be set via the host file, a parameter to the ansible command or in the `vars.yaml` for the host which will have the additional JVB. For example:
 
-``` yaml
+```yaml
 jitsi_jvb_server_id: 'jvb-2'
 ```
 
-``` INI
+```INI
 [jitsi_jvb_servers]
 jvb-2.example.com ansible_host=192.168.0.2 jitsi_jvb_server_id=jvb-2
 jvb-3.example.com ansible_host=192.168.0.3 jitsi_jvb_server_id=jvb-2
@@ -269,11 +267,16 @@ jitsi_disable_gravatar: false
 
 ## Installing
 
-After configuring the playbook and potentially [adjusting your DNS records](#adjusting-dns-records), run the [installation](installing.md) command:
+After configuring the playbook and potentially [adjusting your DNS records](#adjusting-dns-records), run the playbook with [playbook tags](playbook-tags.md) as below:
 
-```
+<!-- NOTE: let this conservative command run (instead of install-all) to make it clear that failure of the command means something is clearly broken. -->
+```sh
 ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,start
 ```
+
+The shortcut commands with the [`just` program](just.md) are also available: `just install-all` or `just setup-all`
+
+`just install-all` is useful for maintaining your setup quickly ([2x-5x faster](../CHANGELOG.md#2x-5x-performance-improvements-in-playbook-runtime) than `just setup-all`) when its components remain unchanged. If you adjust your `vars.yml` to remove other components, you'd need to run `just setup-all`, or these components will still remain installed. Note these shortcuts run the `ensure-matrix-users-created` tag too.
 
 ## Usage
 
@@ -286,7 +289,6 @@ You can use the self-hosted Jitsi server in multiple ways:
 - **directly (without any Matrix integration)**. Just go to `https://jitsi.example.com`
 
 **Note**: Element apps on mobile devices currently [don't support joining meetings on a self-hosted Jitsi server](https://github.com/element-hq/riot-web/blob/601816862f7d84ac47547891bd53effa73d32957/docs/jitsi.md#mobile-app-support).
-
 
 ## Troubleshooting
 

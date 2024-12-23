@@ -6,7 +6,7 @@
 
 This [Ansible](https://www.ansible.com/) playbook is meant to help you run your own [Matrix](http://matrix.org/) homeserver, along with the [various services](#supported-services) related to that.
 
-That is, it lets you join the Matrix network using your own `@<username>:example.com` identifier, all hosted on your own server (see [prerequisites](docs/prerequisites.md)).
+That is, it lets you join the Matrix network using your own user ID like `@alice:example.com`, all hosted on your own server (see [prerequisites](docs/prerequisites.md)).
 
 We run all [supported services](#-supported-services) in [Docker](https://www.docker.com/) containers (see [the container images we use](docs/container-images.md)), which lets us have a predictable and up-to-date setup, across multiple supported distros (see [prerequisites](docs/prerequisites.md)) and [architectures](docs/alternative-architectures.md) (x86/amd64 being recommended).
 
@@ -25,7 +25,14 @@ We have detailed documentation in the [docs/](./docs) directory - see the Table 
 While the [list of supported services](#-supported-services) and documentation is very extensive, you don't need to read through everything. We recommend:
 
 - Starting with the basics. You can always add/remove or tweak services later on.
-- Following our guided installation, starting with the [Prerequisites](./docs/prerequisites.md) documentation page
+
+- Following our installation guide. There are two guides available for beginners and advanced users:
+
+    - ⚡ **[Quick start](./docs/quick-start.md) (for beginners)**: this is recommended for those who do not have an existing Matrix server and want to start quickly with "opinionated defaults".
+
+    - **Full installation guide (for advanced users)**: if you need to import an existing Matrix server's data into the new server or want to learn more while setting up the server, follow this guide by starting with the **[Prerequisites](./docs/prerequisites.md)** documentation page.
+
+If you experience an issue on configuring the playbook, setting up your server, maintaining services on it, etc., please take a look at our [FAQ](./docs/faq.md). If you cannot find an answer to your question, feel free to ask for [help and support](#-support).
 
 ## ✔ Supported services
 
@@ -58,8 +65,6 @@ Web clients for Matrix that you can host on your own domains.
 | [Cinny](https://github.com/ajbura/cinny) |  ❌ | Simple, elegant and secure web client | [Link](docs/configuring-playbook-client-cinny.md) |
 | [SchildiChat Web](https://schildi.chat/) | ❌ | Based on Element Web, with a more traditional instant messaging experience | [Link](docs/configuring-playbook-client-schildichat-web.md) |
 
-
-
 ### Server Components
 
 Services that run on the server to make the various parts of your installation work.
@@ -74,7 +79,6 @@ Services that run on the server to make the various parts of your installation w
 | [ma1sd](https://github.com/ma1uta/ma1sd) | ❌ | Matrix Identity Server | [Link](docs/configuring-playbook-ma1sd.md)
 | [ddclient](https://github.com/linuxserver/docker-ddclient) | ❌ | Dynamic DNS | [Link](docs/configuring-playbook-dynamic-dns.md) |
 
-
 ### Authentication
 
 Extend and modify how users are authenticated on your homeserver.
@@ -88,7 +92,6 @@ Extend and modify how users are authenticated on your homeserver.
 | [matrix-registration](https://github.com/ZerataX/matrix-registration) | ❌ | A simple python application to have a token based Matrix registration | [Link](docs/configuring-playbook-matrix-registration.md) |
 | [Matrix User Verification Service](https://github.com/matrix-org/matrix-user-verification-service) (UVS) | ❌ | Service to verify details of a user based on an Open ID token | [Link](docs/configuring-playbook-user-verification-service.md) |
 | [synapse-simple-antispam](https://github.com/t2bot/synapse-simple-antispam) (advanced) | ❌ | A spam checker module | [Link](docs/configuring-playbook-synapse-simple-antispam.md) |
-
 
 ### File Storage
 
@@ -134,7 +137,6 @@ Bridges can be used to connect your Matrix installation with third-party communi
 | [mx-puppet-steam](https://github.com/icewind1991/mx-puppet-steam) | ❌ | Bridge to [Steam](https://steamapp.com/) | [Link](docs/configuring-playbook-bridge-mx-puppet-steam.md) |
 | [Email2Matrix](https://github.com/devture/email2matrix) | ❌ | Bridge for relaying emails to Matrix rooms | [Link](docs/configuring-playbook-email2matrix.md) |
 | [Postmoogle](https://github.com/etkecc/postmoogle) | ❌ | Email to Matrix bridge | [Link](docs/configuring-playbook-bridge-postmoogle.md) |
-
 
 ### Bots
 
@@ -182,13 +184,11 @@ Various services that don't fit any other categories.
 | [Sygnal](https://github.com/matrix-org/sygnal) | ❌ | Push gateway | [Link](docs/configuring-playbook-sygnal.md) |
 | [ntfy](https://ntfy.sh) | ❌ | Push notifications server | [Link](docs/configuring-playbook-ntfy.md) |
 
-
 ## 🆕 Changes
 
 This playbook evolves over time, sometimes with backward-incompatible changes.
 
 When updating the playbook, refer to [the changelog](CHANGELOG.md) to catch up with what's new.
-
 
 ## 🆘 Support
 
@@ -198,6 +198,11 @@ When updating the playbook, refer to [the changelog](CHANGELOG.md) to catch up w
 
 - GitHub issues: [spantaleev/matrix-docker-ansible-deploy/issues](https://github.com/spantaleev/matrix-docker-ansible-deploy/issues)
 
+## 🌐 Translation
+
+See the [i18n/README.md](i18n/README.md) file for more information about translation.
+
+Translations are still work in progress.
 
 ## 🤝 Related
 

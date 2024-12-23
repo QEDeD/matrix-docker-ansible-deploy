@@ -4,7 +4,7 @@
 
 The playbook can install and configure [Heisenbridge](https://github.com/hifi/heisenbridge) - the bouncer-style [IRC](https://en.wikipedia.org/wiki/Internet_Relay_Chat) bridge for you.
 
-See the project's [README](https://github.com/hifi/heisenbridge/blob/master/README.md) to learn what it does and why it might be useful to you. You can also take a look at [this demonstration video](https://www.youtube.com/watch?v=nQk1Bp4tk4I).
+See the project's [documentation](https://github.com/hifi/heisenbridge/blob/master/README.md) to learn what it does and why it might be useful to you. You can also take a look at [this demonstration video](https://www.youtube.com/watch?v=nQk1Bp4tk4I).
 
 ## Configuration
 
@@ -15,7 +15,7 @@ matrix_heisenbridge_enabled: true
 
 # Setting the owner is optional as the first local user to DM `@heisenbridge:example.com` will be made the owner.
 # If you are not using a local user you must set it as otherwise you can't DM it at all.
-matrix_heisenbridge_owner: "@you:example.com"
+matrix_heisenbridge_owner: "@alice:{{ matrix_domain }}"
 
 # Uncomment to enable identd on host port 113/TCP (optional)
 # matrix_heisenbridge_identd_enabled: true
@@ -49,11 +49,24 @@ If you've decided to use the default hostname, you won't need to do any extra DN
 
 ## Installing
 
-After configuring the playbook and potentially [adjusting your DNS records](#adjusting-dns-records), run the [installation](installing.md) command: `just install-all` or `just setup-all`
+After configuring the playbook and potentially [adjusting your DNS records](#adjusting-dns-records), run the playbook with [playbook tags](playbook-tags.md) as below:
+
+<!-- NOTE: let this conservative command run (instead of install-all) to make it clear that failure of the command means something is clearly broken. -->
+```sh
+ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,ensure-matrix-users-created,start
+```
+
+**Notes**:
+
+- The `ensure-matrix-users-created` playbook tag makes the playbook automatically create the bot's user account.
+
+- The shortcut commands with the [`just` program](just.md) are also available: `just install-all` or `just setup-all`
+
+  `just install-all` is useful for maintaining your setup quickly ([2x-5x faster](../CHANGELOG.md#2x-5x-performance-improvements-in-playbook-runtime) than `just setup-all`) when its components remain unchanged. If you adjust your `vars.yml` to remove other components, you'd need to run `just setup-all`, or these components will still remain installed.
 
 ## Usage
 
-After the bridge is successfully running just DM `@heisenbridge:example.com` to start setting it up. If the bridge ignores you and a DM is not accepted then the owner setting may be wrong.
+To use the bridge, you need to start a chat with `@heisenbridge:example.com` (where `example.com` is your base domain, not the `matrix.` domain). If the bridge ignores you and a DM is not accepted then the owner setting may be wrong.
 
 Help is available for all commands with the `-h` switch.
 

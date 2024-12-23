@@ -73,7 +73,7 @@ traefik_configuration_extension_yaml: |
         storage: {{ traefik_config_certificatesResolvers_acme_storage | to_json }}
 
 # 2. Configure the environment variables needed by Rraefik to automate the ACME DNS Challenge (example for Cloudflare)
-traefik_environment_variables: |
+traefik_environment_variables_additional_variables: |
   CF_API_EMAIL=redacted
   CF_ZONE_API_TOKEN=redacted
   CF_DNS_API_TOKEN=redacted
@@ -91,7 +91,7 @@ By default, Coturn is configured to wait on the certificate for the `matrix.` su
 
 We also need to indicate to Coturn where the wildcard certificate is.
 
-**⚠ WARNING ⚠** : On first start of the services, Coturn might still fail to start because Traefik is still in the process of obtaining the certificates. If you still get an error, make sure Traefik obtained the certificates and restart the Coturn service (`just start-group coturn`).
+**⚠️ WARNING ⚠️** : On first start of the services, Coturn might still fail to start because Traefik is still in the process of obtaining the certificates. If you still get an error, make sure Traefik obtained the certificates and restart the Coturn service (`just start-group coturn`).
 
 This should not happen again afterwards as Traefik will renew certificates well before their expiry date, and the Coturn service is setup to restart periodically.
 
@@ -153,7 +153,7 @@ traefik_configuration_extension_yaml: |
 traefik_certResolver_primary: "dns"
 
 # Configure the environment variables needed by Traefik to automate the ACME DNS Challenge (example for Cloudflare)
-traefik_environment_variables: |
+traefik_environment_variables_additional_variables: |
   CF_API_EMAIL=redacted
   CF_ZONE_API_TOKEN=redacted
   CF_DNS_API_TOKEN=redacted

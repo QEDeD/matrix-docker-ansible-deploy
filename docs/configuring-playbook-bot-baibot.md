@@ -11,11 +11,9 @@ It supports [OpenAI](https://openai.com/)'s [ChatGPT](https://openai.com/blog/ch
 
 It's designed as a more private and [✨ featureful](https://github.com/etkecc/baibot/?tab=readme-ov-file#-features) alternative to [matrix-chatgpt-bot](./configuring-playbook-bot-chatgpt.md). See the [baibot](https://github.com/etkecc/baibot) project and its documentation for more information.
 
-
 ## Prerequisites
 
 API access to one or more LLM [☁️ providers](https://github.com/etkecc/baibot/blob/main/docs/providers.md).
-
 
 ## Adjusting the playbook configuration
 
@@ -30,10 +28,9 @@ There are **a lot of configuration options** (some required, some possibly requi
 
 Depending on your current `vars.yml` file and desired configuration, **you may require more than just the [base configuration](#base-configuration)**.
 
-
 ### Base configuration
 
-Add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
+To enable the bot, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 
 ```yaml
 matrix_bot_baibot_enabled: true
@@ -41,12 +38,12 @@ matrix_bot_baibot_enabled: true
 # Uncomment and adjust this part if you'd like to use a username different than the default
 # matrix_bot_baibot_config_user_mxid_localpart: baibot
 
-# Generate a strong password here. Consider generating it with `pwgen -s 64 1`.
+# Generate a strong password for the bot. You can create one with a command like `pwgen -s 64 1`.
 # If you'd like to change this password subsequently, see the details below.
 matrix_bot_baibot_config_user_password: 'PASSWORD_FOR_THE_BOT'
 
 # An optional passphrase to use for backing up and recovering the bot's encryption keys.
-# You can put any string here, but generating a strong one is preferred (e.g. `pwgen -s 64 1`).
+# You can create one with a command like `pwgen -s 64 1`.
 #
 # If set to null, the recovery module will not be used and losing your session/database
 # will mean you lose access to old messages in encrypted room.
@@ -73,7 +70,6 @@ matrix_bot_baibot_config_persistence_config_encryption_key: 'A_HEX_STRING_OF_64_
 
 As mentioned above, **this may not be enough**. Continue with the configuration sections below.
 
-
 ### 👮‍♂️ Administrator configuration
 
 This is an addition to the [base configuration](#base-configuration).
@@ -84,7 +80,7 @@ If `matrix_admin` is already configured in your `vars.yml` configuration, you ca
 
 **If necessary**, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 
-```yml
+```yaml
 # Uncomment to add one or more admins to this bridge:
 #
 # matrix_bot_baibot_config_access_admin_patterns:
@@ -113,7 +109,7 @@ Configuring `matrix_bot_baibot_config_initial_global_config_user_patterns` is op
 
 **If necessary**, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 
-```yml
+```yaml
 # Uncomment and adjust the bot users if necessary:
 #
 # Subsequent changes to `matrix_bot_baibot_config_initial_global_config_user_patterns` do not affect the bot's behavior.
@@ -139,14 +135,13 @@ Depending on your propensity for [GitOps](https://en.wikipedia.org/wiki/DevOps#G
 
 Before proceeding, we recommend reading the upstream documentation on [How to choose a provider](https://github.com/etkecc/baibot/blob/main/docs/providers.md#how-to-choose-a-provider). In short, it's probably best to go with [OpenAI](#openai).
 
-
 #### Anthropic
 
 You can statically-define a single [🤖 agent](https://github.com/etkecc/baibot/blob/main/docs/agents.md) instance powered by the [Anthropic provider](https://github.com/etkecc/baibot/blob/main/docs/providers.md#anthropic) with the help of the playbook's preset variables.
 
 Here's an example **addition** to your `vars.yml` file:
 
-```yml
+```yaml
 matrix_bot_baibot_config_agents_static_definitions_anthropic_enabled: true
 
 matrix_bot_baibot_config_agents_static_definitions_anthropic_config_api_key: "YOUR_API_KEY_HERE"
@@ -166,14 +161,13 @@ If you'd like to use more than one model, take a look at the [Configuring additi
 
 💡 You may also wish to use this new agent for [🤝 Configuring initial default handlers](#-configuring-initial-default-handlers).
 
-
 #### Groq
 
 You can statically-define a single [🤖 agent](https://github.com/etkecc/baibot/blob/main/docs/agents.md) instance powered by the [Groq provider](https://github.com/etkecc/baibot/blob/main/docs/providers.md#groq) with the help of the playbook's preset variables.
 
 Here's an example **addition** to your `vars.yml` file:
 
-```yml
+```yaml
 matrix_bot_baibot_config_agents_static_definitions_groq_enabled: true
 
 matrix_bot_baibot_config_agents_static_definitions_groq_config_api_key: "YOUR_API_KEY_HERE"
@@ -200,14 +194,13 @@ If you'd like to use more than one model, take a look at the [Configuring additi
 
 💡 You may also wish to use this new agent for [🤝 Configuring initial default handlers](#-configuring-initial-default-handlers).
 
-
 #### Mistral
 
 You can statically-define a single [🤖 agent](https://github.com/etkecc/baibot/blob/main/docs/agents.md) instance powered by the [🇫🇷 Mistral provider](https://github.com/etkecc/baibot/blob/main/docs/providers.md#mistral) with the help of the playbook's preset variables.
 
 Here's an example **addition** to your `vars.yml` file:
 
-```yml
+```yaml
 matrix_bot_baibot_config_agents_static_definitions_mistral_enabled: true
 
 matrix_bot_baibot_config_agents_static_definitions_mistral_config_api_key: "YOUR_API_KEY_HERE"
@@ -229,7 +222,6 @@ If you'd like to use more than one model, take a look at the [Configuring additi
 
 💡 You may also wish to use this new agent for [🤝 Configuring initial default handlers](#-configuring-initial-default-handlers).
 
-
 #### OpenAI
 
 You can statically-define a single [🤖 agent](https://github.com/etkecc/baibot/blob/main/docs/agents.md) instance powered by the [OpenAI provider](https://github.com/etkecc/baibot/blob/main/docs/providers.md#openai) with the help of the playbook's preset variables.
@@ -238,7 +230,7 @@ The OpenAI provider is **only meant to be used with OpenAI's official API** and 
 
 Here's an example **addition** to your `vars.yml` file:
 
-```yml
+```yaml
 matrix_bot_baibot_config_agents_static_definitions_openai_enabled: true
 
 matrix_bot_baibot_config_agents_static_definitions_openai_config_api_key: "YOUR_API_KEY_HERE"
@@ -260,7 +252,6 @@ If you'd like to use more than one model, take a look at the [Configuring additi
 
 💡 You may also wish to use this new agent for [🤝 Configuring initial default handlers](#-configuring-initial-default-handlers).
 
-
 #### OpenAI Compatible
 
 You can statically-define a single [🤖 agent](https://github.com/etkecc/baibot/blob/main/docs/agents.md) instance powered by the [OpenAI Compatible provider](https://github.com/etkecc/baibot/blob/main/docs/providers.md#openai-compatible) with the help of the playbook's preset variables.
@@ -270,7 +261,6 @@ This provider allows you to use OpenAI-compatible API services like [OpenRouter]
 Some of these popular services already have **shortcut** providers (see [supported providers](https://github.com/etkecc/baibot/blob/main/docs/providers.md#supported-providers) leading to this one behind the scenes - this make it easier to get started.
 
 As of this moment, the playbook does not include presets for any of these services, so you'll need to [Configuring additional agents (without a preset)](#configuring-additional-agents-without-a-preset).
-
 
 #### Configuring additional agents (without a preset)
 
@@ -282,7 +272,7 @@ You can also define providers at runtime, by chatting with the bot, so using Ans
 
 Below is an an **example** demonstrating **statically-defining agents via Ansible without using presets**:
 
-```yml
+```yaml
 matrix_bot_baibot_config_agents_static_definitions_custom:
   # This agent will use the GPT 3.5 model and will only support text-generation,
   # even though the `openai` provider could support other features (e.g. image-generation).
@@ -327,7 +317,6 @@ As with any [🤖 agent](https://github.com/etkecc/baibot/blob/main/docs/agents.
 
 💡 You may also wish to use these new agents for [🤝 Configuring initial default handlers](#-configuring-initial-default-handlers).
 
-
 ### 🤝 Configuring initial default handlers
 
 This section is only useful if you're [🤖 Configuring agents via Ansible](#-configuring-agents-via-ansible), as it lets you put these agents to use as soon as the bot starts (by adjusting the bot's **initial global configuration**).
@@ -356,7 +345,7 @@ You can configure the **initial values** for these via Ansible, via the `matrix_
 
 Example **additional** `vars.yml` configuration:
 
-```yml
+```yaml
 # Note: these are initial defaults for the bot's global configuration.
 # As such, changing any of these values subsequently has no effect on the bot's behavior.
 # Once initially configured, the global configuration is managed via bot commands, not via Ansible.
@@ -373,25 +362,28 @@ matrix_bot_baibot_config_initial_global_config_handler_image_generation: null
 
 **Note**: these are initial defaults for the bot's global configuration. As such, changing any of these values subsequently has no effect on the bot's behavior. **Once initially configured the global configuration cannot be managed Ansible**, but only via bot commands.
 
-
 ## Installing
 
-After configuring the playbook, run the [installation](installing.md) command:
+After configuring the playbook, run it with [playbook tags](playbook-tags.md) as below:
 
+<!-- NOTE: let this conservative command run (instead of install-all) to make it clear that failure of the command means something is clearly broken. -->
 ```sh
-just run-tags install-all,ensure-matrix-users-created,start
+ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,ensure-matrix-users-created,start
 ```
 
 **Notes**:
 
-- the `ensure-matrix-users-created` playbook tag makes the playbook automatically create the bot's user account
+- The `ensure-matrix-users-created` playbook tag makes the playbook automatically create the bot's user account.
 
-- if you change the bot password (`matrix_bot_baibot_config_user_password` in your `vars.yml` file) subsequently, the bot user's credentials on the homeserver won't be updated automatically. If you'd like to change the bot user's password, use a tool like [synapse-admin](configuring-playbook-synapse-admin.md) to change it, and then update `matrix_bot_baibot_config_user_password` to let the bot know its new password
+- The shortcut commands with the [`just` program](just.md) are also available: `just install-all` or `just setup-all`
 
+  `just install-all` is useful for maintaining your setup quickly ([2x-5x faster](../CHANGELOG.md#2x-5x-performance-improvements-in-playbook-runtime) than `just setup-all`) when its components remain unchanged. If you adjust your `vars.yml` to remove other components, you'd need to run `just setup-all`, or these components will still remain installed.
+
+- If you change the bot password (`matrix_bot_baibot_config_user_password` in your `vars.yml` file) subsequently, the bot user's credentials on the homeserver won't be updated automatically. If you'd like to change the bot user's password, use a tool like [synapse-admin](configuring-playbook-synapse-admin.md) to change it, and then update `matrix_bot_baibot_config_user_password` to let the bot know its new password.
 
 ## Usage
 
-To use the bot, invite the `@baibot:example.com` bot user into a room.
+To use the bot, invite it to any existing Matrix room (`/invite @baibot:example.com` where `example.com` is your base domain, not the `matrix.` domain).
 
 If you're an allowed bot [👥 user](https://github.com/etkecc/baibot/blob/main/docs/access.md#user) (see [👥 Initial users configuration](#-initial-users-configuration)), the bot will accept your invitation and join the room.
 
@@ -399,10 +391,9 @@ After joining, the bot will introduce itself and show information about the [✨
 
 If you've [🤖 configured one or more agents via Ansible](#-configuring-agents-via-ansible) and have [🤝 configured initial default handlers](#configuring-initial-default-handlers), the bot will immediately be able to make use of these agents for this new room. Otherwise, you will need to configure agents and/or handlers via chat commands.
 
-Send `!bai help` to the room at any time to see the bot's help menu for additional commands.
+Send `!bai help` to the bot in the room to see the available commands.
 
 You can also refer to the upstream [baibot](https://github.com/etkecc/baibot) project's documentation.
-
 
 ## Debugging
 

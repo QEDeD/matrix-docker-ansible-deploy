@@ -1,14 +1,8 @@
 # Configuring the playbook
 
-<sup>⚡️[Quick start](README.md) | [Prerequisites](prerequisites.md) > [Configuring your DNS server](configuring-dns.md) > [Getting the playbook](getting-the-playbook.md) > Configuring the playbook > [Installing](installing.md) </sup>
+<sup>[Prerequisites](prerequisites.md) > [Configuring your DNS settings](configuring-dns.md) > [Getting the playbook](getting-the-playbook.md) > Configuring the playbook > [Installing](installing.md)</sup>
 
-To configure the Ansible playbook, you need to have done the following things:
-
-- have a server where Matrix services will run
-- [configured your DNS records](configuring-dns.md)
-- [retrieved the playbook's source code](getting-the-playbook.md) to your computer
-
-You can then follow these steps inside the playbook directory:
+If you've configured your DNS records and retrieved the playbook's source code to your computer, you can start configuring the playbook. To do so, follow these steps inside the playbook directory:
 
 1. create a directory to hold your configuration (`mkdir -p inventory/host_vars/matrix.example.com` where `example.com` is your "base domain")
 
@@ -28,8 +22,7 @@ For a basic Matrix installation, that's all you need.
 
 For a more custom setup, see the [Other configuration options](#other-configuration-options) below.
 
-When you're done with all the configuration you'd like to do, continue with [Installing](installing.md).
-
+[▶️](installing.md) When you're done with all the configuration you'd like to do, continue with [Installing](installing.md).
 
 ## Other configuration options
 
@@ -104,7 +97,7 @@ Extend and modify how users are authenticated on your homeserver.
 
 Use alternative file storage to the default `media_store` folder.
 
-- [Storing Matrix media files on Amazon S3 with Goofys](docs/configuring-playbook-s3-goofys.md)
+- [Storing Matrix media files on Amazon S3 with Goofys](configuring-playbook-s3-goofys.md)
 
 - [Storing Synapse media files on Amazon S3 or another compatible Object Storage](configuring-playbook-s3.md)
 
@@ -172,7 +165,6 @@ Bridges can be used to connect your Matrix installation with third-party communi
 
 - [Setting up WeChat bridging](configuring-playbook-bridge-wechat.md)
 
-
 ### Bots
 
 Bots provide various additional functionality to your installation.
@@ -203,7 +195,7 @@ Services that help you in administrating and monitoring your Matrix installation
 
 - [Enabling metrics and graphs (Prometheus, Grafana) for your Matrix server](configuring-playbook-prometheus-grafana.md)
 
-- [Enabling metrics and graphs for NginX logs](docs/configuring-playbook-prometheus-nginxlog.md)
+- [Enabling metrics and graphs for NginX logs](configuring-playbook-prometheus-nginxlog.md)
 
 - [Setting up the rageshake bug report server](configuring-playbook-rageshake.md)
 

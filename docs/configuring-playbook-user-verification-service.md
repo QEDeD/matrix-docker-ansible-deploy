@@ -39,15 +39,15 @@ For a list of all configuration options see the role defaults [`roles/matrix-use
 
 In the default configuration, the UVS Server is only reachable via the docker network, which is fine if e.g. Jitsi is also running in a container on the host. However, it is possible to expose UVS via setting `matrix_user_verification_service_container_http_host_bind_port`.
 
-### Access token
+### Obtain an access token
 
 The Synapse Access Token is used to verify RoomMembership and PowerLevel against `matrix_user_verification_service_uvs_homeserver_url`.
 
 We recommend that you create a dedicated Matrix user for uvs (`uvs` is a good username). Follow our [Registering users](registering-users.md) guide to register a user with administration privileges.
 
-You are required to specify an access token (belonging to this new user) for UVS to work. To get an access token for the UVS user, you can follow the documentation on [how to do obtain an access token](obtaining-access-tokens.md).
+You are required to specify an access token (belonging to this new user) for UVS to work. Refer to the documentation on [how to obtain an access token](obtaining-access-tokens.md).
 
-**Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.**
+⚠️ **Warning**: Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.
 
 ```yaml
 matrix_user_verification_service_uvs_access_token: "YOUR ACCESS TOKEN HERE"
@@ -59,7 +59,7 @@ It is possible to set an API Auth Token to restrict access to the UVS. If this i
 
 By default, the token will be derived from `matrix_homeserver_generic_secret_key` in `group_vars/matrix_servers`.
 
-To set your own Token, simply put the following in your host_vars.
+To set your own Token, add the following configuration to your `vars.yml` file:
 
 ```yaml
 matrix_user_verification_service_uvs_auth_token: "TOKEN"
@@ -67,34 +67,36 @@ matrix_user_verification_service_uvs_auth_token: "TOKEN"
 
 In case Jitsi is also managed by this playbook and 'matrix' authentication in Jitsi is enabled, this collection will automatically configure Jitsi to use the configured auth token.
 
-###  (Optional) Disable Auth
-Authorization is enabled by default. To disable set
+### (Optional) Disable Auth
+
+Authorization is enabled by default. To disable it, add the following configuration to your `vars.yml` file:
 
 ```yaml
 matrix_user_verification_service_uvs_require_auth: false
 ```
 
-in your host_vars.
-
 ### (Optional) Federation
 
-In theory (however currently untested), UVS can handle federation. Simply set:
+In theory (however currently untested), UVS can handle federation. To enable it, add the following configuration to your `vars.yml` file:
 
 ```yaml
 matrix_user_verification_service_uvs_pin_openid_verify_server_name: false
 ```
 
-in your host_vars.
-
 This will instruct UVS to verify the OpenID token against any domain given in a request. Homeserver discovery is done via '.well-known/matrix/server' of the given domain.
 
 ## Installing
 
-After these variables have been set, run the [installation](installing.md) command to restart UVS:
+After configuring the playbook, run it with [playbook tags](playbook-tags.md) as below:
 
+<!-- NOTE: let this conservative command run (instead of install-all) to make it clear that failure of the command means something is clearly broken. -->
+```sh
+ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,start
 ```
-ansible-playbook -i inventory/hosts setup.yml --tags=setup-matrix-user-verification-service,start
-```
+
+The shortcut commands with the [`just` program](just.md) are also available: `just install-service matrix-user-verification-service` or `just setup-all`
+
+`just install-service matrix-user-verification-service` is useful for maintaining your setup quickly when its components remain unchanged. If you adjust your `vars.yml` to remove other components, you'd need to run `just setup-all`, or these components will still remain installed. Note `just setup-all` runs the `ensure-matrix-users-created` tag too.
 
 ## Logging
 
@@ -104,6 +106,7 @@ The configuration variable `UVS_LOG_LEVEL` can be set to:
 - debug
 
 ## TLS Certificate Checking
+
 If the Matrix Homeserver does not provide a valid TLS certificate, UVS will fail with the following error message:
 
 > message: 'No response received: [object Object]',

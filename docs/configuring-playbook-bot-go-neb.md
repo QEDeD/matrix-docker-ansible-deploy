@@ -6,29 +6,31 @@ The playbook can install and configure [Go-NEB](https://github.com/matrix-org/go
 
 Go-NEB is a Matrix bot written in Go. It is the successor to Matrix-NEB, the original Matrix bot written in Python.
 
-See the project's [documentation](https://github.com/matrix-org/go-neb) to learn what it does and why it might be useful to you.
+See the project's [documentation](https://github.com/matrix-org/go-neb/blob/master/README.md) to learn what it does and why it might be useful to you.
 
+## Prerequisites
 
-## Registering the bot user
+### Register the bot account
 
-The playbook does not automatically create users for you. The bot requires at least 1 access token to be able to connect to your homeserver.
+The playbook does not automatically create users for you. You **need to register the bot user manually** before setting up the bot.
 
-You **need to register the bot user manually** before setting up the bot.
-
-Choose a strong password for the bot. You can generate a good password with a command like this: `pwgen -s 64 1`.
+Generate a strong password for the bot. You can create one with a command like `pwgen -s 64 1`.
 
 You can use the playbook to [register a new user](registering-users.md):
 
-```
+```sh
 ansible-playbook -i inventory/hosts setup.yml --extra-vars='username=bot.go-neb password=PASSWORD_FOR_THE_BOT admin=no' --tags=register-user
 ```
 
-Once the user is created you can [obtain an access token](obtaining-access-tokens.md).
+### Obtain an access token
 
+The bot requires an access token to be able to connect to your homeserver. Refer to the documentation on [how to obtain an access token](obtaining-access-tokens.md).
+
+⚠️ **Warning**: Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.
 
 ## Adjusting the playbook configuration
 
-To enable Go-NEB, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
+To enable the bot, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file. Make sure to replace `ACCESS_TOKEN_FOR_GONEB_HERE` and `ACCESS_TOKEN_FOR_ANOTHER_GONEB_HERE` with the ones created [above](#obtain-an-access-token).
 
 ```yaml
 matrix_bot_go_neb_enabled: true
@@ -37,7 +39,7 @@ matrix_bot_go_neb_enabled: true
 # Use the access token you obtained in the step above.
 matrix_bot_go_neb_clients:
   - UserID: "@goneb:{{ matrix_domain }}"
-    AccessToken: "MDASDASJDIASDJASDAFGFRGER"
+    AccessToken: "ACCESS_TOKEN_FOR_GONEB_HERE"
     DeviceID: "DEVICE1"
     HomeserverURL: "{{ matrix_addons_homeserver_client_api_url }}"
     Sync: true
@@ -46,7 +48,7 @@ matrix_bot_go_neb_clients:
     AcceptVerificationFromUsers: [":{{ matrix_domain }}"]
 
   - UserID: "@another_goneb:{{ matrix_domain }}"
-    AccessToken: "MDASDASJDIASDJASDAFGFRGER"
+    AccessToken: "ACCESS_TOKEN_FOR_ANOTHER_GONEB_HERE"
     DeviceID: "DEVICE2"
     HomeserverURL: "{{ matrix_addons_homeserver_client_api_url }}"
     Sync: false
@@ -64,7 +66,7 @@ matrix_bot_go_neb_realms:
 matrix_bot_go_neb_sessions:
   - SessionID: "your_github_session"
     RealmID: "github_realm"
-    UserID: "@YOUR_USER_ID:{{ matrix_domain }}" # This needs to be the username of the person that's allowed to use the !github commands
+    UserID: "@alice:{{ matrix_domain }}" # This needs to be the username of the person that's allowed to use the !github commands
     Config:
       # Populate these fields by generating a "Personal Access Token" on github.com
       AccessToken: "YOUR_GITHUB_ACCESS_TOKEN"
@@ -107,7 +109,7 @@ matrix_bot_go_neb_services:
       api_key: "AIzaSyA4FD39m9"
       cx: "AIASDFWSRRtrtr"
 
-# Get a key via https://api.imgur.com/oauth2/addclient
+# Obtain a key via https://api.imgur.com/oauth2/addclient
 # Select "oauth2 without callback url"
   - ID: "imgur_service"
     Type: "imgur"
@@ -151,7 +153,7 @@ matrix_bot_go_neb_services:
     UserID: "@another_goneb:{{ matrix_domain }}"
     Config:
       RealmID: "github_realm"
-      ClientUserID: "@YOUR_USER_ID:{{ matrix_domain }}" # needs to be an authenticated user so Go-NEB can create webhooks. Check the UserID field in the github_realm in matrix_bot_go_neb_sessions.
+      ClientUserID: "@alice:{{ matrix_domain }}" # needs to be an authenticated user so Go-NEB can create webhooks. Check the UserID field in the github_realm in matrix_bot_go_neb_sessions.
       Rooms:
         "!qporfwt:example.com":
           Repos:
@@ -219,19 +221,27 @@ If you've decided to reuse the `matrix.` domain, you won't need to do any extra 
 
 ## Installing
 
-After configuring the playbook and potentially [adjusting your DNS records](#adjusting-dns-records), run the [installation](installing.md) command:
+After configuring the playbook and potentially [adjusting your DNS records](#adjusting-dns-records), run the playbook with [playbook tags](playbook-tags.md) as below:
 
-```
-ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,start
+<!-- NOTE: let this conservative command run (instead of install-all) to make it clear that failure of the command means something is clearly broken. -->
+```sh
+ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,ensure-matrix-users-created,start
 ```
 
+**Notes**:
+
+- The `ensure-matrix-users-created` playbook tag makes the playbook automatically create the bot's user account.
+
+- The shortcut commands with the [`just` program](just.md) are also available: `just install-all` or `just setup-all`
+
+  `just install-all` is useful for maintaining your setup quickly ([2x-5x faster](../CHANGELOG.md#2x-5x-performance-improvements-in-playbook-runtime) than `just setup-all`) when its components remain unchanged. If you adjust your `vars.yml` to remove other components, you'd need to run `just setup-all`, or these components will still remain installed.
 
 ## Usage
 
-To use the bot, invite it to any existing Matrix room (`/invite @whatever_you_chose:example.com` where `example.com` is your base domain, not the `matrix.` domain, make sure you have permission from the room owner if that's not you).
+To use the bot, invite it to any existing Matrix room (`/invite @bot.go-neb:example.com` where `example.com` is your base domain, not the `matrix.` domain). Make sure you are granted with the sufficient permission if you are not the room owner.
 
 Basic usage is like this: `!echo hi` or `!imgur puppies` or `!giphy matrix`
 
-If you enabled the github_cmd service you can get the supported commands via `!github help`
+If you enabled the github_cmd service, send `!github help` to the bot in the room to see the available commands.
 
 You can also refer to the upstream [Documentation](https://github.com/matrix-org/go-neb).

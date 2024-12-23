@@ -18,7 +18,7 @@ By default, if you're using the integrated Postgres database server (as opposed 
 
 2. Create a new SSH key:
 
-    ```bash
+    ```sh
     ssh-keygen -t ed25519 -N '' -f matrix-borg-backup -C matrix
     ```
 
@@ -28,7 +28,7 @@ By default, if you're using the integrated Postgres database server (as opposed 
 
     If you plan to use a hosted solution, follow their instructions. If you have your own server, copy the key over:
 
-    ```bash
+    ```sh
     # example to append the new PUBKEY contents, where:
     # PUBKEY is path to the public key,
     # USER is a ssh user on a provider / server
@@ -60,7 +60,7 @@ where:
 * USER - SSH user of a provider/server
 * HOST - SSH host of a provider/server
 * REPO - BorgBackup repository name, it will be initialized on backup start, eg: `matrix`, regarding Syntax see [Remote repositories](https://borgbackup.readthedocs.io/en/stable/usage/general.html#repository-urls)
-* PASSPHRASE - passphrase used for encrypting backups, you may generate it with `pwgen -s 64 1` or use any password manager
+* PASSPHRASE - passphrase used for encrypting backups. You can create one with a command like `pwgen -s 64 1`.
 * PRIVATE KEY - the content of the **private** part of the SSH key you created before. The whole key (all of its belonging lines) under `backup_borg_ssh_key_private` needs to be indented with 2 spaces
 
 To backup without encryption, add `backup_borg_encryption: 'none'` to your vars. This will also enable the `backup_borg_unknown_unencrypted_repo_access_is_ok` variable.
@@ -71,11 +71,16 @@ Check the [backup_borg role](https://github.com/mother-of-all-self-hosting/ansib
 
 ## Installing
 
-After configuring the playbook, run the [installation](installing.md) command:
+After configuring the playbook, run it with [playbook tags](playbook-tags.md) as below:
 
-```
+<!-- NOTE: let this conservative command run (instead of install-all) to make it clear that failure of the command means something is clearly broken. -->
+```sh
 ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,start
 ```
+
+The shortcut commands with the [`just` program](just.md) are also available: `just install-all` or `just setup-all`
+
+`just install-all` is useful for maintaining your setup quickly ([2x-5x faster](../CHANGELOG.md#2x-5x-performance-improvements-in-playbook-runtime) than `just setup-all`) when its components remain unchanged. If you adjust your `vars.yml` to remove other components, you'd need to run `just setup-all`, or these components will still remain installed. Note these shortcuts run the `ensure-matrix-users-created` tag too.
 
 ## Manually start a backup
 

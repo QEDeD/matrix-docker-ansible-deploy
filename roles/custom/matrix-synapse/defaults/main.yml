@@ -16,7 +16,7 @@ matrix_synapse_enabled: true
 matrix_synapse_github_org_and_repo: element-hq/synapse
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/synapse
-matrix_synapse_version: v1.119.0
+matrix_synapse_version: v1.121.1
 
 matrix_synapse_username: ''
 matrix_synapse_uid: ''
@@ -56,7 +56,7 @@ matrix_synapse_container_image_customizations_auto_accept_invite_installation_en
 #
 # Example usage:
 #
-# ```yml
+# ```yaml
 # matrix_synapse_container_image_customizations_templates_enabled: true
 # # The templates are expected to be in a `templates/` subdirectory in
 # matrix_synapse_container_image_customizations_templates_in_container_template_files_relative_path: templates/
@@ -78,7 +78,7 @@ matrix_synapse_container_image_customizations_templates_git_repository_keyscan_h
 
 # matrix_synapse_container_image_customizations_dockerfile_body contains your custom Dockerfile steps
 # for building your customized Synapse image based on the original (upstream) image (`matrix_synapse_docker_image`).
-# A `FROM ...` clause is included automatically so you don't have to.
+# A `FROM …` clause is included automatically so you don't have to.
 #
 # Example:
 # matrix_synapse_container_image_customizations_dockerfile_body_custom: |
@@ -369,6 +369,27 @@ matrix_synapse_media_retention_remote_media_lifetime:
 
 # Controls the list of additional oembed providers to be added to the homeserver.
 matrix_synapse_oembed_additional_providers: []
+
+# Controls message retention policies
+matrix_synapse_retention_enabled: false
+# "A single var to control them all" - applied to all retention period vars, applied only if a value is set, e.g. : "1d", "1w", "1m", "1y"
+matrix_synapse_retention_period: ""
+# The default min lifetime, applied only if a value is set, e.g. : "1d", "1w", "1m", "1y"
+matrix_synapse_retention_default_policy_min_lifetime: "{{ matrix_synapse_retention_period }}"
+# The default max lifetime, applied only if a value is set, e.g. : "1d", "1w", "1m", "1y"
+matrix_synapse_retention_default_policy_max_lifetime: "{{ matrix_synapse_retention_period }}"
+# The allowed min lifetime, applied only if a value is set, e.g. : "1d", "1w", "1m", "1y"
+matrix_synapse_retention_allowed_lifetime_min: "{{ matrix_synapse_retention_period }}"
+# The allowed max lifetime, applied only if a value is set, e.g. : "1d", "1w", "1m", "1y"
+matrix_synapse_retention_allowed_lifetime_max: "{{ matrix_synapse_retention_period }}"
+# The list of the purge jobs, structure (all fields are optional, example below contains all available variants):
+# - longest_max_lifetime: "1d"
+#   shortest_max_lifetime: "1d"
+#   interval: "12h"
+# - longest_max_lifetime: "1d"
+# - shortest_max_lifetime: "1d"
+# - interval: "12h"
+matrix_synapse_retention_purge_jobs: []
 
 # The tmpfs at /tmp needs to be large enough to handle multiple concurrent file uploads.
 matrix_synapse_tmp_directory_size_mb: "{{ matrix_synapse_max_upload_size_mb * 50 }}"
@@ -989,10 +1010,10 @@ matrix_synapse_workers_media_repository_workers_container_arguments: []
 # Adjusting this value manually is generally not necessary.
 matrix_synapse_enable_media_repo: "{{ not matrix_synapse_ext_media_repo_enabled and (not matrix_synapse_workers_enabled or (matrix_synapse_workers_enabled_list | selectattr('type', 'equalto', 'media_repository') | list | length == 0)) }}"
 
-# matrix_synapse_enable_authenticated_media controls if authenticated media is enabled. If enabled all "old" media remains accessible over the legacy endpoints but new media is blocked.
+# matrix_synapse_enable_authenticated_media controls if authenticated media is enabled.
+# If enabled all "old" media remains accessible over the legacy endpoints but new media is blocked.
 # while this option is enabled all media access and downloads have to be done via authenticated endpoints.
-# FIX_ME_WHEN_DEFAULT_TRUE: This option is going to become set to default true in Synapse at a later date.
-matrix_synapse_enable_authenticated_media: false
+matrix_synapse_enable_authenticated_media: true
 
 # matrix_synapse_media_instance_running_background_jobs populates the `media_instance_running_background_jobs` Synapse configuration used when Synapse workers are in use (`matrix_synapse_workers_enabled`).
 # `media_instance_running_background_jobs` is meant to point to a single media-repository worker, which is dedicated to running background tasks that maintain the media repository.
@@ -1418,7 +1439,7 @@ matrix_synapse_media_storage_providers_auto: |
 # matrix_synapse_media_storage_providers_custom:
 # - module: module.SomeModule
 #   store_local: True
-#   # ...
+#   # …
 matrix_synapse_media_storage_providers_custom: []
 
 matrix_synapse_encryption_enabled_by_default_for_room_type: "off"

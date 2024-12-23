@@ -18,7 +18,7 @@ There are some additional things you may wish to configure about the bridge befo
 To **configure a user as an administrator for all bridges**, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
 
 ```yaml
-matrix_admin: "@YOUR_USERNAME:{{ matrix_domain }}"
+matrix_admin: "@alice:{{ matrix_domain }}"
 ```
 
 **Alternatively** (more verbose, but allows multiple admins to be configured), you can do the same on a per-bridge basis with:
@@ -27,7 +27,7 @@ matrix_admin: "@YOUR_USERNAME:{{ matrix_domain }}"
 matrix_mautrix_SERVICENAME_configuration_extension_yaml: |
   bridge:
     permissions:
-      '@YOUR_USERNAME:{{ matrix_domain }}': admin
+      '@alice:{{ matrix_domain }}': admin
 ```
 
 ## encryption
@@ -73,7 +73,7 @@ You can only have one `matrix_mautrix_SERVICENAME_configuration_extension_yaml` 
 matrix_mautrix_SERVICENAME_configuration_extension_yaml: |
   bridge:
     permissions:
-      '@YOUR_USERNAME:{{ matrix_domain }}': admin
+      '@alice:{{ matrix_domain }}': admin
     encryption:
       allow: true
       default: true
@@ -93,13 +93,26 @@ You may wish to look at `roles/custom/matrix-bridge-mautrix-SERVICENAME/template
 
 ## Installing
 
-After configuring the playbook, run the [installation](installing.md) command: `just install-all` or `just setup-all`
+After configuring the playbook, run it with [playbook tags](playbook-tags.md) as below:
+
+<!-- NOTE: let this conservative command run (instead of install-all) to make it clear that failure of the command means something is clearly broken. -->
+```sh
+ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,ensure-matrix-users-created,start
+```
+
+**Notes**:
+
+- The `ensure-matrix-users-created` playbook tag makes the playbook automatically create the bot's user account.
+
+- The shortcut commands with the [`just` program](just.md) are also available: `just install-all` or `just setup-all`
+
+  `just install-all` is useful for maintaining your setup quickly ([2x-5x faster](../CHANGELOG.md#2x-5x-performance-improvements-in-playbook-runtime) than `just setup-all`) when its components remain unchanged. If you adjust your `vars.yml` to remove other components, you'd need to run `just setup-all`, or these components will still remain installed.
 
 ## Set up Double Puppeting
 
 To set up [Double Puppeting](https://docs.mau.fi/bridges/general/double-puppeting.html) enable the [Appservice Double Puppet](configuring-playbook-appservice-double-puppet.md) service for this playbook.
 
-The bridge will automatically perform Double Puppeting if you enable [Shared Secret Auth](configuring-playbook-shared-secret-auth.md) for this playbook by adding
+The bridge automatically performs Double Puppeting if [Shared Secret Auth](configuring-playbook-shared-secret-auth.md) is configured and enabled on the server for this playbook by adding
 
 ```yaml
 matrix_appservice_double_puppet_enabled: true
@@ -117,16 +130,13 @@ to `vars.yml` to control the logging level, where you may replace WARN with one 
 
 If you have issues with a service, and are requesting support, the higher levels of logging will generally be more helpful.
 
-
 ## Usage
 
-You then need to start a chat with `@SERVICENAMEbot:example.com` (where `example.com` is your base domain, not the `matrix.` domain).
+To use the bridge, you need to start a chat with `@SERVICENAMEbot:example.com` (where `example.com` is your base domain, not the `matrix.` domain).
 
 Send `login` to the bridge bot to get started. You can learn more here about authentication from the bridge's official documentation on Authentication: https://docs.mau.fi/bridges/python/SERVICENAME/authentication.html
 
 If you run into trouble, check the [Troubleshooting](#troubleshooting) section below.
-
-
 
 ## Troubleshooting
 

@@ -3,7 +3,8 @@
 ## How to see the current status of your services
 
 You can check the status of your services by using `systemctl status`. Example:
-```
+
+```sh
 sudo systemctl status matrix-synapse
 
 ● matrix-synapse.service - Synapse server
@@ -20,7 +21,6 @@ To view systemd-journald logs using [journalctl](https://man.archlinux.org/man/j
 ```sh
 sudo journalctl -fu matrix-synapse
 ```
-
 
 ## Increasing Synapse logging
 
@@ -41,9 +41,12 @@ Re-run the playbook after making these configuration changes.
 ## Remove unused Docker data
 
 You can free some disk space from Docker, see [docker system prune](https://docs.docker.com/engine/reference/commandline/system_prune/) for more information.
-```bash
+
+```sh
 ansible-playbook -i inventory/hosts setup.yml --tags=run-docker-prune
 ```
+
+The shortcut command with `just` program is also available: `just run-tags run-docker-prune`
 
 ## Postgres
 

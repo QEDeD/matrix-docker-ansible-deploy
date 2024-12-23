@@ -2,7 +2,7 @@
 
 When setting up some optional features like bots and bridges you will need to provide an access token for some user. This document provides documentation on how to obtain such an access token.
 
-**Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.**
+⚠️ **Warning**: Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.
 
 ## Prerequisites
 
@@ -20,14 +20,13 @@ Below, we describe 2 ways to generate an access token for a user - using [Elemen
 
 ![Obtaining an access token with Element Web](assets/obtain_admin_access_token_element_web.png)
 
-
 ## Obtain an access token via curl
 
 You can use the following command to get an access token for your user directly from the [Matrix Client-Server API](https://www.matrix.org/docs/guides/client-server-api#login):
 
-```
+```sh
 curl -XPOST -d '{
-    "identifier": { "type": "m.id.user", "user": "USERNAME" },
+    "identifier": { "type": "m.id.user", "user": "alice" },
     "password": "PASSWORD",
     "type": "m.login.password",
     "device_id": "YOURDEVICEID"
@@ -41,7 +40,7 @@ Your response will look like this (prettified):
 
 ```
 {
-    "user_id":"@USERNAME:example.com",
+    "user_id":"@alice:example.com",
     "access_token":">>>YOUR_ACCESS_TOKEN_IS_HERE<<<",
     "home_server":"example.com",
     "device_id":"YOURDEVICEID"

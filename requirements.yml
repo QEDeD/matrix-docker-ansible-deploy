@@ -4,13 +4,13 @@
   version: v1.0.0-5
   name: auxiliary
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg.git
-  version: v1.4.0-1.9.1-0
+  version: v1.4.0-1.9.4-0
   name: backup_borg
 - src: git+https://github.com/devture/com.devture.ansible.role.container_socket_proxy.git
   version: v0.2.0-0
   name: container_socket_proxy
 - src: git+https://github.com/geerlingguy/ansible-role-docker
-  version: 7.4.1
+  version: 7.4.3
   name: docker
 - src: git+https://github.com/devture/com.devture.ansible.role.docker_sdk_for_python.git
   version: 129c8590e106b83e6f4c259649a613c6279e937a
@@ -19,13 +19,13 @@
   version: v2.2.6-0
   name: etherpad
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-exim-relay.git
-  version: v4.98-r0-1-1
+  version: v4.98-r0-3-0
   name: exim_relay
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-grafana.git
-  version: v11.3.0-0
+  version: v11.4.0-0
   name: grafana
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-jitsi.git
-  version: v9823-0
+  version: v9909-0
   name: jitsi
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-keydb.git
   version: v6.3.4-3
@@ -43,10 +43,10 @@
   version: ff2fd42e1c1a9e28e3312bbd725395f9c2fc7f16
   name: playbook_state_preserver
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-postgres.git
-  version: v17.0-1
+  version: v17.2-0
   name: postgres
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-postgres-backup.git
-  version: v16-0
+  version: v17-0
   name: postgres_backup
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus.git
   version: v2.55.1-0
@@ -70,8 +70,11 @@
   version: v1.0.0-0
   name: timesync
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-traefik.git
-  version: v3.2.0-1
+  version: v3.2.2-0
   name: traefik
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-traefik-certs-dumper.git
   version: v2.8.3-5
   name: traefik_certs_dumper
+- src: git+https://github.com/mother-of-all-self-hosting/ansible-role-valkey.git
+  version: v8.0.1-0
+  name: valkey
