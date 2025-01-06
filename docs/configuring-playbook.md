@@ -26,6 +26,8 @@ For a more custom setup, see the [Other configuration options](#other-configurat
 
 ## Other configuration options
 
+**Note**: some of the roles like one for integrating Etherpad or Jitsi are managed by their own repositories, and the configuration files for them cannot be found locally (in `roles/galaxy`) until those roles are fetched from the upstream projects. Check [requirements.yml](../requirements.yml) for the URLs of those roles.
+
 ### Core service adjustments
 
 - Homeserver configuration:
@@ -106,6 +108,8 @@ Use alternative file storage to the default `media_store` folder.
 ### Bridging other networks
 
 Bridges can be used to connect your Matrix installation with third-party communication networks.
+
+- [Setting up a Generic Mautrix Bridge](configuring-playbook-bridge-mautrix-bridges.md) - a common guide for configuring mautrix bridges
 
 - [Setting up Mautrix Discord bridging](configuring-playbook-bridge-mautrix-discord.md)
 
