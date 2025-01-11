@@ -2,6 +2,8 @@
 
 The playbook can install and configure various [mautrix](https://github.com/mautrix) bridges (twitter, discord, signal, googlechat, etc.), as well as many other (non-mautrix) bridges. This is a common guide for configuring mautrix bridges.
 
+The author of the bridges maintains [the official docs](https://docs.mau.fi/bridges/index.html), whose source code is available at [mautrix/docs](https://github.com/mautrix/docs) repository on GitHub. You may as well to refer it while configuring them.
+
 You can see each bridge's features on the `ROADMAP.md` file in its corresponding mautrix repository.
 
 ## Adjusting the playbook configuration
@@ -26,6 +28,8 @@ Different levels of permission can be granted to users. For example, to **config
 ```yaml
 matrix_admin: "@alice:{{ matrix_domain }}"
 ```
+
+If you don't define the `matrix_admin` in your configuration (e.g. `matrix_admin: @alice:example.com`), then there's no admin by default.
 
 **Alternatively** (more verbose, but allows multiple admins to be configured), you can do the same on a per-bridge basis with:
 
@@ -84,6 +88,8 @@ You can only have one `matrix_mautrix_SERVICENAME_configuration_extension_yaml` 
 ```yaml
 matrix_mautrix_SERVICENAME_configuration_extension_yaml: |
   bridge:
+    relay:
+      enabled: true
     permissions:
       '@alice:{{ matrix_domain }}': admin
     encryption:
@@ -153,7 +159,9 @@ ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,ensure-matrix-use
 
 To use the bridge, you need to start a chat with `@SERVICENAMEbot:example.com` (where `example.com` is your base domain, not the `matrix.` domain).
 
-Send `login` to the bridge bot to get started. You can learn more here about authentication from the bridge's official documentation on Authentication: https://docs.mau.fi/bridges/python/SERVICENAME/authentication.html
+For details about the next steps, refer to each bridge's individual documentation page.
+
+Send `help` to the bot to see the available commands.
 
 If you run into trouble, check the [Troubleshooting](#troubleshooting) section below.
 
@@ -200,4 +208,6 @@ When using this method, **each user** that wishes to enable Double Puppeting nee
 
 For troubleshooting information with a specific bridge, please see the playbook documentation about it (some other document in in `docs/`) and the upstream ([mautrix](https://github.com/mautrix)) bridge documentation for that specific bridge.
 
-Reporting bridge bugs should happen upstream, in the corresponding mautrix repository, not to us.
+If the bridge's bot doesn't accept the invite to a chat, refer [the official troubleshooting page](https://docs.mau.fi/bridges/general/troubleshooting.html) as well.
+
+If you found bugs in mautrix bridges, they should be reported to the upstream project, in the corresponding mautrix repository, not to us.

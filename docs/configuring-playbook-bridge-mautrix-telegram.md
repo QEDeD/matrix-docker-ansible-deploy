@@ -1,5 +1,7 @@
 # Setting up Mautrix Telegram bridging (optional)
 
+<sup>Refer the common guide for configuring mautrix bridges: [Setting up a Generic Mautrix Bridge](configuring-playbook-bridge-mautrix-bridges.md)</sup>
+
 The playbook can install and configure [mautrix-telegram](https://github.com/mautrix/telegram) for you.
 
 See the project's [documentation](https://docs.mau.fi/bridges/python/telegram/index.html) to learn what it does and why it might be useful to you.
@@ -14,7 +16,13 @@ To use the bridge, you'd need to obtain an API key from [https://my.telegram.org
 
 If you want to set up [Double Puppeting](https://docs.mau.fi/bridges/general/double-puppeting.html) (hint: you most likely do) for this bridge automatically, you need to have enabled [Appservice Double Puppet](configuring-playbook-appservice-double-puppet.md) or [Shared Secret Auth](configuring-playbook-shared-secret-auth.md) service for this playbook.
 
-For details about configuring Double Puppeting for this bridge, see the section below: [Set up Double Puppeting](#-set-up-double-puppeting)
+See [this section](configuring-playbook-bridge-mautrix-bridges.md#set-up-double-puppeting-optional) on the [common guide for configuring mautrix bridges](configuring-playbook-bridge-mautrix-bridges.md) for details about setting up Double Puppeting.
+
+**Notes**:
+
+- Double puppeting with the Shared Secret Auth works at the time of writing, but is deprecated and will stop working in the future.
+
+- If you decided to enable Double Puppeting manually, send `login-matrix` to the bot in order to receive an instruction about how to send an access token to it.
 
 ## Adjusting the playbook configuration
 
@@ -25,6 +33,41 @@ matrix_mautrix_telegram_enabled: true
 matrix_mautrix_telegram_api_id: YOUR_TELEGRAM_APP_ID
 matrix_mautrix_telegram_api_hash: YOUR_TELEGRAM_API_HASH
 ```
+
+### Relaying
+
+### Enable relay-bot (optional)
+
+If you want to use the relay-bot feature ([relay bot documentation](https://docs.mau.fi/bridges/python/telegram/relay-bot.html)), which allows anonymous user to chat with telegram users, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
+
+```yaml
+matrix_mautrix_telegram_bot_token: YOUR_TELEGRAM_BOT_TOKEN
+matrix_mautrix_telegram_configuration_extension_yaml: |
+  bridge:
+    permissions:
+      '*': relaybot
+```
+
+### Configure a user as an administrator of the bridge (optional)
+
+You might also want to give permissions to a user to administrate the bot. See [this section](configuring-playbook-bridge-mautrix-bridges.md#configure-bridge-permissions-optional) on the common guide for details about it.
+
+More details about permissions in this example: https://github.com/mautrix/telegram/blob/master/mautrix_telegram/example-config.yaml#L410
+
+### Use the bridge for direct chats only (optional)
+
+If you want to exclude all groups from syncing and use the Telegram-Bridge only for direct chats, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
+
+```yaml
+matrix_mautrix_telegram_filter_mode: whitelist
+```
+
+### Extending the configuration
+
+There are some additional things you may wish to configure about the bridge.
+
+<!-- NOTE: common relay mode is not supported for this bridge -->
+See [this section](configuring-playbook-bridge-mautrix-bridges.md#extending-the-configuration) on the [common guide for configuring mautrix bridges](configuring-playbook-bridge-mautrix-bridges.md) for details about variables that you can customize and the bridge's default configuration, including [bridge permissions](configuring-playbook-bridge-mautrix-bridges.md#configure-bridge-permissions-optional), [encryption support](configuring-playbook-bridge-mautrix-bridges.md#enable-encryption-optional), [bot's username](configuring-playbook-bridge-mautrix-bridges.md#set-the-bots-username-optional), etc.
 
 ## Installing
 
@@ -47,55 +90,6 @@ ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,ensure-matrix-use
 
 To use the bridge, you need to start a chat with `@telegrambot:example.com` (where `example.com` is your base domain, not the `matrix.` domain).
 
-If you want to use the relay-bot feature ([relay bot documentation](https://docs.mau.fi/bridges/python/telegram/relay-bot.html)), which allows anonymous user to chat with telegram users, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
+You can then follow instructions on the bridge's [official documentation on Authentication](https://docs.mau.fi/bridges/python/telegram/authentication.html).
 
-```yaml
-matrix_mautrix_telegram_bot_token: YOUR_TELEGRAM_BOT_TOKEN
-matrix_mautrix_telegram_configuration_extension_yaml: |
-  bridge:
-    permissions:
-      '*': relaybot
-```
-
-You might also want to give permissions to administrate the bot:
-
-```yaml
-matrix_mautrix_telegram_configuration_extension_yaml: |
-  bridge:
-    permissions:
-      '@alice:{{ matrix_domain }}': admin
-```
-
-More details about permissions in this example: https://github.com/mautrix/telegram/blob/master/mautrix_telegram/example-config.yaml#L410
-
-If you like to exclude all groups from syncing and use the Telgeram-Bridge only for direct chats, you can add the following additional playbook configuration:
-
-```yaml
-matrix_mautrix_telegram_filter_mode: whitelist
-```
-
-### 💡 Set up Double Puppeting
-
-After successfully enabling bridging, you may wish to set up [Double Puppeting](https://docs.mau.fi/bridges/general/double-puppeting.html) (hint: you most likely do).
-
-To set it up, you have 2 ways of going about it.
-
-#### Method 1: automatically, by enabling Appservice Double Puppet or Shared Secret Auth
-
-The bridge automatically performs Double Puppeting if [Appservice Double Puppet](configuring-playbook-appservice-double-puppet.md) or [Shared Secret Auth](configuring-playbook-shared-secret-auth.md) service is configured and enabled on the server for this playbook.
-
-Enabling [Appservice Double Puppet](configuring-playbook-appservice-double-puppet.md) is the recommended way of setting up Double Puppeting, as it's easier to accomplish, works for all your users automatically, and has less of a chance of breaking in the future.
-
-Enabling double puppeting by enabling the [Shared Secret Auth](configuring-playbook-shared-secret-auth.md) service works at the time of writing, but is deprecated and will stop working in the future.
-
-#### Method 2: manually, by asking each user to provide a working access token
-
-**Note**: This method for enabling Double Puppeting can be configured only after you've already set up bridging.
-
-When using this method, **each user** that wishes to enable Double Puppeting needs to follow the following steps:
-
-- retrieve a Matrix access token for yourself. Refer to the documentation on [how to obtain one](obtaining-access-tokens.md).
-
-- send `login-matrix` to the bot and follow instructions about how to send the access token to it
-
-- make sure you don't log out the `Mautrix-Telegram` device some time in the future, as that would break the Double Puppeting feature
+After logging in, the bridge will create portal rooms for all of your Telegram groups and invite you to them. Note that the bridge won't automatically create rooms for private chats.
