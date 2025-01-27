@@ -26,7 +26,14 @@ ansible-playbook -i inventory/hosts setup.yml --extra-vars='username=bot.go-neb 
 
 The bot requires an access token to be able to connect to your homeserver. Refer to the documentation on [how to obtain an access token](obtaining-access-tokens.md).
 
-⚠️ **Warning**: Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.
+> [!WARNING]
+> Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.
+
+## Adjusting DNS records
+
+By default, this playbook installs Go-NEB on the `goneb.` subdomain (`goneb.example.com`) and requires you to create a CNAME record for `goneb`, which targets `matrix.example.com`.
+
+When setting, replace `example.com` with your own.
 
 ## Adjusting the playbook configuration
 
@@ -194,28 +201,22 @@ matrix_bot_go_neb_services:
           msg_type: "m.text"  # Must be either `m.text` or `m.notice`
 ```
 
-### Adjusting the Go-NEB URL
-
-By default, this playbook installs Go-NEB on the `goneb.` subdomain (`goneb.example.com`) and requires you to [adjust your DNS records](#adjusting-dns-records).
+### Adjusting the Go-NEB URL (optional)
 
 By tweaking the `matrix_bot_go_neb_hostname` and `matrix_bot_go_neb_path_prefix` variables, you can easily make the service available at a **different hostname and/or path** than the default one.
 
-Example additional configuration for your `inventory/host_vars/matrix.example.com/vars.yml` file:
+Example additional configuration for your `vars.yml` file:
 
 ```yaml
 # Switch to the domain used for Matrix services (`matrix.example.com`),
 # so we won't need to add additional DNS records for Go-NEB.
 matrix_bot_go_neb_hostname: "{{ matrix_server_fqn_matrix }}"
 
-# Expose under the /buscarron subpath
+# Expose under the /go-neb subpath
 matrix_bot_go_neb_path_prefix: /go-neb
 ```
 
-## Adjusting DNS records
-
-Once you've decided on the domain and path, **you may need to adjust your DNS** records to point the Go-NEB domain to the Matrix server.
-
-By default, you will need to create a CNAME record for `goneb`. See [Configuring DNS](configuring-dns.md) for details about DNS changes.
+After changing the domain, **you may need to adjust your DNS** records to point the Go-NEB domain to the Matrix server.
 
 If you've decided to reuse the `matrix.` domain, you won't need to do any extra DNS configuration.
 

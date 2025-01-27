@@ -6,6 +6,12 @@ After setting up maubot, you can use the web management interface to make it do 
 
 See the project's [documentation](https://docs.mau.fi/maubot/usage/basic.html) to learn what it does and why it might be useful to you.
 
+## Adjusting DNS records (optional)
+
+By default, this playbook installs maubot on the `matrix.` subdomain, at the `/_matrix/maubot/` path (https://matrix.example.com/_matrix/maubot/). This makes it easy to install it, because it **doesn't require additional DNS records to be set up**.
+
+If you wish to adjust it, see the section [below](#adjusting-the-maubot-url-optional) for details about DNS configuration.
+
 ## Adjusting the playbook configuration
 
 To enable the bot, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
@@ -25,13 +31,11 @@ matrix_bot_maubot_admins:
 
 You can add multiple admins. The admin accounts are only used to access the maubot administration interface.
 
-### Adjusting the maubot URL
-
-By default, this playbook installs maubot on the `matrix.` subdomain, at the `/_matrix/maubot/` path (https://matrix.example.com/_matrix/maubot/). This makes it easy to install it, because it **doesn't require additional DNS records to be set up**. If that's okay, you can skip this section.
+### Adjusting the maubot URL (optional)
 
 By tweaking the `matrix_bot_maubot_hostname` and `matrix_bot_maubot_path_prefix` variables, you can easily make the service available at a **different hostname and/or path** than the default one.
 
-Example additional configuration for your `inventory/host_vars/matrix.example.com/vars.yml` file:
+Example additional configuration for your `vars.yml` file:
 
 ```yaml
 # Change the default hostname and path prefix
@@ -39,13 +43,9 @@ matrix_bot_maubot_hostname: maubot.example.com
 matrix_bot_maubot_path_prefix: /
 ```
 
-## Adjusting DNS records
+If you've changed the default hostname, you may need to create a CNAME record for the maubot domain (`maubot.example.com`), which targets `matrix.example.com`.
 
-If you've changed the default hostname, **you may need to adjust your DNS** records to point the maubot domain to the Matrix server.
-
-See [Configuring DNS](configuring-dns.md) for details about DNS changes.
-
-If you've decided to use the default hostname, you won't need to do any extra DNS configuration.
+When setting, replace `example.com` with your own.
 
 ## Customizing the maubot container image
 
@@ -53,7 +53,7 @@ Certain [maubot plugins](https://plugins.mau.bot/) require additional dependenci
 
 You can customize the default maubot container image and install your own dependencies.
 
-Example additional configuration for your `inventory/host_vars/matrix.example.com/vars.yml` file:
+Example additional configuration for your `vars.yml` file:
 
 ```yaml
 matrix_bot_maubot_container_image_customizations_enabled: true
@@ -100,4 +100,5 @@ This can be done via `mbc login` then `mbc auth` (see the [maubot documentation]
 
 Alternatively, you can refer to the documentation on [how to obtain an access token](obtaining-access-tokens.md). Be aware that you'd better use the **Obtain an access token via curl** method (not **Obtain an access token via Element Web**) as the latter will causes issues to your bot in encrypted rooms. Read [more](https://docs.mau.fi/maubot/usage/basic.html#creating-clients).
 
-⚠️ **Warning**: Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.
+> [!WARNING]
+> Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.

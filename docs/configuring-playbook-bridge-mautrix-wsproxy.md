@@ -6,6 +6,12 @@ The playbook can install and configure [mautrix-wsproxy](https://github.com/maut
 
 See the project's [documentation](https://github.com/mautrix/wsproxy/blob/master/README.md) to learn what it does and why it might be useful to you.
 
+## Adjusting DNS records
+
+By default, this playbook installs wsproxy on the `wsproxy.` subdomain (`wsproxy.example.com`) and requires you to create a CNAME record for `wsproxy`, which targets `matrix.example.com`.
+
+When setting, replace `example.com` with your own.
+
 ## Adjusting the playbook configuration
 
 To enable the bridge, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
@@ -22,30 +28,24 @@ matrix_mautrix_wsproxy_syncproxy_shared_secret: 'secret token from bridge'
 
 Note that the tokens must match what is compiled into the [mautrix-imessage](https://github.com/mautrix/imessage) bridge running on your Mac or Android device.
 
-### Extending the configuration
-
-There are some additional things you may wish to configure about the bridge.
-
-See [this section](configuring-playbook-bridge-mautrix-bridges.md#extending-the-configuration) on the [common guide for configuring mautrix bridges](configuring-playbook-bridge-mautrix-bridges.md) for details about variables that you can customize and the bridge's default configuration, including [bridge permissions](configuring-playbook-bridge-mautrix-bridges.md#configure-bridge-permissions-optional), [encryption support](configuring-playbook-bridge-mautrix-bridges.md#enable-encryption-optional), [relay mode](configuring-playbook-bridge-mautrix-bridges.md#enable-relay-mode-optional), [bot's username](configuring-playbook-bridge-mautrix-bridges.md#set-the-bots-username-optional), etc.
-
-### Adjusting the wsproxy URL
-
-By default, this playbook installs wsproxy on the `wsproxy.` subdomain (`wsproxy.example.com`) and requires you to [adjust your DNS records](#adjusting-dns-records).
+### Adjusting the wsproxy URL (optional)
 
 By tweaking the `matrix_mautrix_wsproxy_hostname` variable, you can easily make the service available at a **different hostname** than the default one.
 
-Example additional configuration for your `inventory/host_vars/matrix.example.com/vars.yml` file:
+Example additional configuration for your `vars.yml` file:
 
 ```yaml
 # Change the default hostname
 matrix_mautrix_wsproxy_hostname: ws.example.com
 ```
 
-## Adjusting DNS records
+After changing the domain, **you may need to adjust your DNS** records to point the wsproxy domain to the Matrix server.
 
-Once you've decided on the domain, **you may need to adjust your DNS** records to point the wsproxy domain to the Matrix server.
+### Extending the configuration
 
-By default, you will need to create a CNAME record for `wsproxy`. See [Configuring DNS](configuring-dns.md) for details about DNS changes.
+There are some additional things you may wish to configure about the bridge.
+
+See [this section](configuring-playbook-bridge-mautrix-bridges.md#extending-the-configuration) on the [common guide for configuring mautrix bridges](configuring-playbook-bridge-mautrix-bridges.md) for details about variables that you can customize and the bridge's default configuration, including [bridge permissions](configuring-playbook-bridge-mautrix-bridges.md#configure-bridge-permissions-optional), [encryption support](configuring-playbook-bridge-mautrix-bridges.md#enable-encryption-optional), [relay mode](configuring-playbook-bridge-mautrix-bridges.md#enable-relay-mode-optional), [bot's username](configuring-playbook-bridge-mautrix-bridges.md#set-the-bots-username-optional), etc.
 
 ## Installing
 

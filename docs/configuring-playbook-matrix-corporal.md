@@ -2,7 +2,8 @@
 
 <hr/>
 
-⚠️ **Warning**: This is an advanced feature! It requires prior experience with Matrix and a specific need for using [Matrix Corporal](https://github.com/devture/matrix-corporal). If you're unsure whether you have such a need, you most likely don't.
+> [!WARNING]
+> This is an advanced feature! It requires prior experience with Matrix and a specific need for using [Matrix Corporal](https://github.com/devture/matrix-corporal). If you're unsure whether you have such a need, you most likely don't.
 
 <hr/>
 
@@ -48,7 +49,7 @@ matrix_corporal_policy_provider_config: |
     "TimeoutMilliseconds": 300
   }
 
-# If you also want to enable Matrix Corporal's HTTP API..
+# If you also want to enable Matrix Corporal's HTTP API…
 matrix_corporal_http_api_enabled: true
 matrix_corporal_http_api_auth_token: "AUTH_TOKEN_HERE"
 
@@ -138,4 +139,4 @@ The following local filesystem paths are mounted in the `matrix-corporal` contai
 
 - `/matrix/corporal/cache` is mounted at `/var/cache/matrix-corporal` (read and write)
 
-As an example: you can create your own configuration files in `/matrix/corporal/config` and they will appear in `/etc/matrix-corporal` in the Docker container. Your configuration (stuff in `matrix_corporal_policy_provider_config`) needs to refer to these files via the local container paths - `/etc/matrix-corporal` (read-only), `/var/matrix-corporal` (read and write), `/var/cache/matrix-corporal` (read and write).
+As an example: you can create your own configuration files in `/matrix/corporal/config` and they will appear in `/etc/matrix-corporal` in the Docker container. Your configuration (stuff in `matrix_corporal_policy_provider_config`) needs to refer to these files via the local container paths — `/etc/matrix-corporal` (read-only), `/var/matrix-corporal` (read and write), `/var/cache/matrix-corporal` (read and write).

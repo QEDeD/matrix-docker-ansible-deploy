@@ -232,7 +232,7 @@ matrix_addons_homeserver_client_api_url: "{{ ('http://' + matrix_playbook_revers
 matrix_addons_homeserver_systemd_services_list: "{{ ([traefik_identifier + '.service'] if matrix_playbook_reverse_proxy_type == 'playbook-managed-traefik' else []) if matrix_playbook_internal_matrix_client_api_traefik_entrypoint_enabled else matrix_homeserver_systemd_services_list }}"
 
 # Starting from version `0.6.0` Conduit natively supports some sync v3 (sliding-sync) features.
-matrix_homeserver_sliding_sync_url: "{{ matrix_sliding_sync_base_url if matrix_sliding_sync_enabled else (matrix_homeserver_url if matrix_homeserver_implementation in ['conduit'] else '') }}"
+matrix_homeserver_sliding_sync_url: "{{ matrix_sliding_sync_base_url if matrix_sliding_sync_enabled else (matrix_homeserver_url if matrix_homeserver_implementation in ['conduit', 'conduwuit'] else '') }}"
 
 ########################################################################
 #                                                                      #
@@ -249,7 +249,7 @@ matrix_homeserver_sliding_sync_url: "{{ matrix_sliding_sync_base_url if matrix_s
 
 # This list is not exhaustive and final.
 # Synapse workers are still injected into the list at runtime.
-# Additional JVB workers (jitsi_jvb.yml -- roles/galaxy/jitsi/tasks/init_additional_jvb.yml) override this variable at runtime as well.
+# Additional JVB workers (jitsi_jvb.yml — roles/galaxy/jitsi/tasks/init_additional_jvb.yml) override this variable at runtime as well.
 #
 # Priority levels are like this:
 # - Traefik starts first with a level of 250, so that:
@@ -257,19 +257,19 @@ matrix_homeserver_sliding_sync_url: "{{ matrix_sliding_sync_base_url if matrix_s
 #   - so that addon services (starting later) can communicte with the homeserver via Traefik's internal entrypoint
 #     (see `matrix_playbook_internal_matrix_client_api_traefik_entrypoint_enabled`)
 # - core services (the homeserver) get a level of ~1000
-# - services that the homeserver depends on (database, Redis, ntfy, Coturn, etc.) get a lower level - between 500 and 1000
-# - Coturn gets a higher level if `devture_systemd_service_manager_service_restart_mode == 'one-by-one'` to intentionally delay it, because:
+# - services that the homeserver depends on (database, Redis, ntfy, coturn, etc.) get a lower level — between 500 and 1000
+# - coturn gets a higher level if `devture_systemd_service_manager_service_restart_mode == 'one-by-one'` to intentionally delay it, because:
 #  - starting services one by one means that the service manager role waits for each service to fully start before proceeding to the next one
-#  - if Coturn has a lower priority than the homeserver, it would be started before it
-#  - since Coturn is started before the homeserver, there's no container label telling Traefik to get a `matrix.example.com` certificate
-#  - thus, Coturn would spin and wait for a certificate until it fails. We'd get a playbook failure due to it, but service manager will proceed to start all other services anyway.
+#  - if coturn has a lower priority than the homeserver, it would be started before it
+#  - since coturn is started before the homeserver, there's no container label telling Traefik to get a `matrix.example.com` certificate
+#  - thus, coturn would spin and wait for a certificate until it fails. We'd get a playbook failure due to it, but service manager will proceed to start all other services anyway.
 #  - only later, when the homeserver actually starts, would that certificate be fetched and dumped
 # - reverse-proxying services get level 3000
 # - Matrix utility services (bridges, bots) get a level of 2000/2200, so that:
 #   - they can start before the reverse-proxy
 #   - so that, when the reverse-proxy is up (Matrix is up), all bots and bridges can be interacted with
-# - monitoring services (Prometheus, Grafana, ..) get a level of 4000 - they can start later than all-of-Matrix
-# - services which aren't time-sensitive (various crons and timers) get a level of 5000 - they can start later than all-of-Matrix
+# - monitoring services (Prometheus, Grafana, …) get a level of 4000 — they can start later than all-of-Matrix
+# - services which aren't time-sensitive (various crons and timers) get a level of 5000 — they can start later than all-of-Matrix
 devture_systemd_service_manager_services_list_auto: |
   {{
     ([{'name': (backup_borg_identifier + '.timer'), 'priority': 5000, 'groups': ['matrix', 'backup', 'borg']}] if backup_borg_enabled else [])
@@ -432,10 +432,6 @@ devture_systemd_service_manager_services_list_auto: |
     +
     ([{'name': 'matrix-prometheus-nginxlog-exporter.service', 'priority': 3900, 'groups': ['matrix', 'monitoring', 'prometheus-exporters', 'prometheus-nginxlog-exporter']}] if matrix_prometheus_nginxlog_exporter_enabled else [])
     +
-    ([{'name': (redis_identifier + '.service'), 'priority': 750, 'groups': ['matrix', 'redis']}] if redis_enabled else [])
-    +
-    ([{'name': (keydb_identifier + '.service'), 'priority': 750, 'groups': ['matrix', 'keydb']}] if keydb_enabled else [])
-    +
     ([{'name': (valkey_identifier + '.service'), 'priority': 750, 'groups': ['matrix', 'valkey']}] if valkey_enabled else [])
     +
     ([{'name': 'matrix-pantalaimon.service', 'priority': 4000, 'groups': ['matrix', 'pantalaimon']}] if matrix_pantalaimon_enabled else [])
@@ -553,6 +549,7 @@ matrix_homeserver_container_client_api_endpoint: |-
       'synapse': ('matrix-synapse-reverse-proxy-companion:8008' if matrix_synapse_reverse_proxy_companion_enabled | default(false) else ('matrix-synapse:'+ matrix_synapse_container_client_api_port | default('8008') | string)),
       'dendrite': ('matrix-dendrite:' + matrix_dendrite_http_bind_port | default('8008') | string),
       'conduit': ('matrix-conduit:' + matrix_conduit_port_number | default('8008') | string),
+      'conduwuit': ('matrix-conduwuit:' + matrix_conduwuit_config_port_number | default('8008') | string),
     }[matrix_homeserver_implementation]
   }}
 
@@ -562,6 +559,7 @@ matrix_homeserver_container_federation_api_endpoint: |-
       'synapse': ('matrix-synapse-reverse-proxy-companion:8048' if matrix_synapse_reverse_proxy_companion_enabled else ('matrix-synapse:'+ matrix_synapse_container_federation_api_plain_port | default('8008') | string)),
       'dendrite': ('matrix-dendrite:' + matrix_dendrite_http_bind_port | default('8008') | string),
       'conduit': ('matrix-conduit:' + matrix_conduit_port_number | default('8008') | string),
+      'conduwuit': ('matrix-conduwuit:' + matrix_conduwuit_config_port_number | default('8008') | string),
     }[matrix_homeserver_implementation]
   }}
 
@@ -2213,17 +2211,13 @@ matrix_hookshot_systemd_wanted_services_list: |
   {{
     matrix_addons_homeserver_systemd_services_list
     +
-    ([(redis_identifier + '.service')] if redis_enabled and matrix_hookshot_cache_redis_host == redis_identifier else [])
-    +
-    ([(keydb_identifier + '.service')] if keydb_enabled and matrix_hookshot_cache_redis_host == keydb_identifier else [])
-    +
     ([(valkey_identifier + '.service')] if valkey_enabled and matrix_hookshot_cache_redis_host == valkey_identifier else [])
   }}
 
 # Hookshot's experimental encryption feature (and possibly others) may benefit from Redis, if available.
 # We only connect to Redis if encryption is enabled (not for everyone who has Redis enabled),
 # because connectivity is still potentially troublesome and is to be investigated.
-matrix_hookshot_cache_redis_host: "{{ valkey_identifier if valkey_enabled else (redis_identifier if redis_enabled else (keydb_identifier if keydb_enabled else '')) }}"
+matrix_hookshot_cache_redis_host: "{{ valkey_identifier if valkey_enabled else '' }}"
 
 matrix_hookshot_container_network: "{{ matrix_addons_container_network }}"
 
@@ -2231,10 +2225,6 @@ matrix_hookshot_container_additional_networks_auto: |
   {{
     (
       ([] if matrix_addons_homeserver_container_network == '' else [matrix_addons_homeserver_container_network])
-      +
-      ([redis_container_network] if redis_enabled and matrix_hookshot_cache_redis_host == redis_identifier else [])
-      +
-      ([keydb_container_network] if keydb_enabled and matrix_hookshot_cache_redis_host == keydb_identifier else [])
       +
       ([valkey_container_network] if valkey_enabled and matrix_hookshot_cache_redis_host == valkey_identifier else [])
       +
@@ -3199,7 +3189,6 @@ matrix_pantalaimon_homeserver_url: "{{ matrix_addons_homeserver_client_api_url }
 backup_borg_enabled: false
 
 backup_borg_identifier: matrix-backup-borg
-backup_borg_retention_prefix: matrix-
 backup_borg_storage_archive_name_format: matrix-{now:%Y-%m-%d-%H%M%S}
 
 backup_borg_base_path: "{{ matrix_base_data_path }}/backup-borg"
@@ -3692,7 +3681,7 @@ jitsi_web_stun_servers: |
 # The Jitsi instance installed by this playbook is meant for embedding into Matrix clients, so framing is allowed.
 jitsi_web_framing_enabled: true
 
-# Jitsi (Prosody) only seems to support authenticating with Coturn using `auth-secret`, not `lt-cred-mech`.
+# Jitsi (Prosody) only seems to support authenticating with coturn using `auth-secret`, not `lt-cred-mech`.
 # See: https://prosody.im/doc/coturn
 jitsi_turn_credentials: "{{ matrix_coturn_turn_static_auth_secret if (matrix_coturn_enabled and matrix_coturn_authentication_method == 'auth-secret') else '' }}"
 jitsi_turn_host: "{{ ('turn.' + matrix_server_fqn_matrix) if matrix_coturn_enabled else '' }}"
@@ -4410,57 +4399,6 @@ ntfy_visitor_request_limit_exempt_hosts_hostnames_auto: |
 #
 ######################################################################
 
-######################################################################
-#
-# redis
-#
-######################################################################
-
-redis_enabled: "{{ not (keydb_enabled or valkey_enabled) and (matrix_synapse_workers_enabled or (matrix_hookshot_enabled and matrix_hookshot_encryption_enabled)) }}"
-
-redis_identifier: matrix-redis
-
-redis_uid: "{{ matrix_user_uid }}"
-redis_gid: "{{ matrix_user_gid }}"
-
-redis_base_path: "{{ matrix_base_data_path }}/redis"
-
-######################################################################
-#
-# /redis
-#
-######################################################################
-
-######################################################################
-#
-# keydb
-#
-######################################################################
-
-keydb_enabled: false
-
-keydb_identifier: matrix-keydb
-
-keydb_uid: "{{ matrix_user_uid }}"
-keydb_gid: "{{ matrix_user_gid }}"
-
-keydb_base_path: "{{ matrix_base_data_path }}/keydb"
-
-keydb_arch: |-
-  {{
-    ({
-      'amd64': 'x86_64',
-      'arm32': 'arm32',
-      'arm64': 'arm64',
-    })[matrix_architecture]
-  }}
-
-######################################################################
-#
-# keydb
-#
-######################################################################
-
 
 ######################################################################
 #
@@ -4704,10 +4642,6 @@ matrix_synapse_container_additional_networks_auto: |
       +
       ([postgres_container_network] if (postgres_enabled and postgres_container_network != matrix_synapse_container_network and matrix_synapse_database_host == postgres_connection_hostname) else [])
       +
-      ([redis_container_network] if matrix_synapse_redis_enabled and matrix_synapse_redis_host == redis_identifier else [])
-      +
-      ([keydb_container_network] if matrix_synapse_redis_enabled and matrix_synapse_redis_host == keydb_identifier else [])
-      +
       ([valkey_container_network] if matrix_synapse_redis_enabled and matrix_synapse_redis_host == valkey_identifier else [])
       +
       ([exim_relay_container_network] if (exim_relay_enabled and matrix_synapse_email_enabled and matrix_synapse_email_smtp_host == exim_relay_identifier and matrix_synapse_container_network != exim_relay_container_network) else [])
@@ -4793,10 +4727,6 @@ matrix_synapse_systemd_required_services_list_auto: |
   {{
     ([postgres_identifier ~ '.service'] if (postgres_enabled and postgres_container_network != matrix_synapse_container_network and matrix_synapse_database_host == postgres_connection_hostname) else [])
     +
-    ([redis_identifier ~ '.service'] if matrix_synapse_redis_enabled and matrix_synapse_redis_host == redis_identifier else [])
-    +
-    ([keydb_identifier ~ '.service'] if matrix_synapse_redis_enabled and matrix_synapse_redis_host == keydb_identifier else [])
-    +
     ([valkey_identifier ~ '.service'] if matrix_synapse_redis_enabled and matrix_synapse_redis_host == valkey_identifier else [])
     +
     (['matrix-goofys.service'] if matrix_s3_media_store_enabled else [])
@@ -4812,9 +4742,9 @@ matrix_synapse_systemd_wanted_services_list_auto: |
   }}
 
 # Synapse workers (used for parallel load-scaling) need Redis for IPC.
-matrix_synapse_redis_enabled: "{{ redis_enabled or keydb_enabled or valkey_enabled }}"
-matrix_synapse_redis_host: "{{ valkey_identifier if valkey_enabled else (redis_identifier if redis_enabled else (keydb_identifier if keydb_enabled else '')) }}"
-matrix_synapse_redis_password: "{{ valkey_connection_password if valkey_enabled else (redis_connection_password if redis_enabled else (keydb_connection_password if keydb_enabled else '')) }}"
+matrix_synapse_redis_enabled: "{{ valkey_enabled }}"
+matrix_synapse_redis_host: "{{ valkey_identifier if valkey_enabled else '' }}"
+matrix_synapse_redis_password: "{{ valkey_connection_password if valkey_enabled else '' }}"
 
 matrix_synapse_container_extra_arguments_auto: "{{ matrix_homeserver_container_extra_arguments_auto }}"
 matrix_synapse_app_service_config_files_auto: "{{ matrix_homeserver_app_service_config_files_auto }}"
@@ -4993,6 +4923,10 @@ matrix_synapse_admin_config_asManagedUsers_auto: |
     ([
       '^@'+(matrix_bot_buscarron_login | default('') | regex_escape) +':'+(matrix_domain | regex_escape)+'$',
     ] if matrix_bot_buscarron_enabled else [])
+    +
+    ([
+      '^@'+(matrix_bot_draupnir_login | default('') | regex_escape) +':'+(matrix_domain | regex_escape)+'$',
+    ] if matrix_bot_draupnir_enabled else [])
     +
     ([
       '^@'+(matrix_bot_chatgpt_matrix_bot_username_localpart | default('') | regex_escape) +':'+(matrix_domain | regex_escape)+'$',
@@ -5500,6 +5434,7 @@ grafana_default_home_dashboard_path: |-
       'synapse': ('/etc/grafana/dashboards/synapse.json' if matrix_synapse_metrics_enabled and matrix_synapse_metrics_enabled else ('/etc/grafana/dashboards/node-exporter-full.json' if prometheus_node_exporter_enabled else '')),
       'dendrite': ('/etc/grafana/dashboards/node-exporter-full.json' if prometheus_node_exporter_enabled else ''),
       'conduit': ('/etc/grafana/dashboards/node-exporter-full.json' if prometheus_node_exporter_enabled else ''),
+      'conduwuit': ('/etc/grafana/dashboards/node-exporter-full.json' if prometheus_node_exporter_enabled else ''),
     }[matrix_homeserver_implementation]
   }}
 
@@ -5557,6 +5492,7 @@ matrix_registration_shared_secret: |-
       'synapse': matrix_synapse_registration_shared_secret | default (''),
       'dendrite': matrix_dendrite_client_api_registration_shared_secret | default (''),
       'conduit': '',
+      'conduwuit': '',
     }[matrix_homeserver_implementation]
   }}
 
@@ -5803,6 +5739,68 @@ matrix_conduit_turn_password: "{{ matrix_coturn_lt_cred_mech_password if (matrix
 
 ######################################################################
 #
+# matrix-conduwuit
+#
+######################################################################
+
+matrix_conduwuit_enabled: "{{ matrix_homeserver_implementation == 'conduwuit' }}"
+
+matrix_conduwuit_hostname: "{{ matrix_server_fqn_matrix }}"
+
+matrix_conduwuit_config_allow_federation: "{{ matrix_homeserver_federation_enabled }}"
+
+matrix_conduwuit_container_network: "{{ matrix_homeserver_container_network }}"
+
+matrix_conduwuit_container_additional_networks_auto: |
+  {{
+    (
+      ([matrix_playbook_reverse_proxyable_services_additional_network] if matrix_conduwuit_container_labels_traefik_enabled and matrix_playbook_reverse_proxyable_services_additional_network else [])
+    ) | unique
+  }}
+
+matrix_conduwuit_container_labels_traefik_enabled: "{{ matrix_playbook_reverse_proxy_type in ['playbook-managed-traefik', 'other-traefik-container'] and not matrix_synapse_workers_enabled }}"
+matrix_conduwuit_container_labels_traefik_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
+matrix_conduwuit_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
+matrix_conduwuit_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
+
+matrix_conduwuit_container_labels_public_client_root_redirection_enabled: "{{ matrix_conduwuit_container_labels_public_client_root_redirection_url != '' }}"
+matrix_conduwuit_container_labels_public_client_root_redirection_url: "{{ (('https://' if matrix_playbook_ssl_enabled else 'http://') + matrix_server_fqn_element) if matrix_client_element_enabled else '' }}"
+
+matrix_conduwuit_container_labels_public_federation_api_traefik_hostname: "{{ matrix_server_fqn_matrix_federation }}"
+matrix_conduwuit_container_labels_public_federation_api_traefik_entrypoints: "{{ matrix_federation_traefik_entrypoint_name }}"
+matrix_conduwuit_container_labels_public_federation_api_traefik_tls: "{{ matrix_federation_traefik_entrypoint_tls }}"
+
+matrix_conduwuit_container_labels_internal_client_api_enabled: "{{ matrix_playbook_internal_matrix_client_api_traefik_entrypoint_enabled }}"
+matrix_conduwuit_container_labels_internal_client_api_traefik_entrypoints: "{{ matrix_playbook_internal_matrix_client_api_traefik_entrypoint_name }}"
+
+matrix_conduwuit_config_turn_uris: |
+  {{
+    ([
+      'turns:' + matrix_server_fqn_matrix + '?transport=udp',
+      'turns:' + matrix_server_fqn_matrix + '?transport=tcp',
+    ] if matrix_coturn_enabled and matrix_coturn_tls_enabled else [])
+    +
+    ([
+      'turn:' + matrix_server_fqn_matrix + '?transport=udp',
+      'turn:' + matrix_server_fqn_matrix + '?transport=tcp',
+    ] if matrix_coturn_enabled else [])
+  }}
+
+matrix_conduwuit_config_turn_secret: "{{ matrix_coturn_turn_static_auth_secret if (matrix_coturn_enabled and matrix_coturn_authentication_method == 'auth-secret') else '' }}"
+matrix_conduwuit_config_turn_username: "{{ matrix_coturn_lt_cred_mech_username if (matrix_coturn_enabled and matrix_coturn_authentication_method == 'lt-cred-mech') else '' }}"
+matrix_conduwuit_config_turn_password: "{{ matrix_coturn_lt_cred_mech_password if (matrix_coturn_enabled and matrix_coturn_authentication_method == 'lt-cred-mech') else '' }}"
+
+matrix_conduwuit_self_check_validate_certificates: "{{ matrix_playbook_ssl_enabled }}"
+
+######################################################################
+#
+# /matrix-conduwuit
+#
+######################################################################
+
+
+######################################################################
+#
 # matrix-user-creator
 #
 ######################################################################
@@ -5856,6 +5854,12 @@ matrix_user_creator_users_auto: |
       'initial_password': matrix_bot_maubot_initial_password,
       'initial_type': 'bot',
     }] if matrix_bot_maubot_enabled else [])
+        +
+    ([{
+      'username': matrix_bot_draupnir_login,
+      'initial_password': matrix_bot_draupnir_password,
+      'initial_type': 'bot',
+    }] if matrix_bot_draupnir_enabled and matrix_bot_draupnir_password else [])
   }}
 
 ######################################################################
@@ -5891,7 +5895,7 @@ matrix_user_verification_service_container_additional_networks: |
     ) | unique
   }}
 
-# If Jitsi is managed by this playbook we can use the docker network - no need to expose a port.
+# If Jitsi is managed by this playbook we can use the docker network — no need to expose a port.
 # If Jitsi is not managed by this playbook, or you otherwise have a need for it, you can expose
 # matrix-user-verfification-services's client-server port to port 3003.
 # By default Matrix-User-Verification-Service binds to port 3000, which collides with grafana, therefore this uses port 3003.

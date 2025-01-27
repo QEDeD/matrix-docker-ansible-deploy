@@ -16,7 +16,7 @@ matrix_synapse_enabled: true
 matrix_synapse_github_org_and_repo: element-hq/synapse
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/synapse
-matrix_synapse_version: v1.121.1
+matrix_synapse_version: v1.122.0
 
 matrix_synapse_username: ''
 matrix_synapse_uid: ''
@@ -47,6 +47,10 @@ matrix_synapse_container_image_customizations_enabled: |-
 # Controls whether custom build steps will be added to the Dockerfile for installing s3-storage-provider.
 # The version that will be installed is specified in `matrix_synapse_ext_synapse_s3_storage_provider_version`.
 matrix_synapse_container_image_customizations_s3_storage_provider_installation_enabled: "{{ matrix_synapse_ext_synapse_s3_storage_provider_enabled }}"
+
+# Controls whether to install an old version of boto3 and botocore, to work around the following issue:
+# https://github.com/aws/aws-cli/issues/9214
+matrix_synapse_container_image_customizations_s3_storage_provider_installation_old_boto_workaround_enabled: true
 
 # Controls whether custom build steps will be added to the Dockerfile for installing auto-accept-invite module.
 # The version that will be installed is specified in `matrix_synapse_ext_synapse_auto_accept_invite_version`.
@@ -509,7 +513,7 @@ matrix_synapse_allow_public_rooms_without_auth: false
 #
 # For private servers, you may wish to forbid it to align yourself with upstream defaults.
 # However, disabling federation completely (see `matrix_synapse_federation_enabled`) is a better way to make your server private,
-# instead of relying on security-by-obscurity -- federating with others, having your public rooms joinable by anyone,
+# instead of relying on security-by-obscurity — federating with others, having your public rooms joinable by anyone,
 # but hiding them and thinking you've secured them.
 matrix_synapse_allow_public_rooms_over_federation: true
 
@@ -1116,7 +1120,7 @@ matrix_synapse_redis_dbid: 0
 #
 # If Redis is available, we prefer to use that, instead of talking over Synapse's custom replication protocol.
 #
-# matrix_synapse_replication_listener_enabled: "{{ matrix_synapse_workers_enabled and not redis_enabled }}"
+# matrix_synapse_replication_listener_enabled: "{{ matrix_synapse_workers_enabled and matrix_synapse_redis_enabled }}"
 # We force-enable this listener for now until we debug why communication via Redis fails.
 matrix_synapse_replication_listener_enabled: true
 
@@ -1411,6 +1415,7 @@ matrix_synapse_default_room_version: "10"
 
 # Controls whether leaving a room will automatically forget it.
 # The upstream default is `false`, but we try to make Synapse less wasteful of resources, so we do things differently.
+# Also see: `matrix_synapse_forgotten_room_retention_period`
 matrix_synapse_forget_rooms_on_leave: true
 
 # Controls the Synapse `modules` list.
@@ -1451,8 +1456,9 @@ matrix_synapse_redaction_retention_period: 7d
 
 # Controls how long to keep locally forgotten rooms before purging them from the DB.
 # Defaults to `null`, meaning it's disabled.
+# Also see: `matrix_synapse_forget_rooms_on_leave`
 # Example value: 28d
-matrix_synapse_forgotten_room_retention_period: ~
+matrix_synapse_forgotten_room_retention_period: 28d
 
 matrix_synapse_user_ips_max_age: 28d
 

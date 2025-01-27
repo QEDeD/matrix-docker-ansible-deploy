@@ -18,7 +18,8 @@ You can use the **[Purge History API](https://github.com/element-hq/synapse/blob
 
 To make use of this Synapse Admin API, **you'll need an admin access token** first. Refer to the documentation on [how to obtain an access token](obtaining-access-tokens.md).
 
-⚠️ **Warning**: Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.
+> [!WARNING]
+> Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.
 
 Synapse's Admin API is not exposed to the internet by default, following [official Synapse reverse-proxying recommendations](https://github.com/element-hq/synapse/blob/master/docs/reverse_proxy.md#synapse-administration-endpoints). To expose it you will need to add `matrix_synapse_container_labels_public_client_synapse_admin_api_enabled: true` to your `vars.yml` file.
 
@@ -87,9 +88,9 @@ Tuning the cache factor is useful only to a limited degree (as its crude to do i
 
 Cache autotuning is **enabled by default** and controlled via the following variables:
 
-- `matrix_synapse_cache_autotuning_max_cache_memory_usage` - defaults to 1/8 of total RAM with a cap of 2GB; values are specified in bytes
-- `matrix_synapse_cache_autotuning_target_cache_memory_usage` - defaults to 1/16 of total RAM with a cap of 1GB; values are specified in bytes
-- `matrix_synapse_cache_autotuning_min_cache_ttl` - defaults to `30s`
+- `matrix_synapse_cache_autotuning_max_cache_memory_usage` — defaults to 1/8 of total RAM with a cap of 2GB; values are specified in bytes
+- `matrix_synapse_cache_autotuning_target_cache_memory_usage` — defaults to 1/16 of total RAM with a cap of 1GB; values are specified in bytes
+- `matrix_synapse_cache_autotuning_min_cache_ttl` — defaults to `30s`
 
 You can **learn more about cache-autotuning and the global cache factor settings** in the [Synapse's documentation on caches and associated values](https://matrix-org.github.io/synapse/latest/usage/configuration/config_documentation.html#caches-and-associated-values).
 

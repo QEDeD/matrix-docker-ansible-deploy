@@ -26,7 +26,8 @@ ansible-playbook -i inventory/hosts setup.yml --extra-vars='username=bot.alertma
 
 The bot requires an access token to be able to connect to your homeserver. Refer to the documentation on [how to obtain an access token](obtaining-access-tokens.md).
 
-⚠️ **Warning**: Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.
+> [!WARNING]
+> Access tokens are sensitive information. Do not include them in any bug reports, messages, or logs. Do not share the access token with anyone.
 
 ### Join to rooms as the bot manually
 
@@ -35,6 +36,12 @@ The bot requires an access token to be able to connect to your homeserver. Refer
 For each new room you would like the bot to deliver alerts to, invite the bot to the room.
 
 Then, log in as the bot using any Matrix client of your choosing, accept the room invitation from the bot's account, and log out.
+
+## Adjusting DNS records (optional)
+
+By default, this playbook installs matrix-alertmanager-receiver on the `matrix.` subdomain, at the `/matrix-alertmanager-receiver` path (https://matrix.example.com/matrix-alertmanager-receiver). This makes it easy to install it, because it **doesn't require additional DNS records to be set up**. If that's okay, you can skip this section.
+
+If you wish to adjust it, see the section [below](#adjusting-the-matrix-alertmanager-receiver-url-optional) for details about DNS configuration.
 
 ## Adjusting the playbook configuration
 
@@ -59,15 +66,11 @@ matrix_alertmanager_receiver_config_matrix_room_mapping:
   some-room-name: "!qporfwt:{{ matrix_domain }}"
 ```
 
-See `roles/custom/matrix-alertmanager-receiver/defaults/main.yml` for additional configuration variables.
-
-### Adjusting the matrix-alertmanager-receiver URL
-
-By default, this playbook installs matrix-alertmanager-receiver on the `matrix.` subdomain, at the `/matrix-alertmanager-receiver` path (https://matrix.example.com/matrix-alertmanager-receiver). This makes it easy to install it, because it **doesn't require additional DNS records to be set up**. If that's okay, you can skip this section.
+### Adjusting the matrix-alertmanager-receiver URL (optional)
 
 By tweaking the `matrix_alertmanager_receiver_hostname` and `matrix_alertmanager_receiver_path_prefix` variables, you can easily make the service available at a **different hostname and/or path** than the default one.
 
-Example additional configuration for your `inventory/host_vars/matrix.example.com/vars.yml` file:
+Example additional configuration for your `vars.yml` file:
 
 ```yaml
 # Change the default hostname and path prefix
@@ -75,13 +78,18 @@ matrix_alertmanager_receiver_hostname: alertmanager.example.com
 matrix_alertmanager_receiver_path_prefix: /
 ```
 
-## Adjusting DNS records
+If you've changed the default hostname, you may need to create a CNAME record for the matrix-alertmanager-receiver domain (`alertmanager.example.com`), which targets `matrix.example.com`.
 
-If you've changed the default hostname, **you may need to adjust your DNS** records to point the matrix-alertmanager-receiver domain to the Matrix server.
+When setting, replace `example.com` with your own.
 
-See [Configuring DNS](configuring-dns.md) for details about DNS changes.
+### Extending the configuration
 
-If you've decided to use the default hostname, you won't need to do any extra DNS configuration.
+There are some additional things you may wish to configure about the component.
+
+Take a look at:
+
+- `roles/custom/matrix-alertmanager-receiver/defaults/main.yml` for some variables that you can customize via your `vars.yml` file
+- `roles/custom/matrix-alertmanager-receiver/templates/config.yaml.j2` for the component's default configuration. You can override settings (even those that don't have dedicated playbook variables) using the `matrix_alertmanager_receiver_configuration_extension_yaml` variable
 
 ## Installing
 
@@ -122,3 +130,16 @@ route:
 ```
 
 where `URL_HERE` looks like `https://matrix.example.com/matrix-alertmanager-receiver-RANDOM_VALUE_HERE/alert/some-room-name` or `https://matrix.example.com/matrix-alertmanager-receiver-RANDOM_VALUE_HERE/alert/!qporfwt:example.com`.
+
+## Troubleshooting
+
+As with all other services, you can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu matrix-alertmanager-receiver`.
+
+### Increase logging verbosity
+
+The default logging level for this component is `info`. If you want to increase the verbosity, add the following configuration to your `vars.yml` file and re-run the playbook:
+
+```yaml
+# Valid values: error, warn, info, debug
+matrix_alertmanager_receiver_container_process_argument_log_level: debug
+```

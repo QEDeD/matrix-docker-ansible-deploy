@@ -28,7 +28,7 @@ We will be using `example.com` as the domain in the following instruction. Pleas
   - **Debian** (10/Buster or newer)
   - **Ubuntu** (18.04 or newer, although [20.04 may be problematic](ansible.md#supported-ansible-versions) if you run the Ansible playbook on it)
 
-  Generally, newer is better. We only strive to support released stable versions of distributions, not betas or pre-releases. This playbook can take over your whole server or co-exist with other services that you have there.
+  Generally, newer is better. We only strive to support released stable versions of distributions, not betas or pre-releases. The playbook can take over your whole server or co-exist with other services that you have there.
 
   This playbook somewhat supports running on non-`amd64` architectures like ARM. See [Alternative Architectures](alternative-architectures.md).
 
@@ -48,10 +48,10 @@ We will be using `example.com` as the domain in the following instruction. Pleas
 
   - `80/tcp`: HTTP webserver
   - `443/tcp` and `443/udp`: HTTPS webserver
-  - `3478/tcp`: TURN over TCP (used by Coturn)
-  - `3478/udp`: TURN over UDP (used by Coturn)
-  - `5349/tcp`: TURN over TCP (used by Coturn)
-  - `5349/udp`: TURN over UDP (used by Coturn)
+  - `3478/tcp`: TURN over TCP (used by coturn)
+  - `3478/udp`: TURN over UDP (used by coturn)
+  - `5349/tcp`: TURN over TCP (used by coturn)
+  - `5349/udp`: TURN over UDP (used by coturn)
   - `8448/tcp` and `8448/udp`: Matrix Federation API HTTPS webserver. Some components like [Matrix User Verification Service](configuring-playbook-user-verification-service.md#open-matrix-federation-port) require this port to be opened **even with federation disabled**.
   - the range `49152-49172/udp`: TURN over UDP
   - potentially some other ports, depending on the additional (non-default) services that you enable in the **configuring the playbook** step (later on). Consult each service's documentation page in `docs/` for that.

@@ -1,6 +1,6 @@
 # Setting up Matrix Authentication Service (optional)
 
-This playbook can install and configure [Matrix Authentication Service](https://github.com/element-hq/matrix-authentication-service/) (MAS) - a service operating alongside your existing [Synapse](./configuring-playbook-synapse.md) homeserver and providing [better authentication, session management and permissions in Matrix](https://matrix.org/blog/2023/09/better-auth/).
+The playbook can install and configure [Matrix Authentication Service](https://github.com/element-hq/matrix-authentication-service/) (MAS) — a service operating alongside your existing [Synapse](./configuring-playbook-synapse.md) homeserver and providing [better authentication, session management and permissions in Matrix](https://matrix.org/blog/2023/09/better-auth/).
 
 Matrix Authentication Service is an implementation of [MSC3861: Next-generation auth for Matrix, based on OAuth 2.0/OIDC](https://github.com/matrix-org/matrix-spec-proposals/pull/3861) and still work in progress, tracked at the [areweoidcyet.com](https://areweoidcyet.com/) website.
 
@@ -63,13 +63,13 @@ This section details what you can expect when switching to the Matrix Authentica
 
 - ⚠️ [Migrating an existing Synapse homeserver to Matrix Authentication Service](#migrating-an-existing-synapse-homeserver-to-matrix-authentication-service) is **possible**, but requires **some playbook-assisted manual work**. Migration is **reversible with no or minor issues if done quickly enough**, but as users start logging in (creating new login sessions) via the new MAS setup, disabling MAS and reverting back to the Synapse user database will cause these new sessions to break.
 
-- ⚠️ [Migrating an existing Synapse homeserver to Matrix Authentication Service](#migrating-an-existing-synapse-homeserver-to-matrix-authentication-service) does not currently seem to preserve the "admin" flag for users (as found in the Synapse database). All users are imported as non-admin - see [element-hq/matrix-authentication-service#3440](https://github.com/element-hq/matrix-authentication-service/issues/3440). You may need update the Matrix Authentication Service's database manually and adjust the `can_request_admin` column in the `users` table to `true` for users that need to be administrators (e.g. `UPDATE users SET can_request_admin = true WHERE username = 'someone';`)
+- ⚠️ [Migrating an existing Synapse homeserver to Matrix Authentication Service](#migrating-an-existing-synapse-homeserver-to-matrix-authentication-service) does not currently seem to preserve the "admin" flag for users (as found in the Synapse database). All users are imported as non-admin — see [element-hq/matrix-authentication-service#3440](https://github.com/element-hq/matrix-authentication-service/issues/3440). You may need update the Matrix Authentication Service's database manually and adjust the `can_request_admin` column in the `users` table to `true` for users that need to be administrators (e.g. `UPDATE users SET can_request_admin = true WHERE username = 'someone';`)
 
 - ⚠️ Delegating user authentication to MAS causes **your Synapse server to be completely dependant on one more service** for its operations. MAS is quick & lightweight and should be stable enough already, but this is something to keep in mind when making the switch.
 
 - ⚠️ If you've got [OIDC configured in Synapse](./configuring-playbook-synapse.md#synapse--openid-connect-for-single-sign-on), you will need to migrate your OIDC configuration to MAS by adding an [Upstream OAuth2 configuration](#upstream-oauth2-configuration).
 
-- ⚠️ A [compatibility layer](https://element-hq.github.io/matrix-authentication-service/setup/homeserver.html#set-up-the-compatibility-layer) is installed - all `/_matrix/client/*/login` (etc.) requests will be routed to MAS instead of going to the homeserver. This is done both publicly (e.g. `https://matrix.example.com/_matrix/client/*/login`) and on the internal Traefik entrypoint (e.g. `https://matrix-traefik:8008/_matrix/client/*/login`) which helps addon services reach the homeserver's Client-Server API. You typically don't need to do anything to make this work, but it's good to be aware of it, especially if you have a [custom webserver setup](./configuring-playbook-own-webserver.md).
+- ⚠️ A [compatibility layer](https://element-hq.github.io/matrix-authentication-service/setup/homeserver.html#set-up-the-compatibility-layer) is installed — all `/_matrix/client/*/login` (etc.) requests will be routed to MAS instead of going to the homeserver. This is done both publicly (e.g. `https://matrix.example.com/_matrix/client/*/login`) and on the internal Traefik entrypoint (e.g. `https://matrix-traefik:8008/_matrix/client/*/login`) which helps addon services reach the homeserver's Client-Server API. You typically don't need to do anything to make this work, but it's good to be aware of it, especially if you have a [custom webserver setup](./configuring-playbook-own-webserver.md).
 
 - ✅ Your **existing login sessions will continue to work** (you won't get logged out). Migration will require a bit of manual work and minutes of downtime, but it's not too bad.
 
@@ -97,6 +97,12 @@ For existing Synapse homeservers:
 
 - then follow the [Migrating an existing Synapse homeserver to Matrix Authentication Service](#migrating-an-existing-synapse-homeserver-to-matrix-authentication-service) instructions to perform the installation and migration
 
+## Adjusting DNS records (optional)
+
+By default, this playbook installs the Matrix Authentication Service on the `matrix.` subdomain, at the `/auth` path (https://matrix.example.com/auth). This makes it easy to install it, because it **doesn't require additional DNS records to be set up**. If that's okay, you can skip this section.
+
+If you wish to adjust it, see the section [below](#adjusting-the-matrix-authentication-service-url-optional) for details about DNS configuration.
+
 ## Adjusting the playbook configuration
 
 To enable Matrix Authentication Service, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
@@ -117,19 +123,21 @@ In the sub-sections that follow, we'll cover some additional configuration optio
 
 There are many other configuration options available. Consult the [`defaults/main.yml` file](../roles/custom/matrix-authentication-service/defaults/main.yml) in the [matrix-authentication-service role](../roles/custom/matrix-authentication-service/) to discover them.
 
-### Adjusting the Matrix Authentication Service URL
-
-By default, this playbook installs the Matrix Authentication Service on the `matrix.` subdomain, at the `/auth` path (https://matrix.example.com/auth). This makes it easy to install it, because it **doesn't require additional DNS records to be set up**. If that's okay, you can skip this section.
+### Adjusting the Matrix Authentication Service URL (optional)
 
 By tweaking the `matrix_authentication_service_hostname` and `matrix_authentication_service_path_prefix` variables, you can easily make the service available at a **different hostname and/or path** than the default one.
 
-Example additional configuration for your `inventory/host_vars/matrix.example.com/vars.yml` file:
+Example additional configuration for your `vars.yml` file:
 
 ```yaml
 # Change the default hostname and path prefix
 matrix_authentication_service_hostname: auth.example.com
 matrix_authentication_service_path_prefix: /
 ```
+
+If you've changed the default hostname, you may need to create a CNAME record for the Matrix Authentication Service domain (`auth.example.com`), which targets `matrix.example.com`.
+
+When setting, replace `example.com` with your own.
 
 ### Marking an existing homeserver for migration
 
@@ -146,7 +154,7 @@ The playbook exposes a `matrix_authentication_service_config_upstream_oauth2_pro
 <details>
 <summary>Click to expand the example configuration:</summary>
 
-Example additional configuration for your `inventory/host_vars/matrix.example.com/vars.yml` file:
+Example additional configuration for your `vars.yml` file:
 
 ```yaml
 matrix_authentication_service_config_upstream_oauth2_providers:
@@ -268,14 +276,6 @@ matrix_authentication_service_config_upstream_oauth2_providers:
 - go through the [migrating an existing homeserver](#migrating-an-existing-synapse-homeserver-to-matrix-authentication-service) process
 - remove all Synapse OIDC-related configuration (`matrix_synapse_oidc_*`) to prevent it being in conflict with the MAS OIDC configuration
 
-## Adjusting DNS records
-
-If you've changed the default hostname, **you may need to adjust your DNS** records to point the Matrix Authentication Service domain to the Matrix server.
-
-See [Configuring DNS](configuring-dns.md) for details about DNS changes.
-
-If you've decided to use the default hostname, you won't need to do any extra DNS configuration.
-
 ## Installing
 
 Now that you've [adjusted the playbook configuration](#adjusting-the-playbook-configuration) and [your DNS records](#adjusting-dns-records), you can run the playbook with [playbook tags](playbook-tags.md) as below:
@@ -361,7 +361,7 @@ If in `matrix_synapse_oidc_providers` your provider `idp_id` is (was) named `key
 
 The same OIDC provider may have an `id` of `01HFVBY12TMNTYTBV8W921M5FA` on the MAS side, as defined in `matrix_authentication_service_config_upstream_oauth2_providers` (see the [Upstream OAuth2 configuration](#upstream-oauth2-configuration) section above).
 
-To tell `syn2mas` how the Synapse-configured OIDC provider maps to the new MAS-configured OIDC provider, add this additional configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
+To tell `syn2mas` how the Synapse-configured OIDC provider maps to the new MAS-configured OIDC provider, add this additional configuration to your `vars.yml` file:
 
 ```yaml
 # Adjust the mapping below to match your provider IDs on the Synapse side and the MAS side.

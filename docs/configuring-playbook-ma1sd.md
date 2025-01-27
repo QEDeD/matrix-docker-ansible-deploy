@@ -23,6 +23,8 @@ To make the ma1sd Identity Server enable its federation features, set up a SRV r
 
 See [ma1sd's documentation](https://github.com/ma1uta/ma1sd/wiki/mxisd-and-your-privacy#choices-are-never-easy) for information on the privacy implications of setting up this SRV record.
 
+When setting up a SRV record, if you are asked for a service and protocol instead of a hostname split the host value from the table where the period is. For example use service as `_matrix-identity` and protocol as `_tcp`.
+
 **Note**: This `_matrix-identity._tcp` SRV record for the identity server is different from the `_matrix._tcp` that can be used for Synapse delegation. See [howto-server-delegation.md](howto-server-delegation.md) for more information about delegation.
 
 ## Adjusting the playbook configuration
@@ -39,21 +41,21 @@ To ensure maximum discovery, you can make your identity server also forward look
 
 Enabling this is discouraged and you'd better [learn more](https://github.com/ma1uta/ma1sd/blob/master/docs/features/identity.md#lookups) before proceeding.
 
-To enable matrix.org forwarding, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
+To enable matrix.org forwarding, add the following configuration to your `vars.yml` file:
 
 ```yaml
 matrix_ma1sd_matrixorg_forwarding_enabled: true
 ```
 
-### Additional features
+### Extending the configuration
 
-What this playbook configures for your is some bare minimum Identity Server functionality, so that you won't need to rely on external 3rd party services.
+There are some additional things you may wish to configure about the component.
 
-A few variables can be toggled in this playbook to alter the ma1sd configuration that gets generated.
+Take a look at:
 
-Still, ma1sd can do much more. You can refer to the [ma1sd website](https://github.com/ma1uta/ma1sd) for more details and configuration options.
+- `roles/custom/matrix-ma1sd/defaults/main.yml` for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `matrix_ma1sd_configuration_extension_yaml` variable
 
-To use a more custom configuration, you can define a `matrix_ma1sd_configuration_extension_yaml` string variable and put your configuration in it. To learn more about how to do this, refer to the information about `matrix_ma1sd_configuration_extension_yaml` in the [default variables file](../roles/custom/matrix-ma1sd/defaults/main.yml) of the ma1sd component.
+You can refer to the [ma1sd website](https://github.com/ma1uta/ma1sd) for more details and configuration options.
 
 #### Customizing email templates
 
@@ -63,15 +65,15 @@ If you'd like to change the default email templates used by ma1sd, take a look a
 
 To use the [Registration](https://github.com/ma1uta/ma1sd/blob/master/docs/features/registration.md) feature of ma1sd, you can make use of the following variables:
 
-- `matrix_synapse_enable_registration` - to enable user-initiated registration in Synapse
+- `matrix_synapse_enable_registration` — to enable user-initiated registration in Synapse
 
-- `matrix_synapse_enable_registration_captcha` - to validate registering users using reCAPTCHA, as described in the [enabling reCAPTCHA](configuring-captcha.md) documentation.
+- `matrix_synapse_enable_registration_captcha` — to validate registering users using reCAPTCHA, as described in the [enabling reCAPTCHA](configuring-captcha.md) documentation.
 
-- `matrix_synapse_registrations_require_3pid` - a list of 3pid types (among `'email'`, `'msisdn'`) required by the Synapse server for registering
+- `matrix_synapse_registrations_require_3pid` — a list of 3pid types (among `'email'`, `'msisdn'`) required by the Synapse server for registering
 
-- variables prefixed with `matrix_ma1sd_container_labels_` (e.g. `matrix_ma1sd_container_labels_matrix_client_3pid_registration_enabled`) - to configure the Traefik reverse-proxy to capture and send registration requests to ma1sd (instead of Synapse), so it can apply its additional functionality
+- variables prefixed with `matrix_ma1sd_container_labels_` (e.g. `matrix_ma1sd_container_labels_matrix_client_3pid_registration_enabled`) — to configure the Traefik reverse-proxy to capture and send registration requests to ma1sd (instead of Synapse), so it can apply its additional functionality
 
-- `matrix_ma1sd_configuration_extension_yaml` - to configure ma1sd as required. See the [Registration feature's docs](https://github.com/ma1uta/ma1sd/blob/master/docs/features/registration.md) for inspiration. Also see the [Additional features](#additional-features) section below to learn more about how to use `matrix_ma1sd_configuration_extension_yaml`.
+- `matrix_ma1sd_configuration_extension_yaml` — to configure ma1sd as required. See the [Registration feature's docs](https://github.com/ma1uta/ma1sd/blob/master/docs/features/registration.md) for inspiration. Also see the [Additional features](#additional-features) section below to learn more about how to use `matrix_ma1sd_configuration_extension_yaml`.
 
 **Note**: For this to work, either the homeserver needs to [federate](configuring-playbook-federation.md) or the `openid` APIs need to exposed on the federation port. When federation is disabled and ma1sd is enabled, we automatically expose the `openid` APIs (only!) on the federation port. Make sure the federation port (usually `https://matrix.example.com:8448`) is whitelisted in your firewall (even if you don't actually use/need federation).
 
@@ -79,7 +81,7 @@ To use the [Registration](https://github.com/ma1uta/ma1sd/blob/master/docs/featu
 
 [Authentication](https://github.com/ma1uta/ma1sd/blob/master/docs/features/authentication.md) provides the possibility to use your own [Identity Stores](https://github.com/ma1uta/ma1sd/blob/master/docs/stores/README.md) (for example LDAP) to authenticate users on your Homeserver.
 
-To enable authentication against an LDAP server, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
+To enable authentication against an LDAP server, add the following configuration to your `vars.yml` file:
 
 ```yaml
 matrix_synapse_ext_password_provider_rest_auth_enabled: true
@@ -148,10 +150,13 @@ The shortcut commands with the [`just` program](just.md) are also available: `ju
 
 If email address validation emails sent by ma1sd are not reaching you, you should look into [Adjusting email-sending settings](configuring-playbook-email.md).
 
-If you'd like additional logging information, temporarily enable verbose logging for ma1sd.
+As with all other services, you can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu matrix-ma1sd`.
 
-To enable it, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
+### Increase logging verbosity
+
+If you want to increase the verbosity, add the following configuration to your `vars.yml` file and re-run the playbook:
 
 ```yaml
-matrix_ma1sd_verbose_logging: true
+# See: https://github.com/ma1uta/ma1sd/blob/master/docs/troubleshooting.md#increase-verbosity
+matrix_ma1sd_verbose_logging: false
 ```

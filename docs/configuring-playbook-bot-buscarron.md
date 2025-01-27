@@ -4,6 +4,14 @@ The playbook can install and configure [Buscarron](https://github.com/etkecc/bus
 
 Buscarron is bot that receives HTTP POST submissions of web forms and forwards them to a Matrix room.
 
+See the project's [documentation](https://github.com/etkecc/buscarron/blob/main/README.md) to learn what it does and why it might be useful to you.
+
+## Adjusting DNS records
+
+By default, this playbook installs Buscarron on the `buscarron.` subdomain (`buscarron.example.com`) and requires you to create a CNAME record for `buscarron`, which targets `matrix.example.com`.
+
+When setting, replace `example.com` with your own.
+
 ## Adjusting the playbook configuration
 
 To enable the bot, add the following configuration to your `inventory/host_vars/matrix.example.com/vars.yml` file:
@@ -29,13 +37,11 @@ matrix_bot_buscarron_forms:
 matrix_bot_buscarron_spamlist: [] # (optional) list of emails/domains/hosts (with wildcards support) that should be rejected automatically
 ```
 
-### Adjusting the Buscarron URL
-
-By default, this playbook installs Buscarron on the `buscarron.` subdomain (`buscarron.example.com`) and requires you to [adjust your DNS records](#adjusting-dns-records).
+### Adjusting the Buscarron URL (optional)
 
 By tweaking the `matrix_bot_buscarron_hostname` and `matrix_bot_buscarron_path_prefix` variables, you can easily make the service available at a **different hostname and/or path** than the default one.
 
-Example additional configuration for your `inventory/host_vars/matrix.example.com/vars.yml` file:
+Example additional configuration for your `vars.yml` file:
 
 ```yaml
 # Switch to the domain used for Matrix services (`matrix.example.com`),
@@ -46,13 +52,17 @@ matrix_bot_buscarron_hostname: "{{ matrix_server_fqn_matrix }}"
 matrix_bot_buscarron_path_prefix: /buscarron
 ```
 
-## Adjusting DNS records
-
-Once you've decided on the domain and path, **you may need to adjust your DNS** records to point the Buscarron domain to the Matrix server.
-
-By default, you will need to create a CNAME record for `buscarron`. See [Configuring DNS](configuring-dns.md) for details about DNS changes.
+After changing the domain, **you may need to adjust your DNS** records to point the Buscarron domain to the Matrix server.
 
 If you've decided to reuse the `matrix.` domain, you won't need to do any extra DNS configuration.
+
+### Extending the configuration
+
+There are some additional things you may wish to configure about the bot.
+
+Take a look at:
+
+- `roles/custom/matrix-bot-buscarron/defaults/main.yml` for some variables that you can customize via your `vars.yml` file
 
 ## Installing
 
@@ -95,4 +105,14 @@ Here is an example for the `contact` form:
 
 If you get banned, you'd need to restart the process by running the playbook with `--tags=start` or running `systemctl restart matrix-bot-buscarron` on the server.
 
-You can also refer to the upstream [documentation](https://github.com/etkecc/buscarron).
+## Troubleshooting
+
+As with all other services, you can find the logs in [systemd-journald](https://www.freedesktop.org/software/systemd/man/systemd-journald.service.html) by logging in to the server with SSH and running `journalctl -fu matrix-bot-buscarron`.
+
+### Increase logging verbosity
+
+The default logging level for this component is `INFO`. If you want to increase the verbosity, add the following configuration to your `vars.yml` file and re-run the playbook:
+
+```yaml
+matrix_bot_buscarron_loglevel: DEBUG
+```
