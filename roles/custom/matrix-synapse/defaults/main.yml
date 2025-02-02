@@ -16,7 +16,7 @@ matrix_synapse_enabled: true
 matrix_synapse_github_org_and_repo: element-hq/synapse
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/synapse
-matrix_synapse_version: v1.122.0
+matrix_synapse_version: v1.123.0
 
 matrix_synapse_username: ''
 matrix_synapse_uid: ''
@@ -83,6 +83,8 @@ matrix_synapse_container_image_customizations_templates_git_repository_keyscan_h
 # matrix_synapse_container_image_customizations_dockerfile_body contains your custom Dockerfile steps
 # for building your customized Synapse image based on the original (upstream) image (`matrix_synapse_docker_image`).
 # A `FROM …` clause is included automatically so you don't have to.
+#
+# For this to take effect, you need to enable customizations (`matrix_synapse_container_image_customizations_enabled: true`).
 #
 # Example:
 # matrix_synapse_container_image_customizations_dockerfile_body_custom: |
