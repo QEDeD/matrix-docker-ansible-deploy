@@ -415,7 +415,7 @@ See our [documentation page about upgrading services](maintenance-upgrading-serv
 
 ### How do I move my existing installation to another (VM) server?
 
-If you have an existing installation done using this Ansible playbook, you can easily migrate that to another server using [our dedicated server migration guide](maintenance-migrating.md).
+If you have an existing installation done using this Ansible playbook, you can easily migrate that to another server following [our dedicated server migration guide](maintenance-migrating.md).
 
 If your previous installation is done in some other way (not using this Ansible playbook), see [I installed Synapse some other way. Can I migrate such a setup to the playbook?](#i-installed-synapse-some-other-way-can-i-migrate-such-a-setup-to-the-playbook).
 
@@ -435,6 +435,6 @@ See [this section](maintenance-and-troubleshooting.md#how-to-see-the-logs) on th
 
 ### I would like to see this favorite service of mine integrated and become available on my Matrix server. How can I request it?
 
-You can freely create an issue for feature request on the repository at GitHub [here](https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/new). Note this is a community project with no financial backing, and there is not assurance that your request would be eventually picked up by others and the requested feature would become available. The easiest way to get a feature into this project is to just develop it yourself.
+You can freely create an issue for feature request on the repository at GitHub [here](https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/new/choose). Note this is a community project with no financial backing, and there is not assurance that your request would be eventually picked up by others and the requested feature would become available. The easiest way to get a feature into this project is to just develop it yourself.
 
 Also, please note that this playbook intends to focus solely on Matrix and Matrix-related services. If your request is not specific to Matrix, you may as well to consider to submit it to the [mash-playbook](https://github.com/mother-of-all-self-hosting/mash-playbook), maintained by the members behind this matrix-docker-ansible-deploy project. [This document on the interoperability](https://github.com/mother-of-all-self-hosting/mash-playbook/blob/main/docs/interoperability.md) describes how to deploy services along with the Matrix services easily.
