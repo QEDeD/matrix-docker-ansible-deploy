@@ -4,7 +4,7 @@
   version: v1.0.0-5
   name: auxiliary
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg.git
-  version: v1.4.0-1.9.9-0
+  version: v1.4.0-1.9.10-0
   name: backup_borg
 - src: git+https://github.com/devture/com.devture.ansible.role.container_socket_proxy.git
   version: v0.2.0-0
@@ -16,7 +16,7 @@
   version: 129c8590e106b83e6f4c259649a613c6279e937a
   name: docker_sdk_for_python
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-etherpad.git
-  version: v2.2.6-0
+  version: v2.2.7-0
   name: etherpad
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-exim-relay.git
   version: v4.98-r0-4-0
@@ -28,7 +28,7 @@
   version: v10008-0
   name: jitsi
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-ntfy.git
-  version: v2.11.0-0
+  version: v2.11.0-1
   name: ntfy
 - src: git+https://github.com/devture/com.devture.ansible.role.playbook_help.git
   version: 201c939eed363de269a83ba29784fc3244846048

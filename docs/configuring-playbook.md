@@ -199,8 +199,6 @@ Services that help you in administrating and monitoring your Matrix installation
 
 - [Enabling metrics and graphs (Prometheus, Grafana) for your Matrix server](configuring-playbook-prometheus-grafana.md)
 
-- [Enabling metrics and graphs for nginx logs](configuring-playbook-prometheus-nginxlog.md)
-
 - [Setting up the rageshake bug report server](configuring-playbook-rageshake.md)
 
 - [Enabling synapse-usage-exporter for Synapse usage statistics](configuring-playbook-synapse-usage-exporter.md)
@@ -208,7 +206,7 @@ Services that help you in administrating and monitoring your Matrix installation
 - Backups:
   - [Setting up BorgBackup](configuring-playbook-backup-borg.md) — a full Matrix server backup solution, including the Postgres database
 
-  - [Setting up postgres backup](configuring-playbook-postgres-backup.md) — a Postgres-database backup solution (note: does not include other files)
+  - [Setting up Postgres backup](configuring-playbook-postgres-backup.md) — a Postgres-database backup solution (note: does not include other files)
 
 ### Other specialized services
 
