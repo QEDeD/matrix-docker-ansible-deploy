@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2024 - 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 ---
 
 # matrix-authentication-service (MAS) is an OAuth 2.0 and OpenID Provider server for Matrix.
@@ -17,9 +22,11 @@ matrix_authentication_service_container_repo_version: "{{ 'main' if matrix_authe
 matrix_authentication_service_container_src_files_path: "{{ matrix_base_data_path }}/matrix-authentication-service/container-src"
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/matrix-authentication-service
-matrix_authentication_service_version: 0.14.0
-matrix_authentication_service_container_image: "{{ matrix_authentication_service_container_image_name_prefix }}element-hq/matrix-authentication-service:{{ matrix_authentication_service_version }}"
-matrix_authentication_service_container_image_name_prefix: "{{ 'localhost/' if matrix_authentication_service_container_image_self_build else 'ghcr.io/' }}"
+matrix_authentication_service_version: 0.14.1
+matrix_authentication_service_container_image_registry_prefix: "{{ 'localhost/' if matrix_authentication_service_container_image_self_build else matrix_authentication_service_container_image_registry_prefix_upstream }}"
+matrix_authentication_service_container_image_registry_prefix_upstream: "{{ matrix_authentication_service_container_image_registry_prefix_upstream_default }}"
+matrix_authentication_service_container_image_registry_prefix_upstream_default: "ghcr.io/"
+matrix_authentication_service_container_image: "{{ matrix_authentication_service_container_image_registry_prefix }}element-hq/matrix-authentication-service:{{ matrix_authentication_service_version }}"
 matrix_authentication_service_container_image_force_pull: "{{ matrix_authentication_service_container_image.endswith(':latest') }}"
 
 matrix_authentication_service_base_path: "{{ matrix_base_data_path }}/matrix-authentication-service"
@@ -555,7 +562,7 @@ matrix_authentication_service_syn2mas_start_wait_time_seconds: 5
 matrix_authentication_service_syn2mas_dry_run: false
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/matrix-authentication-service/syn2mas
-matrix_authentication_service_syn2mas_version: 0.14.0
+matrix_authentication_service_syn2mas_version: 0.14.1
 matrix_authentication_service_syn2mas_container_image: "{{ matrix_authentication_service_container_image_name_prefix }}element-hq/matrix-authentication-service/syn2mas:{{ matrix_authentication_service_syn2mas_version }}"
 matrix_authentication_service_syn2mas_container_image_name_prefix: "{{ 'localhost/' if matrix_authentication_service_container_image_self_build else 'ghcr.io/' }}"
 matrix_authentication_service_syn2mas_container_image_force_pull: "{{ matrix_authentication_service_syn2mas_container_image.endswith(':latest') }}"

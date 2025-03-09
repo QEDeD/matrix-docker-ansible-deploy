@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2024 - 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2024 Suguru Hirahara
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 ---
 
 # matrix-static-files is a role which generates and serves `/.well-known/matrix` files for the purposes of Matrix Delegation.
@@ -24,7 +29,10 @@ matrix_static_files_systemd_wanted_services_list: "{{ matrix_static_files_system
 matrix_static_files_systemd_wanted_services_list_auto: []
 matrix_static_files_systemd_wanted_services_list_custom: []
 
-matrix_static_files_container_image: "{{ matrix_container_global_registry_prefix }}joseluisq/static-web-server:{{ matrix_static_files_container_image_tag }}"
+matrix_static_files_container_image: "{{ matrix_static_files_container_image_registry_prefix }}joseluisq/static-web-server:{{ matrix_static_files_container_image_tag }}"
+matrix_static_files_container_image_registry_prefix: "{{ matrix_static_files_container_image_registry_prefix_upstream }}"
+matrix_static_files_container_image_registry_prefix_upstream: "{{ matrix_static_files_container_image_registry_prefix_upstream_default }}"
+matrix_static_files_container_image_registry_prefix_upstream_default: "docker.io/"
 matrix_static_files_container_image_tag: "{{ 'latest' if matrix_static_files_version == 'latest' else (matrix_static_files_version + '-alpine') }}"
 matrix_static_files_container_image_force_pull: "{{ matrix_static_files_container_image.endswith(':latest') }}"
 

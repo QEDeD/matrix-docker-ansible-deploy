@@ -1,3 +1,96 @@
+# 2025-03-08
+
+## 6️⃣ IPv6 support enablement recommended by default
+
+Our [default example configuration](./examples/vars.yml) and [Configuring DNS](./docs/configuring-dns.md) guides now recommend enabling [IPv6](https://en.wikipedia.org/wiki/IPv6) support. We recommend that everyone enables IPv6 support for their Matrix server, even if they don't have IPv6 connectivity yet.
+
+Our new [Configuring IPv6](./docs/configuring-ipv6.md) documentation page has more details about the playbook's IPv6 support.
+
+**Existing playbook users** will **need to do some manual work** to enable IPv6 support. This consists of:
+
+- enabling IPv6 support for the Docker container networks:
+	- add `devture_systemd_docker_base_ipv6_enabled: true` to their `vars.yml` configuration file
+	- stop all services (`just stop-all`)
+	- delete all container networks on the server: `docker network rm $(docker network ls -q)`
+	- re-run the playbook fully: `just install-all`
+
+- [configuring IPv6 (`AAAA`) DNS records](./docs/configuring-ipv6.md#configuring-dns-records-for-ipv6)
+
+# 2025-02-26
+
+## 🪦 Bye-bye, Email2Matrix
+
+The [Email2Matrix](./docs/configuring-playbook-email2matrix.md) service has been superseded by the [Postmoogle](./docs/configuring-playbook-bridge-postmoogle.md) bridge for a long time now and was completely removed from the playbook today.
+
+If you still have the Email2Matrix component installed on your Matrix server, the playbook can no longer help you uninstall it and you will need to do it manually as described in the [Uninstalling Email2Matrix manually](./docs/configuring-playbook-email2matrix.md#uninstalling-email2matrix-manually) section of the documentation. The playbook will warn you if there are any `matrix_email2matrix_*` variables still remaining in your configuration.
+
+
+# 2025-02-23
+
+## The playbook defaults to exposing the Coturn STUN port (3478) over UDP once again
+
+Recently, we made the playbook [default to exposing the Coturn STUN port (3478) only over TCP](#the-playbook-now-defaults-to-exposing-the-coturn-stun-port-3478-only-over-tcp) to reduce the severity of DDoS amplification/reflection attacks.
+
+It seems like old Element clients on mobile devices only support talking to the STUN port over UDP, not TCP.
+To accommodate such ancient clients, we're now **reversing this change** and **defaulting to exposing the Coturn STUN port (3478) over UDP once again**.
+
+In light of this new information, you have 2 options:
+
+1. **If you already adapted to the previous change and would like to adapt to this change one again**:
+
+- make sure the `3478/udp` port is whitelisted in your external firewall (if you have one) once again.
+
+2. **If you don't care about old Element clients and wish to reduce the severity of DDoS amplification/reflection attacks**:
+
+- Consider closing the STUN/UDP port with the following configuration:
+
+  ```yaml
+  matrix_coturn_container_stun_plain_host_bind_port_udp: ""
+  ```
+
+- Consider keeping `3478/udp` blocked in your external firewall (if you have one)
+
+# 2025-02-21
+
+## Docker daemon options are no longer adjusted when IPv6 is enabled
+
+We landed [initial IPv6 support](#initial-work-on-ipv6-support) in the past via a `devture_systemd_docker_base_ipv6_enabled` variable that one had to toggle to `true`.
+
+This variable did **2 different things at once**:
+
+- ensured that container networks were created with IPv6 being enabled
+- adjusted the Docker daemon's configuration to set `experimental: true` and `ip6tables: true` (a necessary prerequisite for creating IPv6-enabled networks)
+
+Since Docker 27.0.1's [changes to how it handles IPv6](https://docs.docker.com/engine/release-notes/27/#ipv6), **adjusting the Docker daemon's configuration is no longer necessary**, because:
+- `ip6tables` defaults to `true` for everyone
+- `ip6tables` is out of the experimental phase, so `experimental` is no longer necessary
+
+In light of this, we're introducing a new variable (`devture_systemd_docker_base_ipv6_daemon_options_changing_enabled`) for controlling if IPv6 should be force-enabled in the Docker daemon's configuration options.
+Since most people should be on a modern enough Docker daemon version which doesn't require such changes, this variable defaults to `false`.
+
+This change affects you like this:
+
+- ✅ if you're **not explicitly enabling IPv6** (via `devture_systemd_docker_base_ipv6_enabled` in your configuration): you're unaffected
+- ❓ if you're **explicitly enabling IPv6** (via `devture_systemd_docker_base_ipv6_enabled` in your configuration):
+  - ✅ .. and you're on a modern enough Docker version (which you most likely are): the playbook will no longer mess with your Docker daemon options. You're unaffected.
+  - 🔧 .. and you're on an old Docker version, you **are affected** and need to use the following configuration to restore the old behavior:
+
+    ```yml
+    # Force-enable IPv6 by changing the Docker daemon's options.
+    # This is necessary for Docker < 27.0.1, but not for newer versions.
+    devture_systemd_docker_base_ipv6_daemon_options_changing_enabled: true
+
+    # Request that individual container networks are created with IPv6 enabled.
+    devture_systemd_docker_base_ipv6_enabled: true
+    ```
+
+## Support for bridging to Bluesky via mautrix-bluesky
+
+Thanks to [Zepmann](https://github.com/Zepmann), the playbook now supports bridging to [Bluesky](https://bsky.app/) via [mautrix-bluesky](https://github.com/mautrix/bluesky).
+
+To learn more, see our [Setting up mautrix-bluesky](./docs/configuring-playbook-bridge-mautrix-bluesky.md) documentation page.
+
+
 # 2025-02-19
 
 ## The playbook now defaults to exposing the Coturn STUN port (3478) only over TCP
@@ -271,7 +364,7 @@ If you'd like to switch back to the original synapse-admin software, you can do 
 
 ```yaml
 matrix_synapse_admin_docker_image: "{{ matrix_synapse_admin_docker_image_name_prefix }}awesometechnologies/synapse-admin:{{ matrix_synapse_admin_version }}"
-matrix_synapse_admin_docker_image_name_prefix: "{{ 'localhost/' if matrix_synapse_admin_container_image_self_build else matrix_container_global_registry_prefix }}"
+matrix_synapse_admin_docker_image_name_prefix: "{{ 'localhost/' if matrix_synapse_admin_container_image_self_build else 'docker.io/' }}"
 
 matrix_synapse_admin_version: 0.10.3
 
@@ -721,7 +814,7 @@ If you were using these values as a way to stay away from Traefik, you now have 
 
 Now that `matrix-nginx-proxy` is not in the mix, it became easier to clear out some other long-overdue technical debt.
 
-Since the very beginning of this playbook, all playbook services were connected to a single (shared) `matrix` container network. Later on, some additional container networks appeared, but most services (database, etc.) still remained in the `matrix` container network.  This meant that any random container in this network could try to talk (or attack) the Postgres database operating in the same `matrix` network.
+Since the very beginning of this playbook, all playbook services were connected to a single (shared) `matrix` container network. Later on, some additional container networks appeared, but most services (database, etc.) still remained in the `matrix` container network. This meant that any random container in this network could try to talk (or attack) the Postgres database operating in the same `matrix` network.
 
 Moving components (especially the database) into other container networks was difficult — it required changes to many other components to ensure correct connectivity.
 
@@ -2733,12 +2826,12 @@ Until the issue gets fixed, we're making User Directory search not go to ma1sd b
 
 ## Newer IRC bridge (with potential breaking change)
 
-This upgrades matrix-appservice-irc from 0.14.1 to 0.16.0.  Upstream
-made a change to how you define manual mappings.  If you added a
+This upgrades matrix-appservice-irc from 0.14.1 to 0.16.0. Upstream
+made a change to how you define manual mappings. If you added a
 `mapping` to your configuration, you will need to update it accoring
 to the [upstream
 instructions](https://github.com/matrix-org/matrix-appservice-irc/blob/master/CHANGELOG.md#0150-2020-02-05). If you did not include `mappings` in your configuration for IRC, no
-change is necessary.  `mappings` is not part of the default
+change is necessary. `mappings` is not part of the default
 configuration.
 
 

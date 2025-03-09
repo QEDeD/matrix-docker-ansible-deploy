@@ -1,3 +1,10 @@
+{#
+SPDX-FileCopyrightText: 2024 - 2025 Slavi Pantaleev
+SPDX-FileCopyrightText: 2024 - 2025 Suguru Hirahara
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+
 # Default configuration for baibot.
 # To extend it, use `matrix_bot_baibot_configuration_extension_yaml`.
 
@@ -34,6 +41,10 @@ user:
 
 # Command prefix. Leave empty to use the default (!bai).
 command_prefix: {{ matrix_bot_baibot_config_command_prefix | to_json }}
+
+room:
+  # Whether the bot should send an introduction message after joining a room.
+  post_join_self_introduction_enabled: {{ matrix_bot_baibot_config_room_post_join_self_introduction_enabled | to_json }}
 
 access:
   # Space-separated list of MXID patterns which specify who is an admin.

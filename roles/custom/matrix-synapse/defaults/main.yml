@@ -16,7 +16,7 @@ matrix_synapse_enabled: true
 matrix_synapse_github_org_and_repo: element-hq/synapse
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/synapse
-matrix_synapse_version: v1.124.0
+matrix_synapse_version: v1.125.0
 
 matrix_synapse_username: ''
 matrix_synapse_uid: ''
@@ -93,12 +93,13 @@ matrix_synapse_container_image_customizations_templates_git_repository_keyscan_h
 #  RUN echo 'You do NOT need to include a FROM clause yourself.'
 matrix_synapse_container_image_customizations_dockerfile_body_custom: ''
 
-matrix_synapse_docker_image: "{{ matrix_synapse_docker_image_name_prefix }}{{ matrix_synapse_docker_image_name }}:{{ matrix_synapse_docker_image_tag }}"
-matrix_synapse_docker_image_name_prefix: "{{ 'localhost/' if matrix_synapse_container_image_self_build else matrix_synapse_docker_image_registry_prefix }}"
+matrix_synapse_docker_image: "{{ matrix_synapse_docker_image_registry_prefix }}{{ matrix_synapse_docker_image_name }}:{{ matrix_synapse_docker_image_tag }}"
 matrix_synapse_docker_image_name: "{{ matrix_synapse_github_org_and_repo }}"
 matrix_synapse_docker_image_tag: "{{ matrix_synapse_version }}"
 matrix_synapse_docker_image_force_pull: "{{ matrix_synapse_docker_image.endswith(':latest') }}"
-matrix_synapse_docker_image_registry_prefix: ghcr.io/
+matrix_synapse_docker_image_registry_prefix: "{{ 'localhost/' if matrix_synapse_container_image_self_build else matrix_synapse_docker_image_registry_prefix_upstream }}"
+matrix_synapse_docker_image_registry_prefix_upstream: "{{ matrix_synapse_docker_image_registry_prefix_upstream_default }}"
+matrix_synapse_docker_image_registry_prefix_upstream_default: "ghcr.io/"
 
 # matrix_synapse_docker_image_customized is the name of the locally built Synapse image
 # which adds various customizations on top of the original (upstream) Synapse image.
@@ -750,9 +751,36 @@ matrix_synapse_password_providers_enabled: false
 # to load message content directly from the homeserver.
 matrix_synapse_push_include_content: true
 
-# If url previews should be generated. This will cause a request from Synapse to
-# URLs shared by users.
+# If url previews should be generated. This will cause a request from Synapse to URLs shared by users.
+# Also see `matrix_synapse_url_preview_ip_range_blacklist`.
 matrix_synapse_url_preview_enabled: true
+
+# List of IP address CIDR ranges that the URL preview spider is denied from accessing.
+# Note: The value is ignored when an HTTP proxy is in use
+# See the comment about this setting in `templates/synapse/homeserver.yaml.j2` for more details.
+matrix_synapse_url_preview_ip_range_blacklist:
+  - '127.0.0.0/8'
+  - '10.0.0.0/8'
+  - '172.16.0.0/12'
+  - '192.168.0.0/16'
+  - '100.64.0.0/10'
+  - '192.0.0.0/24'
+  - '169.254.0.0/16'
+  - '192.88.99.0/24'
+  - '198.18.0.0/15'
+  - '192.0.2.0/24'
+  - '198.51.100.0/24'
+  - '203.0.113.0/24'
+  - '224.0.0.0/4'
+  - '::1/128'
+  - 'fe80::/10'
+  - 'fc00::/7'
+  - '2001:db8::/32'
+  - 'ff00::/8'
+  - 'fec0::/10'
+
+# List of IP address CIDR ranges that the URL preview spider is allowed to access even if they are specified in `matrix_synapse_url_preview_ip_range_blacklist`.
+matrix_synapse_url_preview_ip_range_whitelist: []
 
 # A list of values for the Accept-Language HTTP header used when downloading webpages during URL preview generation
 matrix_url_preview_accept_language: ['en-US', 'en']
@@ -1117,6 +1145,7 @@ matrix_synapse_redis_host: ""
 matrix_synapse_redis_port: 6379
 matrix_synapse_redis_password: ""
 matrix_synapse_redis_dbid: 0
+matrix_synapse_redis_use_tls: false
 
 # Controls whether Synapse starts a replication listener necessary for workers.
 #
@@ -1222,6 +1251,15 @@ matrix_synapse_experimental_features_msc4108_enabled: false
 #
 ################################################################################
 
+
+# Controls whether to enable the "room summary API" experimental feature.
+# See https://github.com/matrix-org/matrix-spec-proposals/pull/3266
+# Despite being experimental, this feature is mandatory for the next-generation Element X clients, which is why it is enabled by default:
+# https://github.com/element-hq/element-x-ios/issues/3713#issuecomment-2620958291
+# If you're worried about the privacy implications of this unauthenticated API, see:
+# https://github.com/deepbluev7/matrix-doc/blob/room-summaries/proposals/3266-room-summary.md#client-server-api
+# Set this to false if you still want to disable to API for some reason. Note that doing so breaks Element X compatibility though.
+matrix_synapse_experimental_features_msc3266_enabled: true
 
 # Enable this to activate the REST auth password provider module.
 # See: https://github.com/ma1uta/matrix-synapse-rest-password-provider
@@ -1383,8 +1421,10 @@ matrix_synapse_ext_media_repo_enabled: false
 
 matrix_s3_media_store_enabled: false
 matrix_s3_media_store_custom_endpoint_enabled: false
-matrix_s3_goofys_docker_image: "{{ matrix_s3_goofys_docker_image_name_prefix }}ewoutp/goofys:latest"
-matrix_s3_goofys_docker_image_name_prefix: "docker.io/"
+matrix_s3_goofys_docker_image: "{{ matrix_s3_goofys_docker_image_registry_prefix }}ewoutp/goofys:latest"
+matrix_s3_goofys_docker_image_registry_prefix: "{{ matrix_s3_goofys_docker_image_registry_prefix_upstream }}"
+matrix_s3_goofys_docker_image_registry_prefix_upstream: "{{ matrix_s3_goofys_docker_image_registry_prefix_upstream_default }}"
+matrix_s3_goofys_docker_image_registry_prefix_upstream_default: "docker.io/"
 matrix_s3_goofys_docker_image_force_pull: "{{ matrix_s3_goofys_docker_image.endswith(':latest') }}"
 matrix_s3_media_store_custom_endpoint: "your-custom-endpoint"
 matrix_s3_media_store_bucket_name: "your-bucket-name"
