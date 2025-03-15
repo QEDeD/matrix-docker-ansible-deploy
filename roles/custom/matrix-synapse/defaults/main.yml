@@ -16,7 +16,7 @@ matrix_synapse_enabled: true
 matrix_synapse_github_org_and_repo: element-hq/synapse
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/synapse
-matrix_synapse_version: v1.125.0
+matrix_synapse_version: v1.126.0
 
 matrix_synapse_username: ''
 matrix_synapse_uid: ''
@@ -268,6 +268,16 @@ matrix_synapse_container_labels_public_client_synapse_admin_api_traefik_entrypoi
 matrix_synapse_container_labels_public_client_synapse_admin_api_traefik_tls: "{{ matrix_synapse_container_labels_public_client_synapse_admin_api_traefik_entrypoints != 'web' }}"
 matrix_synapse_container_labels_public_client_synapse_admin_api_traefik_tls_certResolver: "{{ matrix_synapse_container_labels_traefik_tls_certResolver }}"  # noqa var-naming
 
+# Controls whether labels will be added that expose the /_synapse/admin paths on the internal Traefik entrypoint.
+# Following these recommendations (https://github.com/element-hq/synapse/blob/master/docs/reverse_proxy.md), by default, we don't.
+# Regardless of whether this is enabled, it may or may not take effect due to the value of other variables.
+
+matrix_synapse_container_labels_internal_client_synapse_admin_api_enabled: false
+matrix_synapse_container_labels_internal_client_synapse_admin_api_traefik_path_prefix: /_synapse/admin
+matrix_synapse_container_labels_internal_client_synapse_admin_api_traefik_rule: "PathPrefix(`{{ matrix_synapse_container_labels_internal_client_synapse_admin_api_traefik_path_prefix }}`)"
+matrix_synapse_container_labels_internal_client_synapse_admin_api_traefik_priority: 0
+matrix_synapse_container_labels_internal_client_synapse_admin_api_traefik_entrypoints: ""
+
 # Controls whether labels will be added that expose the Server-Server API (Federation API).
 # Regardless of whether this is enabled, it may or may not take effect due to the value of other variables.
 # See `matrix_synapse_container_labels_traefik_enabled` or `matrix_synapse_container_labels_matrix_related_labels_enabled`
@@ -416,8 +426,8 @@ matrix_synapse_root_log_level: "WARNING"
 
 # Rate limits
 matrix_synapse_rc_message:
-  per_second: 0.2
-  burst_count: 10
+  per_second: 0.5
+  burst_count: 30
 
 matrix_synapse_rc_registration:
   per_second: 0.17
@@ -467,6 +477,13 @@ matrix_synapse_rc_federation:
   concurrent: 3
 
 matrix_synapse_federation_rr_transactions_per_room_per_second: 50
+
+# Controls the rate limit for delayed event management.
+#
+# This is only applied if `matrix_synapse_experimental_features_msc4140_enabled` is set to `true`.
+matrix_synapse_rc_delayed_event_mgmt:
+  per_second: 1
+  burst_count: 20
 
 # Controls the templates directory setting.
 #
@@ -562,6 +579,10 @@ matrix_synapse_registration_requires_token: false
 
 # A list of 3PID types which users must supply when registering (possible values: email, msisdn).
 matrix_synapse_registrations_require_3pid: []
+
+# Explicitly disable asking for MSISDNs from the registration
+# flow (overrides matrix_synapse_registrations_require_3pid if MSISDNs are set as required)
+matrix_synapse_disable_msisdn_registration: false
 
 # A list of patterns 3pids must match in order to permit registration, e.g.:
 #  - medium: email
@@ -1199,6 +1220,27 @@ matrix_synapse_email_invite_client_location: "https://app.element.io"
 #
 ################################################################################
 
+# Controls whether to enable the "send typing, presence and receipts to appservices" experimental feature.
+#
+# See:
+# - https://github.com/matrix-org/matrix-spec-proposals/pull/2409
+# - https://matrix-org.github.io/matrix-hookshot/latest/advanced/encryption.html#running-with-synapse
+matrix_synapse_experimental_features_msc2409_to_device_messages_enabled: false
+
+# Controls whether to enable the "device masquerading" for encrypted appservices experimental feature.
+#
+# See:
+# - https://github.com/matrix-org/matrix-spec-proposals/pull/3202
+# - https://matrix-org.github.io/matrix-hookshot/latest/advanced/encryption.html#running-with-synapse
+matrix_synapse_experimental_features_msc3202_device_masquerading_enabled: false
+
+# Controls whether to enable the "transaction extensions" for encrypted appservices experimental feature.
+#
+# See:
+# - https://github.com/matrix-org/matrix-spec-proposals/pull/3202
+# - https://matrix-org.github.io/matrix-hookshot/latest/advanced/encryption.html#running-with-synapse
+matrix_synapse_experimental_features_msc3202_transaction_extensions_enabled: false
+
 # Controls whether to enable the "Next-generation auth for Matrix, based on OAuth 2.0/OIDC" experimental feature.
 #
 # See:
@@ -1261,6 +1303,37 @@ matrix_synapse_experimental_features_msc4108_enabled: false
 # Set this to false if you still want to disable to API for some reason. Note that doing so breaks Element X compatibility though.
 matrix_synapse_experimental_features_msc3266_enabled: true
 
+# Controls whether to enable the "Delayed Events" experimental feature.
+# Delayed events are required for proper call (Element Call) participation signalling.
+# If disabled it is very likely that you end up with stuck calls in Matrix rooms.
+#
+# Related to:
+# - `matrix_synapse_max_event_delay_duration`
+# - `matrix_synapse_rc_delayed_event_mgmt`
+#
+# See https://github.com/matrix-org/matrix-spec-proposals/pull/4140
+matrix_synapse_experimental_features_msc4140_enabled: false
+
+# Controls the maximum allowed duration by which sent events can be delayed, as per MSC4140.
+#
+# See `matrix_synapse_experimental_features_msc4140_enabled`.
+matrix_synapse_max_event_delay_duration: 24h
+
+# Controls whether to enable the MSC4133 experimental feature (Custom profile fields).
+#
+# This allows clients to set custom profile fields (e.g. User Time Zone in Element Web)
+#
+# See https://github.com/matrix-org/matrix-spec-proposals/pull/4133
+matrix_synapse_experimental_features_msc4133_enabled: false
+
+# Controls whether to enable the MSC4222 experimental feature (adding `state_after` to sync v2).
+#
+# Allow clients to opt-in to a change of the sync v2 API that allows them to correctly track the state of the room.
+# This is required by Element Call to track room state reliably.
+#
+# See https://github.com/matrix-org/matrix-spec-proposals/pull/4222
+matrix_synapse_experimental_features_msc4222_enabled: false
+
 # Enable this to activate the REST auth password provider module.
 # See: https://github.com/ma1uta/matrix-synapse-rest-password-provider
 matrix_synapse_ext_password_provider_rest_auth_enabled: false
@@ -1309,7 +1382,8 @@ matrix_synapse_ext_spam_checker_synapse_simple_antispam_config_blocked_homeserve
 # See: https://github.com/matrix-org/mjolnir#synapse-module
 matrix_synapse_ext_spam_checker_mjolnir_antispam_enabled: false
 matrix_synapse_ext_spam_checker_mjolnir_antispam_git_repository_url: "https://github.com/matrix-org/mjolnir"
-matrix_synapse_ext_spam_checker_mjolnir_antispam_git_version: "v1.6.4"
+# renovate: datasource=docker depName=matrixdotorg/mjolnir
+matrix_synapse_ext_spam_checker_mjolnir_antispam_git_version: "v1.9.2"
 matrix_synapse_ext_spam_checker_mjolnir_antispam_config_block_invites: true
 # Flag messages sent by servers/users in the ban lists as spam. Currently
 # this means that spammy messages will appear as empty to users. Default
@@ -1494,6 +1568,11 @@ matrix_synapse_encryption_enabled_by_default_for_room_type: "off"
 matrix_synapse_trusted_key_servers:
   - server_name: "matrix.org"
 
+
+# Enable the following to disable the warning that is emitted when the
+# matrix_synapse_trusted_key_servers include 'matrix.org'. See above.
+matrix_synapse_suppress_key_server_warning: false
+
 matrix_synapse_redaction_retention_period: 7d
 
 # Controls how long to keep locally forgotten rooms before purging them from the DB.
@@ -1505,8 +1584,10 @@ matrix_synapse_forgotten_room_retention_period: 28d
 matrix_synapse_user_ips_max_age: 28d
 
 
-matrix_synapse_rust_synapse_compress_state_docker_image: "{{ matrix_synapse_rust_synapse_compress_state_docker_image_name_prefix }}mb-saces/rust-synapse-tools:v0.0.1"
-matrix_synapse_rust_synapse_compress_state_docker_image_name_prefix: "registry.gitlab.com/"
+matrix_synapse_rust_synapse_compress_state_docker_image: "{{ matrix_synapse_rust_synapse_compress_state_docker_image_registry_prefix }}mb-saces/rust-synapse-tools:v0.0.1"
+matrix_synapse_rust_synapse_compress_state_docker_image_registry_prefix: "{{ matrix_synapse_rust_synapse_compress_state_docker_image_registry_prefix_upstream }}"
+matrix_synapse_rust_synapse_compress_state_docker_image_registry_prefix_upstream: "{{ matrix_synapse_rust_synapse_compress_state_docker_image_registry_prefix_upstream_default }}"
+matrix_synapse_rust_synapse_compress_state_docker_image_registry_prefix_upstream_default: "registry.gitlab.com/"
 matrix_synapse_rust_synapse_compress_state_docker_image_force_pull: "{{ matrix_synapse_rust_synapse_compress_state_docker_image.endswith(':stable') or matrix_synapse_rust_synapse_compress_state_docker_image.endswith(':latest') }}"
 
 matrix_synapse_rust_synapse_compress_state_base_path: "{{ matrix_base_data_path }}/rust-synapse-compress-state"

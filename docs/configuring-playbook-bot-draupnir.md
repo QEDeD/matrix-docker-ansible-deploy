@@ -54,11 +54,11 @@ To enable the native E2EE support, add the following configuration to your `vars
 
 ```yaml
 # Enables the native E2EE support
-matrix_bot_draupnir_enable_experimental_rust_crypto: true
+matrix_bot_draupnir_config_experimentalRustCrypto: true
 
 # Access token which the bot will use for logging in.
 # Comment out `matrix_bot_draupnir_login_native` when using this option.
-matrix_bot_draupnir_access_token: "CLEAN_ACCESS_TOKEN_HERE"
+matrix_bot_draupnir_config_accessToken: "CLEAN_ACCESS_TOKEN_HERE"
 ```
 
 ## Adjusting the playbook configuration
@@ -73,13 +73,13 @@ matrix_bot_draupnir_enabled: true
 # matrix_bot_draupnir_login: bot.draupnir
 
 # Generate a strong password for the bot. You can create one with a command like `pwgen -s 64 1`.
-# If creating the user on your own and using `matrix_bot_draupnir_access_token` to login you can comment out this line.
+# If creating the user on your own and using `matrix_bot_draupnir_config_accessToken` to login you can comment out this line.
 matrix_bot_draupnir_password: PASSWORD_FOR_THE_BOT
 
-# Comment out if using `matrix_bot_draupnir_enable_experimental_rust_crypto: true` or `matrix_bot_draupnir_access_token` to login.
+# Comment out if using `matrix_bot_draupnir_config_experimentalRustCrypto: true` or `matrix_bot_draupnir_config_accessToken` to login.
 matrix_bot_draupnir_login_native: true
 
-matrix_bot_draupnir_management_room: "MANAGEMENT_ROOM_ID_HERE"
+matrix_bot_draupnir_config_managementRoom: "MANAGEMENT_ROOM_ID_HERE"
 ```
 
 ### Create and invite the bot to the management room
@@ -142,7 +142,7 @@ Draupnir can receive reports in the management room.
 The bot can intercept the report API endpoint of the client-server API, which requires integration with the reverse proxy in front of the homeserver. If you are using Traefik, this playbook can set this up for you:
 
 ```yaml
-matrix_bot_draupnir_abuse_reporting_enabled: true
+matrix_bot_draupnir_config_web_abuseReporting: true
 ```
 
 <!--
@@ -190,9 +190,15 @@ After configuring the playbook, run it with [playbook tags](playbook-tags.md) as
 ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,ensure-matrix-users-created,start
 ```
 
-The shortcut commands with the [`just` program](just.md) are also available: `just install-all` or `just setup-all`
+**Notes**:
 
-`just install-all` is useful for maintaining your setup quickly ([2x-5x faster](../CHANGELOG.md#2x-5x-performance-improvements-in-playbook-runtime) than `just setup-all`) when its components remain unchanged. If you adjust your `vars.yml` to remove other components, you'd need to run `just setup-all`, or these components will still remain installed.
+- The `ensure-matrix-users-created` playbook tag makes the playbook automatically create the bot's user account.
+
+- The shortcut commands with the [`just` program](just.md) are also available: `just install-all` or `just setup-all`
+
+  `just install-all` is useful for maintaining your setup quickly ([2x-5x faster](../CHANGELOG.md#2x-5x-performance-improvements-in-playbook-runtime) than `just setup-all`) when its components remain unchanged. If you adjust your `vars.yml` to remove other components, you'd need to run `just setup-all`, or these components will still remain installed.
+
+- If you change the bot password (`matrix_bot_draupnir_password` in your `vars.yml` file) subsequently, the bot user's credentials on the homeserver won't be updated automatically. If you'd like to change the bot user's password, use a tool like [synapse-admin](configuring-playbook-synapse-admin.md) to change it, and then update `matrix_bot_draupnir_password` to let the bot know its new password.
 
 ## Usage
 
