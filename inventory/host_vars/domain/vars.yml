@@ -40,7 +40,7 @@ matrix_synapse_max_upload_size_mb: 150
 #                                                                      #
 ########################################################################
  
-traefik_config_certificatesResolvers_acme_email: '{{admin_user_email}}'
+# traefik_config_certificatesResolvers_acme_email: '{{admin_user_email}}'
 
 traefik_dashboard_enabled: true
 traefik_dashboard_hostname: "{{ matrix_server_fqn_matrix }}"
@@ -52,6 +52,31 @@ traefik_dashboard_basicauth_password: "{{traefik_dashboard_basicauth_password}}"
 # It will retrieve SSL certificates for you on-demand and forward requests to all other components.
 # For alternatives, see `docs/configuring-playbook-own-webserver.md`.
 matrix_playbook_reverse_proxy_type: playbook-managed-traefik
+
+traefik_provider_configuration_extension_yaml: |
+  http:
+    routers:
+      ha:
+        entrypoints: web-secure
+        rule: Host(`ha.{{domain}}`)
+        service: ha
+        tls:
+          certResolver: default
+          domains:
+            - main: "{{domain}}"
+              sans:
+                - "*.{{domain}}"
+    services:
+      ha:
+        loadBalancer:
+          serversTransport: unmanaged
+          servers:
+            - url: http://10.1.154.4:8123
+
+traefik_configuration_extension_yaml: |
+    serversTransports:
+      unmanaged:
+        insecureSkipVerify: true
 
 ########################################################################
 #                                                                      #
@@ -192,8 +217,13 @@ matrix_synapse_admin_enabled: true
 matrix_synapse_ext_password_provider_shared_secret_auth_enabled: true
 matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret}}"
 
+
+  # Element Call #
+matrix_element_call_enabled: true
+
   # Synapse Stats #  
 matrix_synapse_usage_exporter_enabled: true
+
 
 # (Optional) Expose endpoint if you want to collect statistics from outside (from other homeservers).
 # If enabled, synapse-usage-exporter will be exposed publicly at `matrix.DOMAIN/report-usage-stats/push`.
