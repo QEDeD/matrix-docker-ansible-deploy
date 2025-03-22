@@ -6089,7 +6089,7 @@ matrix_user_verification_service_container_url: "http://{{  matrix_user_verifica
 matrix_user_verification_service_uvs_homeserver_url: "{{ matrix_addons_homeserver_client_api_url }}"
 
 # We connect via the container network (private IPs), so we need to disable IP checks
-matrix_user_verification_service_uvs_disable_ip_blacklist: "{{'true' if matrix_synapse_enabled else 'false'}}"
+matrix_user_verification_service_uvs_disable_ip_blacklist: "{{ matrix_synapse_enabled }}"
 
 matrix_user_verification_service_uvs_auth_token: "{{ '%s' | format(matrix_homeserver_generic_secret_key) | password_hash('sha512', 'uvs.auth.token', rounds=655555) | to_uuid }}"
 
@@ -6151,8 +6151,6 @@ matrix_static_files_file_matrix_client_property_org_matrix_msc4143_rtc_foci_auto
   }}
 
 matrix_static_files_file_matrix_server_property_m_server: "{{ matrix_server_fqn_matrix_federation }}:{{ matrix_federation_public_port }}"
-
-matrix_static_files_file_element_element_json_property_call_widget_url: "{{ matrix_element_call_public_url if matrix_element_call_enabled else '' }}"
 
 matrix_static_files_scheme: "{{ 'https' if matrix_playbook_ssl_enabled else 'http' }}"
 
