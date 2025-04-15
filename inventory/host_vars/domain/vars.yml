@@ -53,32 +53,7 @@ traefik_dashboard_basicauth_password: "{{traefik_dashboard_basicauth_password}}"
 # For alternatives, see `docs/configuring-playbook-own-webserver.md`.
 matrix_playbook_reverse_proxy_type: playbook-managed-traefik
 
-traefik_provider_configuration_extension_yaml: |
-  http:
-    routers:
-      ha:
-        entrypoints: web-secure
-        rule: Host(`ha.{{domain}}`)
-        service: ha
-        tls:
-          certResolver: default
-          domains:
-            - main: "{{domain}}"
-              sans:
-                - "*.{{domain}}"
-    services:
-      ha:
-        loadBalancer:
-          serversTransport: unmanaged
-          servers:
-            - url: http://10.1.154.4:8123
-
-traefik_configuration_extension_yaml: |
-    serversTransports:
-      unmanaged:
-        insecureSkipVerify: true
-
-traefik_additional_domains_to_obtain_certificates_for: "*.{{domain}}"
+traefik_additional_domains_to_obtain_certificates_for: "ha.int.{{domain}}"
 
 ########################################################################
 #                                                                      #
