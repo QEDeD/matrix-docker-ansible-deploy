@@ -16,7 +16,7 @@
   version: 129c8590e106b83e6f4c259649a613c6279e937a
   name: docker_sdk_for_python
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-etherpad.git
-  version: v2.2.7-4
+  version: v2.3.0-0
   name: etherpad
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-exim-relay.git
   version: v4.98.1-r0-2-0
@@ -25,13 +25,13 @@
   version: v11.6.0-0
   name: grafana
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-jitsi.git
-  version: v10133-1-0
+  version: v10184-0
   name: jitsi
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-livekit-server.git
-  version: v1.8.4-3
+  version: v1.8.4-5
   name: livekit_server
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-ntfy.git
-  version: v2.11.0-4
+  version: v2.11.0-5
   name: ntfy
 - src: git+https://github.com/devture/com.devture.ansible.role.playbook_help.git
   version: 201c939eed363de269a83ba29784fc3244846048
