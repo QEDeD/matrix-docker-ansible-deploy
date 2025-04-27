@@ -226,11 +226,12 @@ matrix_mautrix_whatsapp_registration_yaml: |
   rate_limited: false
   namespaces:
       users:
-      - regex: '^@whatsapp_[0-9]+:{{ matrix_mautrix_whatsapp_homeserver_domain | regex_escape }}$'
+      - regex: '^@whatsapp_.*:{{ matrix_mautrix_whatsapp_homeserver_domain | regex_escape }}$'
         exclusive: true
       - exclusive: true
         regex: '^@{{ matrix_mautrix_whatsapp_appservice_bot_username | regex_escape }}:{{ matrix_mautrix_whatsapp_homeserver_domain | regex_escape }}$'
   de.sorunome.msc2409.push_ephemeral: true
+  receive_ephemeral: true
   io.element.msc4190: {{ matrix_mautrix_whatsapp_msc4190_enabled | to_json }}
 
 matrix_mautrix_whatsapp_registration: "{{ matrix_mautrix_whatsapp_registration_yaml | from_yaml }}"
