@@ -55,9 +55,7 @@ This section details what you can expect when switching to the Matrix Authentica
 
 - ❌ **Some services experience issues when authenticating via MAS**:
 
-  - [Postmoogle](./configuring-playbook-bridge-postmoogle.md) works the first time around, but it consistently fails after restarting:
-
-    > cannot initialize matrix bot error="olm account is marked as shared, keys seem to have disappeared from the server"
+  - [Reminder bot](configuring-playbook-bot-matrix-reminder-bot.md) seems to be losing some of its state on each restart and may reschedule old reminders once again
 
 - ❌ **Encrypted appservices** do not work yet (related to [MSC4190](https://github.com/matrix-org/matrix-spec-proposals/pull/4190) and [PR 17705 for Synapse](https://github.com/element-hq/synapse/pull/17705)), so all bridges/bots that rely on encryption will fail to start (see [this issue](https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/3658) for Hookshot). You can use these bridges/bots only if you **keep end-to-bridge encryption disabled** (which is the default setting).
 

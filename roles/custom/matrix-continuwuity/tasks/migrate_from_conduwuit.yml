@@ -63,16 +63,16 @@
           ansible.builtin.file:
             path: "{{ matrix_base_data_path }}/continuwuity"
             state: directory
-            owner: "{{ matrix_user_username }}"
-            group: "{{ matrix_user_groupname }}"
+            owner: "{{ matrix_user_name }}"
+            group: "{{ matrix_group_name }}"
             recurse: true
 
         - name: Set continuwuity_old ownership
           ansible.builtin.file:
             path: "{{ matrix_base_data_path }}/continuwuity_old"
             state: directory
-            owner: "{{ matrix_user_username }}"
-            group: "{{ matrix_user_groupname }}"
+            owner: "{{ matrix_user_name }}"
+            group: "{{ matrix_group_name }}"
             recurse: true
 
     - name: Ensure matrix-continuwuity.service systemd service is started
