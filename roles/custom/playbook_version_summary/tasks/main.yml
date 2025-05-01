@@ -1,0 +1,9 @@
+---
+- name: Display current version summary
+  ansible.builtin.import_tasks: display_summary.yml
+  tags: ["version_summary"]
+
+- name: View version history
+  ansible.builtin.import_tasks: view_history.yml
+  tags: ["version_history"]
+  when: matrix_playbook_show_version_history | default(false) | bool

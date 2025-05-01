@@ -1,0 +1,8 @@
+---
+- name: View Matrix Version History
+  hosts: "{{ target_host | default('matrix_servers') }}"
+  gather_facts: true
+  
+  tasks:
+    - name: Include version history display task
+      ansible.builtin.include_tasks: view_history.yml

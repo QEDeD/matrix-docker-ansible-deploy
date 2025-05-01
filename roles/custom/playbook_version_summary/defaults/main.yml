@@ -1,0 +1,9 @@
+---
+# Whether to enable the version summary feature
+matrix_playbook_version_summary_enabled: true
+
+# Where to store the local facts file
+matrix_playbook_version_summary_facts_file: "matrix_container_versions.fact"
+
+# Whether to display the summary
+matrix_playbook_version_summary_display: true

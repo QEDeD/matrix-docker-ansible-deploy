@@ -1,0 +1,148 @@
+---
+- name: Skip version summary display - feature disabled
+  ansible.builtin.meta: end_play
+  when: not matrix_playbook_version_summary_enabled | default(true) | bool
+
+- name: Ensure facts directory exists
+  ansible.builtin.file:
+    path: /etc/ansible/facts.d
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Get current container versions (matrix containers only)
+  ansible.builtin.shell: |
+    docker ps --format "{% raw %}{{.Names}},{{.Image}}{% endraw %}" | grep -E '^matrix-'
+  register: docker_containers
+  changed_when: false
+  check_mode: false
+  # Allow non-zero exit code when no containers match
+  failed_when: docker_containers.rc != 0 and docker_containers.rc != 1
+
+- name: Process current versions
+  ansible.builtin.set_fact:
+    current_versions: "{{ dict(docker_containers.stdout_lines
+                       | map('regex_replace', '^([^,]+),.*:([^@]+).*$', '\\1,\\2')
+                       | map('split', ',') | list) }}"
+  when: docker_containers.stdout_lines | length > 0
+
+- name: Read local facts if they exist
+  ansible.builtin.set_fact:
+    before_versions: "{{ ansible_local.matrix_container_versions | default({}) }}"
+  when: ansible_local is defined and ansible_local.matrix_container_versions is defined
+
+- name: Initialize before_versions if not exists
+  ansible.builtin.set_fact:
+    before_versions: {}
+  when: before_versions is not defined
+
+- name: Read version history if it exists
+  ansible.builtin.set_fact:
+    version_history: "{{ ansible_local.matrix_version_history | default({'last_versions': {}, 'changes': []}) }}"
+  when: ansible_local is defined and ansible_local.matrix_version_history is defined
+
+- name: Initialize version history if not exists
+  ansible.builtin.set_fact:
+    version_history: { "last_versions": {}, "changes": [] }
+  when: version_history is not defined
+
+- name: Process version changes for each service
+  ansible.builtin.set_fact:
+    version_changes: "{{ {} }}"
+  when: current_versions is defined and current_versions | length > 0
+
+- name: Build version changes dict
+  ansible.builtin.set_fact:
+    version_changes: "{{ version_changes | default({}) | combine({item: {
+                          'previous': before_versions[item] | default('-'),
+                          'current': current_versions[item],
+                          'status': 'NEW' if item not in before_versions 
+                                     else 'UPDATED' if before_versions[item] != current_versions[item] 
+                                     else 'UNCHANGED'
+                        }}) }}"
+  loop: "{{ current_versions.keys() | list }}"
+  when: current_versions is defined and current_versions | length > 0
+
+- name: Check for actual changes
+  ansible.builtin.set_fact:
+    changed_items: "{{ version_changes | default({}) | dict2items | selectattr('value.status', 'in', ['NEW', 'UPDATED']) | list }}"
+  when: version_changes is defined
+
+- name: Record changes to history when changes exist
+  ansible.builtin.set_fact:
+    new_history_entry: {
+      'timestamp': ansible_date_time.iso8601,
+      'changes': "{{ dict(changed_items | map(attribute='key') | zip(changed_items | map(attribute='value'))) }}"
+    }
+  when: 
+    - changed_items is defined 
+    - changed_items | length > 0
+
+- name: Update history with new changes
+  ansible.builtin.set_fact:
+    updated_changes: "{{ ([new_history_entry] + version_history.changes) if new_history_entry is defined else version_history.changes }}"
+  when: version_history is defined
+
+- name: Limit history to 20 entries
+  ansible.builtin.set_fact:
+    trimmed_changes: "{{ updated_changes[0:20] if (updated_changes | length > 20) else updated_changes }}"
+  when: updated_changes is defined
+
+- name: Update version history with changes
+  ansible.builtin.set_fact:
+    version_history: {
+      'last_versions': "{{ current_versions }}",
+      'changes': "{{ trimmed_changes | default([]) }}"
+    }
+  when: current_versions is defined and current_versions | length > 0
+
+- name: Create ASCII summary table
+  ansible.builtin.set_fact:
+    version_summary: |
+      MATRIX SERVICE VERSION CHANGES - {{ ansible_date_time.iso8601 }}
+      
+      +---------------------------------+---------------------------------+---------------------------------+------------+
+      | SERVICE/CONTAINER               | VERSION BEFORE                  | VERSION AFTER                   | STATUS     |
+      +=================================+=================================+=================================+============+
+      {% for service_name in current_versions.keys() | sort %}
+      | {{ "%-31s" | format(service_name | truncate(31, true)) }} | {{ "%-31s" | format((version_changes[service_name].previous | default('-') | string) | truncate(31, true)) }} | {{ "%-31s" | format(version_changes[service_name].current | string | truncate(31, true)) }} | {{ '%10s' | format(version_changes[service_name].status) }} |
+      {% endfor %}
+      +---------------------------------+---------------------------------+---------------------------------+------------+
+      
+      Total matrix containers: {{ current_versions | length }}
+      
+      {% if new_history_entry is defined %}
+      [NEW VERSION CHANGES RECORDED]
+      {% endif %}
+  when:
+    - current_versions is defined
+    - current_versions | length > 0
+
+- name: Display empty table message when no containers found
+  ansible.builtin.set_fact:
+    version_summary: |
+      MATRIX SERVICE VERSION CHANGES - {{ ansible_date_time.iso8601 }}
+      
+      No matrix containers found running on this host.
+  when: current_versions is not defined or current_versions | length == 0
+
+- name: Display version summary
+  ansible.builtin.debug:
+    msg: "{{ version_summary.split('\n') }}"
+  when: version_summary is defined
+
+- name: Write current versions to fact file
+  ansible.builtin.copy:
+    content: "{{ current_versions | default({}) | to_json }}"
+    dest: /etc/ansible/facts.d/matrix_container_versions.fact
+    mode: '0644'
+  become: true
+  when: current_versions is defined and current_versions | length > 0
+
+- name: Write version history to fact file
+  ansible.builtin.copy:
+    content: "{{ version_history | to_json }}"
+    dest: /etc/ansible/facts.d/matrix_version_history.fact
+    mode: '0644'
+  become: true
+  when: version_history is defined
