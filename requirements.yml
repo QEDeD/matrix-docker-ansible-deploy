@@ -22,7 +22,7 @@
   version: v4.98.1-r0-2-0
   name: exim_relay
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-grafana.git
-  version: v11.6.1-2
+  version: v11.6.2-0
   name: grafana
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-jitsi.git
   version: v10184-0
@@ -49,7 +49,7 @@
   version: v17-3
   name: postgres_backup
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus.git
-  version: v3.3.1-0
+  version: v3.4.0-1
   name: prometheus
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus-node-exporter.git
   version: v1.9.1-3
