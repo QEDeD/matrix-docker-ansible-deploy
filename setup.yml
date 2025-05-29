@@ -172,7 +172,7 @@
   tags:
     - always
   vars:
-    matrix_playbook_version_summary_display: true
+    matrix_version_summary_display: true
   tasks:
     - name: Include version summary display tasks
-      ansible.builtin.include_tasks: roles/custom/playbook_version_summary/tasks/display_summary.yml
+      ansible.builtin.include_tasks: roles/custom/matrix-version-summary/tasks/display_summary.yml
