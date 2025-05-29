@@ -17,10 +17,10 @@ This role tracks container version changes over time and provides tools to view 
 
 ```bash
 # View changes history (default mode)
-ansible-playbook -i inventory/hosts roles/custom/playbook_version_summary/tasks/history_playbook.yml -e "target_host=your-matrix-server.com" -K
+ansible-playbook -i inventory/hosts roles/custom/matrix-version-summary/tasks/history_playbook.yml -e "target_host=your-matrix-server.com" -K
 
 # View full service history
-ansible-playbook -i inventory/hosts roles/custom/playbook_version_summary/tasks/history_playbook.yml -e "target_host=your-matrix-server.com view_mode=full" -K
+ansible-playbook -i inventory/hosts roles/custom/matrix-version-summary/tasks/history_playbook.yml -e "target_host=your-matrix-server.com view_mode=full" -K
 
 # Filter for a specific service
-ansible-playbook -i inventory/hosts roles/custom/playbook_version_summary/tasks/history_playbook.yml -e "target_host=your-matrix-server.com service_filter=matrix-synapse" -K
+ansible-playbook -i inventory/hosts roles/custom/matrix-version-summary/tasks/history_playbook.yml -e "target_host=your-matrix-server.com service_filter=matrix-synapse" -K
