@@ -12,7 +12,7 @@
 
 - name: Get current container versions (matrix containers only)
   ansible.builtin.shell: |
-    docker ps --filter "name={{ container_prefix }}" --format "{{.Names}}:{{.Image}}" | sort
+    docker ps --filter "name={{ container_prefix }}" --format "{{ "{{" }}.Names{{ "}}" }}:{{ "{{" }}.Image{{ "}}" }}" | sort
   register: container_versions
   changed_when: false
 
