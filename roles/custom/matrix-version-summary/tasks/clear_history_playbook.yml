@@ -1,0 +1,29 @@
+---
+- name: Clear Matrix Version History
+  hosts: "{{ target_host }}"
+  gather_facts: true
+  vars:
+    confirm_clear: "{{ confirm_clear | default('no') }}"
+    matrix_version_history_fact_file: "{{ matrix_version_history_fact_file | default('matrix_version_history.fact') }}"
+  tasks:
+    - name: Confirm history clearing
+      ansible.builtin.fail:
+        msg: "History clearing aborted. Use -e 'confirm_clear=yes' to confirm clearing history."
+      when: confirm_clear != 'yes'
+
+    - name: Clear version history
+      ansible.builtin.file:
+        path: "/etc/ansible/facts.d/{{ matrix_version_history_fact_file }}"
+        state: absent
+      become: true
+      register: clear_result
+      
+    - name: Display confirmation message
+      ansible.builtin.debug:
+        msg: "Matrix version history has been cleared successfully."
+      when: clear_result.changed
+      
+    - name: Display no history message
+      ansible.builtin.debug:
+        msg: "No history file found to clear."
+      when: not clear_result.changed

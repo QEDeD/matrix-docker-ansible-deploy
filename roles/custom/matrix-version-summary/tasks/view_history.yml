@@ -1,0 +1,110 @@
+---
+- name: Read version history if it exists
+  ansible.builtin.set_fact:
+    version_history: "{{ ansible_local[matrix_version_history_fact_file | regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}"
+  when: ansible_local is defined and ansible_local[matrix_version_history_fact_file | regex_replace('\\.fact$', '')] is defined
+
+- name: Initialize version history if not exists
+  ansible.builtin.set_fact:
+    version_history: { "last_versions": {}, "changes": [], "full_history": {} }
+  when: version_history is not defined
+
+- name: Set view mode
+  ansible.builtin.set_fact:
+    view_mode: "{{ view_mode | default('changes') }}"
+    service_filter: "{{ service_filter | default('') }}"
+
+- name: Prepare changes history table
+  ansible.builtin.set_fact:
+    changes_history_table: |-
+      ┌─────────────────────────────────────────────────────────────────────────────────┐
+      │ MATRIX VERSION HISTORY - CHANGES                                                │
+      └─────────────────────────────────────────────────────────────────────────────────┘
+      {% if version_history.changes | default([]) | length == 0 %}
+      ┌─────────────────────────────────────────────────────────────────────────────────┐
+      │ No version changes have been recorded yet.                                      │
+      │ Run the playbook with container updates to generate history.                    │
+      └─────────────────────────────────────────────────────────────────────────────────┘
+      {% else %}
+      {% for change_record in version_history.changes %}
+      {% if change_record.event_type is defined and change_record.event_type == 'initial' %}
+      ┌─────────────────────────────────────────────────────────────────────────────────┐
+      │ INITIAL STATE RECORDED: {{ "%-48s" | format(change_record.timestamp) }} │
+      │ RECORDED BY: {{ "%-61s" | format(change_record.user | default('Unknown')) }} │
+      ├───────────────────────────┬───────────────────────────┬───────────────────────────┤
+      │ SERVICE                   │ INITIAL VERSION           │                           │
+      ├───────────────────────────┼───────────────────────────┼───────────────────────────┤
+      {% for service_name, change in change_record.changes.items() | sort %}
+      {% if service_filter == '' or service_filter in service_name %}
+      │ {{ "%-25s" | format(service_name | truncate(25, true)) }} │ {{ "%-25s" | format(change.current | string | truncate(25, true)) }} │                           │
+      {% endif %}
+      {% endfor %}
+      └───────────────────────────┴───────────────────────────┴───────────────────────────┘
+      {% else %}
+      ┌─────────────────────────────────────────────────────────────────────────────────┐
+      │ UPDATE RECORDED: {{ "%-53s" | format(change_record.timestamp) }} │
+      │ UPDATED BY: {{ "%-60s" | format(change_record.user | default('Unknown')) }} │
+      ├───────────────────────────┬───────────────────────────┬───────────────────────────┤
+      │ SERVICE                   │ FROM VERSION              │ TO VERSION                │
+      ├───────────────────────────┼───────────────────────────┼───────────────────────────┤
+      {% for service_name, change in change_record.changes.items() | sort %}
+      {% if service_filter == '' or service_filter in service_name %}
+      │ {{ "%-25s" | format(service_name | truncate(25, true)) }} │ {{ "%-25s" | format(change.previous | default('-') | string | truncate(25, true)) }} │ {{ "%-25s" | format(change.current | string | truncate(25, true)) }} │
+      {% endif %}
+      {% endfor %}
+      └───────────────────────────┴───────────────────────────┴───────────────────────────┘
+      {% endif %}
+      {% endfor %}
+      {% endif %}
+  when: view_mode == 'changes'
+
+- name: Display changes history table line by line
+  ansible.builtin.debug:
+    msg: "{{ item }}"
+  loop: "{{ changes_history_table.split('\n') }}"
+  loop_control:
+    label: ""
+  when: view_mode == 'changes'
+
+- name: Prepare full history table
+  ansible.builtin.set_fact:
+    full_history_table: |-
+      ┌─────────────────────────────────────────────────────────────────────────────────┐
+      │ MATRIX VERSION HISTORY - FULL SERVICE HISTORY                                   │
+      └─────────────────────────────────────────────────────────────────────────────────┘
+      {% if version_history.full_history | default({}) | length == 0 %}
+      ┌─────────────────────────────────────────────────────────────────────────────────┐
+      │ No version history has been recorded yet.                                       │
+      │ Run the playbook with container updates to generate history.                    │
+      └─────────────────────────────────────────────────────────────────────────────────┘
+      {% else %}
+      {% for service_name, service_data in version_history.full_history.items() | sort %}
+      {% if service_filter == '' or service_filter in service_name %}
+      ┌─────────────────────────────────────────────────────────────────────────────────┐
+      │ SERVICE: {{ "%-69s" | format(service_name | truncate(69, true)) }} │
+      │ CURRENT VERSION: {{ "%-59s" | format(service_data.version | truncate(59, true)) }} │
+      │ LAST UPDATED: {{ "%-62s" | format(service_data.last_updated | default('Unknown')) }} │
+      {% if service_data.updates | default([]) | length > 0 %}
+      ├─────────────────────────────┬───────────────────────┬───────────────────────────┤
+      │ TIMESTAMP                   │ FROM VERSION          │ TO VERSION                │
+      ├─────────────────────────────┼───────────────────────┼───────────────────────────┤
+      {% for update in service_data.updates | default([]) %}
+      │ {{ "%-27s" | format(update.timestamp | truncate(27, true)) }} │ {{ "%-21s" | format(update.previous | default('-') | string | truncate(21, true)) }} │ {{ "%-25s" | format(update.current | string | truncate(25, true)) }} │
+      {% endfor %}
+      {% else %}
+      │ No version changes recorded for this service.                                   │
+      {% endif %}
+      └─────────────────────────────┴───────────────────────┴───────────────────────────┘
+
+      {% endif %}
+      {% endfor %}
+      {% endif %}
+  when: view_mode == 'full'
+
+- name: Display full history table line by line
+  ansible.builtin.debug:
+    msg: "{{ item }}"
+  loop: "{{ full_history_table.split('\n') }}"
+  loop_control:
+    label: ""
+  when: view_mode == 'full'

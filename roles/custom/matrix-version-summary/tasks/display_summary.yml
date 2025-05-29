@@ -1,0 +1,169 @@
+---
+- name: Skip version summary display - feature disabled
+  ansible.builtin.meta: end_play
+  when: not matrix_playbook_show_version_summary | default(show_version_summary) | bool
+
+- name: Ensure facts directory exists
+  ansible.builtin.file:
+    path: /etc/ansible/facts.d
+    state: directory
+    mode: '0755'
+  become: true
+
+- name: Get current container versions (matrix containers only)
+  ansible.builtin.shell: |
+    docker ps --filter "name={{ container_prefix }}" --format "{{.Names}}:{{.Image}}" | sort
+  register: container_versions
+  changed_when: false
+
+- name: Process current versions
+  ansible.builtin.set_fact:
+    current_versions: "{{ {} }}"
+    after_versions: "{{ {} }}"
+  
+- name: Read local facts if they exist
+  ansible.builtin.set_fact:
+    before_versions: "{{ ansible_local[matrix_versions_fact_file | regex_replace('\\.fact$', '')] | default({}) }}"
+  when: ansible_local is defined and ansible_local[matrix_versions_fact_file | regex_replace('\\.fact$', '')] is defined
+
+- name: Initialize before_versions if not exists
+  ansible.builtin.set_fact:
+    before_versions: {}
+  when: before_versions is not defined
+
+- name: Read version history if it exists
+  ansible.builtin.set_fact:
+    version_history: "{{ ansible_local[matrix_version_history_fact_file | regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}"
+  when: ansible_local is defined and ansible_local[matrix_version_history_fact_file | regex_replace('\\.fact$', '')] is defined
+
+- name: Initialize version history if not exists
+  ansible.builtin.set_fact:
+    version_history: { "last_versions": {}, "changes": [], "full_history": {} }
+  when: version_history is not defined
+
+- name: Process version changes for each service
+  ansible.builtin.set_fact:
+    current_versions: "{{ current_versions | combine({container.split(':')[0]: container.split(':')[1:] | join(':')}) }}"
+  with_items: "{{ container_versions.stdout_lines }}"
+  loop_control:
+    loop_var: container
+
+- name: Build version changes dict
+  ansible.builtin.set_fact:
+    after_versions: "{{ after_versions | combine({item: {'current': current_versions[item], 'previous': before_versions[item] | default(none), 'status': 'NEW' if item not in before_versions else ('UPDATED' if current_versions[item] != before_versions[item] else 'UNCHANGED')}}) }}"
+  with_items: "{{ current_versions.keys() | list }}"
+
+- name: Check for actual changes
+  ansible.builtin.set_fact:
+    has_changes: "{{ after_versions.values() | selectattr('status', 'in', ['NEW', 'UPDATED']) | list | length > 0 }}"
+    first_run: "{{ before_versions.keys() | length == 0 }}"
+
+- name: Record changes to history when changes exist
+  ansible.builtin.set_fact:
+    version_history_changes: "{{ {} }}"
+  when: has_changes
+
+- name: Update history with new changes
+  ansible.builtin.set_fact:
+    version_history_changes: "{{ version_history_changes | default({}) | combine({item.key: {'previous': item.value.previous, 'current': item.value.current}}) }}"
+  with_dict: "{{ after_versions }}"
+  when: has_changes and item.value.status != 'UNCHANGED'
+
+- name: Get current timestamp
+  ansible.builtin.command: date -u +"%Y-%m-%d %H:%M:%S"
+  register: current_timestamp_cmd
+  changed_when: false
+  when: has_changes or first_run
+
+- name: Set current timestamp
+  ansible.builtin.set_fact:
+    current_timestamp: "{{ current_timestamp_cmd.stdout }}"
+  when: has_changes or first_run
+
+- name: Get current username
+  ansible.builtin.set_fact:
+    current_user: "{{ lookup('env', 'USER') }}"
+  when: has_changes or first_run
+
+# Record initial state on first run
+- name: Record initial state for full history
+  ansible.builtin.set_fact:
+    first_run_changes: "{{ {} }}"
+  when: first_run
+
+- name: Build initial state record
+  ansible.builtin.set_fact:
+    first_run_changes: "{{ first_run_changes | default({}) | combine({item.key: {'previous': '-', 'current': item.value.current}}) }}"
+  with_dict: "{{ after_versions }}"
+  when: first_run
+
+- name: Add initial state to changes history
+  ansible.builtin.set_fact:
+    version_history: "{{ version_history | combine({'changes': ([{'timestamp': current_timestamp, 'user': current_user, 'changes': first_run_changes, 'event_type': 'initial'}] + version_history.changes)[:history_max_entries | default(100) | int]}) }}"
+  when: first_run and first_run_changes is defined
+
+# Update full history for tracking every service independently
+- name: Update full history for each service
+  ansible.builtin.set_fact:
+    version_history: "{{ version_history | combine({'full_history': version_history.full_history | default({}) | combine({item.key: {'version': item.value.current, 'last_updated': current_timestamp if item.value.status != 'UNCHANGED' else (version_history.full_history[item.key].last_updated | default(current_timestamp)), 'status': item.value.status, 'updates': (version_history.full_history[item.key].updates | default([]) + [{'timestamp': current_timestamp, 'previous': item.value.previous | default('-'), 'current': item.value.current, 'user': current_user}])[:20] if item.value.status != 'UNCHANGED' else (version_history.full_history[item.key].updates | default([]))}}), recursive=true)}) }}"
+  with_dict: "{{ after_versions }}"
+  when: (has_changes or first_run) and not item.value.status == 'UNCHANGED'
+
+# Record incremental changes only when not first run and changes exist
+- name: Record incremental changes
+  ansible.builtin.set_fact:
+    version_history: "{{ version_history | combine({'changes': ([{'timestamp': current_timestamp, 'user': current_user, 'changes': version_history_changes, 'event_type': 'update'}] + version_history.changes)[:history_max_entries | default(100) | int]}) }}"
+  when: has_changes and version_history_changes is defined and version_history_changes | length > 0 and not first_run
+
+- name: Update version history with last known versions
+  ansible.builtin.set_fact:
+    version_history: "{{ version_history | combine({'last_versions': current_versions}) }}"
+
+- name: Create ASCII summary table
+  ansible.builtin.set_fact:
+    version_table: |-
+      MATRIX SERVICE VERSION CHANGES - {{ current_timestamp | default(lookup('pipe', 'date -u +"%Y-%m-%d %H:%M:%S"')) }}
+
+      ┌─────────────────────────────┬─────────────────────────────┬─────────────────────────────┬────────────┐
+      │ SERVICE/CONTAINER           │ VERSION BEFORE              │ VERSION AFTER               │ STATUS     │
+      ├─────────────────────────────┼─────────────────────────────┼─────────────────────────────┼────────────┤
+      {% for service_name, values in after_versions.items() | sort %}
+      │ {{ "%-25s" | format(service_name | truncate(25, true)) }} │ {{ "%-25s" | format(values.previous | default('-') | string | truncate(25, true)) }} │ {{ "%-25s" | format(values.current | string | truncate(25, true)) }} │ {{ "%-10s" | format(values.status) }} │
+      {% endfor %}
+      └─────────────────────────────┴─────────────────────────────┴─────────────────────────────┴────────────┘
+
+      Total matrix containers: {{ after_versions | length }}
+      {% if has_changes %}
+      [NEW VERSION CHANGES RECORDED]
+      {% elif first_run %}
+      [INITIAL STATE RECORDED]
+      {% else %}
+      [NO CHANGES DETECTED]
+      {% endif %}
+
+- name: Display empty table message when no containers found
+  ansible.builtin.debug:
+    msg: "No Matrix containers found running. Start services first to see version information."
+  when: current_versions | length == 0
+
+- name: Display version summary line by line
+  ansible.builtin.debug:
+    msg: "{{ item }}"
+  loop: "{{ version_table.split('\n') }}"
+  loop_control:
+    label: ""
+  when: current_versions | length > 0
+
+- name: Write current versions to fact file
+  ansible.builtin.copy:
+    content: "{{ current_versions | to_nice_json }}"
+    dest: "/etc/ansible/facts.d/{{ matrix_versions_fact_file }}"
+    mode: '0644'
+  become: true
+
+- name: Write version history to fact file
+  ansible.builtin.copy:
+    content: "{{ version_history | to_nice_json }}"
+    dest: "/etc/ansible/facts.d/{{ matrix_version_history_fact_file }}"
+    mode: '0644'
+  become: true

@@ -1,0 +1,12 @@
+---
+- name: View Matrix Version History
+  hosts: "{{ target_host }}"
+  gather_facts: true
+  vars:
+    view_mode: "{{ view_mode | default('changes') }}"
+    service_filter: "{{ service_filter | default('') }}"
+    matrix_versions_fact_file: "{{ matrix_versions_fact_file | default('matrix_versions.fact') }}"
+    matrix_version_history_fact_file: "{{ matrix_version_history_fact_file | default('matrix_version_history.fact') }}"
+  tasks:
+    - name: Include version history display task
+      include_tasks: view_history.yml
