@@ -110,7 +110,7 @@
 # Update full history for tracking every service independently
 - name: Update full history for each service
   ansible.builtin.set_fact:
-    version_history: "{{ version_history | combine({'full_history': version_history.full_history | default({}) | combine({item.key: {'version': item.value.current, 'last_updated': current_timestamp if item.value.status != 'UNCHANGED' else (version_history.full_history[item.key].last_updated | default(current_timestamp)), 'status': item.value.status, 'updates': (version_history.full_history[item.key].updates | default([]) + [{'timestamp': current_timestamp, 'previous': item.value.previous | default('-'), 'current': item.value.current, 'user': current_user}])[:20] if item.value.status != 'UNCHANGED' else (version_history.full_history[item.key].updates | default([]))}}), recursive=true)}) }}"
+    version_history: "{{ version_history | combine({'full_history': version_history.full_history | default({}) | combine({item.key: {'version': item.value.current, 'last_updated': current_timestamp if item.value.status != 'UNCHANGED' else (version_history.full_history[item.key].last_updated | default(current_timestamp)), 'status': item.value.status, 'updates': (version_history.full_history[item.key].updates | default([]) + [{'timestamp': current_timestamp, 'previous': item.value.previous | default('-'), 'current': item.value.current, 'user': current_user}])[:20] if item.value.status != 'UNCHANGED' else (version_history.full_history[item.key].updates | default([]))}}), recursive=True)}) }}"
   with_dict: "{{ after_versions }}"
   when: (has_changes or first_run) and not item.value.status == 'UNCHANGED'
 
@@ -148,7 +148,7 @@
 
 - name: Apply retention policy to full history updates for each service
   ansible.builtin.set_fact:
-    version_history: "{{ version_history | combine({'full_history': version_history.full_history | default({}) | combine({item.key: item.value | combine({'updates': item.value.updates | default([]) | rejectattr('timestamp', 'lt', retention_cutoff_date) | list})}, recursive=true)}) }}"
+    version_history: "{{ version_history | combine({'full_history': version_history.full_history | default({}) | combine({item.key: item.value | combine({'updates': item.value.updates | default([]) | rejectattr('timestamp', 'lt', retention_cutoff_date) | list})}, recursive=True)}) }}"
   with_dict: "{{ version_history.full_history | default({}) }}"
   when: retention_cutoff_date is defined and version_history.full_history is defined and item.value.updates is defined and item.value.updates | length > 0
 
