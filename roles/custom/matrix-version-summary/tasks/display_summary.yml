@@ -1,7 +1,7 @@
 ---
 - name: Skip version summary display - feature disabled
   ansible.builtin.meta: end_play
-  when: not matrix_version_summary_display | default(matrix_show_version_summary) | bool
+  when: not matrix_version_summary_display | default(matrix_show_version_summary | default(true)) | bool
 
 - name: Ensure facts directory exists
   ansible.builtin.file:
@@ -12,7 +12,7 @@
 
 - name: Get current container versions (matrix containers only)
   ansible.builtin.shell: |
-    docker ps --filter "name={{ matrix_container_prefix }}" --format "{{ "{{" }}.Names{{ "}}" }}:{{ "{{" }}.Image{{ "}}" }}" | sort
+    docker ps --filter "name={{ matrix_container_prefix | default('matrix-') }}" --format "{{ "{{" }}.Names{{ "}}" }}:{{ "{{" }}.Image{{ "}}" }}" | sort
   register: container_versions
   changed_when: false
 
@@ -23,8 +23,8 @@
   
 - name: Read local facts if they exist
   ansible.builtin.set_fact:
-    before_versions: "{{ ansible_local[matrix_versions_fact_file | regex_replace('\\.fact$', '')] | default({}) }}"
-  when: ansible_local is defined and ansible_local[matrix_versions_fact_file | regex_replace('\\.fact$', '')] is defined
+    before_versions: "{{ ansible_local[(matrix_versions_fact_file | default('matrix_versions.fact')) | regex_replace('\\.fact$', '')] | default({}) }}"
+  when: ansible_local is defined and ansible_local[(matrix_versions_fact_file | default('matrix_versions.fact')) | regex_replace('\\.fact$', '')] is defined
 
 - name: Initialize before_versions if not exists
   ansible.builtin.set_fact:
@@ -33,8 +33,8 @@
 
 - name: Read version history if it exists
   ansible.builtin.set_fact:
-    version_history: "{{ ansible_local[matrix_history_fact_file | regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}"
-  when: ansible_local is defined and ansible_local[matrix_history_fact_file | regex_replace('\\.fact$', '')] is defined
+    version_history: "{{ ansible_local[(matrix_history_fact_file | default('matrix_version_history.fact')) | regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}"
+  when: ansible_local is defined and ansible_local[(matrix_history_fact_file | default('matrix_version_history.fact')) | regex_replace('\\.fact$', '')] is defined
 
 - name: Initialize version history if not exists
   ansible.builtin.set_fact:
@@ -190,13 +190,13 @@
 - name: Write current versions to fact file
   ansible.builtin.copy:
     content: "{{ current_versions | to_nice_json }}"
-    dest: "/etc/ansible/facts.d/{{ matrix_versions_fact_file }}"
+    dest: "/etc/ansible/facts.d/{{ matrix_versions_fact_file | default('matrix_versions.fact') }}"
     mode: '0644'
   become: true
 
 - name: Write version history to fact file
   ansible.builtin.copy:
     content: "{{ version_history | to_nice_json }}"
-    dest: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
+    dest: "/etc/ansible/facts.d/{{ matrix_history_fact_file | default('matrix_version_history.fact') }}"
     mode: '0644'
   become: true

@@ -19,8 +19,8 @@
 
     - name: Read current version history
       ansible.builtin.set_fact:
-        version_history: "{{ ansible_local[matrix_history_fact_file | regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}"
-      when: ansible_local is defined and ansible_local[matrix_history_fact_file | regex_replace('\\.fact$', '')] is defined
+        version_history: "{{ ansible_local[(matrix_history_fact_file | default('matrix_version_history.fact')) | regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}"
+      when: ansible_local is defined and ansible_local[(matrix_history_fact_file | default('matrix_version_history.fact')) | regex_replace('\\.fact$', '')] is defined
 
     - name: Initialize empty history if not found
       ansible.builtin.set_fact:
