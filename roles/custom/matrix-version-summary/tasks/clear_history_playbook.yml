@@ -4,7 +4,7 @@
   gather_facts: true
   vars:
     confirm_clear: "{{ confirm_clear | default('no') }}"
-    matrix_version_summary_history_fact_file: "{{ matrix_version_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    matrix_history_fact_file: "{{ matrix_history_fact_file | default('matrix_version_history.fact') }}"
   tasks:
     - name: Confirm history clearing
       ansible.builtin.fail:
@@ -13,7 +13,7 @@
 
     - name: Clear version history
       ansible.builtin.file:
-        path: "/etc/ansible/facts.d/{{ matrix_version_summary_history_fact_file }}"
+        path: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
         state: absent
       become: true
       register: clear_result

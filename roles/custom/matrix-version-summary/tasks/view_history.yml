@@ -1,13 +1,36 @@
 ---
 - name: Read version history if it exists
   ansible.builtin.set_fact:
-    version_history: "{{ ansible_local[matrix_version_summary_history_fact_file | regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}"
-  when: ansible_local is defined and ansible_local[matrix_version_summary_history_fact_file | regex_replace('\\.fact$', '')] is defined
+    version_history: "{{ ansible_local[matrix_history_fact_file | regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}"
+  when: ansible_local is defined and ansible_local[matrix_history_fact_file | regex_replace('\\.fact$', '')] is defined
 
 - name: Initialize version history if not exists
   ansible.builtin.set_fact:
     version_history: { "last_versions": {}, "changes": [], "full_history": {} }
   when: version_history is not defined
+
+# Apply date-based retention cleanup when reading history
+- name: Get cutoff date for retention cleanup
+  ansible.builtin.command: date -u -d "{{ matrix_history_retention_days | default(365) }} days ago" +"%Y-%m-%d %H:%M:%S"
+  register: cutoff_date_cmd
+  changed_when: false
+  when: matrix_history_retention_days is defined and matrix_history_retention_days | int > 0
+
+- name: Set cutoff date for retention
+  ansible.builtin.set_fact:
+    retention_cutoff_date: "{{ cutoff_date_cmd.stdout }}"
+  when: cutoff_date_cmd is defined and cutoff_date_cmd.stdout is defined
+
+- name: Apply retention policy to changes history for viewing
+  ansible.builtin.set_fact:
+    version_history: "{{ version_history | combine({'changes': version_history.changes | default([]) | rejectattr('timestamp', 'lt', retention_cutoff_date) | list}) }}"
+  when: retention_cutoff_date is defined and version_history.changes is defined and version_history.changes | length > 0
+
+- name: Apply retention policy to full history updates for viewing
+  ansible.builtin.set_fact:
+    version_history: "{{ version_history | combine({'full_history': version_history.full_history | default({}) | combine({item.key: item.value | combine({'updates': item.value.updates | default([]) | rejectattr('timestamp', 'lt', retention_cutoff_date) | list})}, recursive=true)}) }}"
+  with_dict: "{{ version_history.full_history | default({}) }}"
+  when: retention_cutoff_date is defined and version_history.full_history is defined and item.value.updates is defined and item.value.updates | length > 0
 
 - name: Set view mode
   ansible.builtin.set_fact:
