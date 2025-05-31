@@ -217,34 +217,32 @@
 - name: Display version summary table
   ansible.builtin.debug:
     msg: |
-      ═══════════════════════════════════════════════════════════════════════════════════
-      MATRIX SERVICE VERSION SUMMARY - {{ current_timestamp | default(ansible_date_time.year + '-' + ansible_date_time.month + '-' + ansible_date_time.day + ' ' + ansible_date_time.hour + ':' + ansible_date_time.minute + ':' + ansible_date_time.second) }}
-      {% if is_status_display %}[STATUS CHECK MODE - Current running versions displayed]{% endif %}
-      ═══════════════════════════════════════════════════════════════════════════════════
-
-      {{ '%-28s %-22s %-22s %-12s' | format('SERVICE/CONTAINER', 'VERSION BEFORE', 'VERSION AFTER', 'STATUS') }}
-      {{ '─' * 28 }} {{ '─' * 22 }} {{ '─' * 22 }} {{ '─' * 12 }}
+      
+      ================================================================================
+                              MATRIX SERVICE VERSION SUMMARY
+                    {{ current_timestamp | default(ansible_date_time.year + '-' + ansible_date_time.month + '-' + ansible_date_time.day + ' ' + ansible_date_time.hour + ':' + ansible_date_time.minute + ':' + ansible_date_time.second) }}
+      {% if is_status_display %}              [STATUS CHECK MODE - Current running versions displayed]
+      {% endif %}================================================================================
+      
+      SERVICE                           VERSION BEFORE        VERSION AFTER         STATUS
+      --------------------------------------------------------------------------------
       {% for service_name, values in after_versions.items() | sort %}
-      {{ '%-28s %-22s %-22s %-12s' | format(
-          service_name[:27],
-          (values.previous | default('-') | string)[:21],
-          values.current[:21],
-          values.status[:11]
-        ) }}
+      {{ service_name[:32] | ljust(33) }} {{ (values.previous | default('-') | string)[:20] | ljust(21) }} {{ values.current[:20] | ljust(21) }} {{ values.status }}
       {% endfor %}
-
-      ═══════════════════════════════════════════════════════════════════════════════════
-      Total matrix containers: {{ after_versions | length }}
+      --------------------------------------------------------------------------------
+      
+      SUMMARY: {{ after_versions | length }} Matrix containers total
       {% if is_status_display %}
-      [STATUS CHECK - Displaying current running versions without recording changes]
+      STATUS: Displaying current running versions (no changes recorded)
       {% elif has_changes %}
-      [NEW VERSION CHANGES RECORDED]
+      RESULT: New version changes have been recorded
       {% elif first_run %}
-      [INITIAL STATE RECORDED]
+      RESULT: Initial state has been recorded
       {% else %}
-      [NO CHANGES DETECTED]
+      RESULT: No changes detected since last run
       {% endif %}
-      ═══════════════════════════════════════════════════════════════════════════════════
+      ================================================================================
+      
   when: current_versions | length > 0
 
 - name: Display empty table message when no containers found
