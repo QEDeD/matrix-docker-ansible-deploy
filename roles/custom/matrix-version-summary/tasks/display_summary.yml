@@ -227,7 +227,7 @@
       SERVICE                           VERSION BEFORE        VERSION AFTER         STATUS
       --------------------------------------------------------------------------------
       {% for service_name, values in after_versions.items() | sort %}
-      {{ service_name[:32] | ljust(33) }} {{ (values.previous | default('-') | string)[:20] | ljust(21) }} {{ values.current[:20] | ljust(21) }} {{ values.status }}
+      {{ "%-33s %-21s %-21s %s" | format(service_name[:32], (values.previous | default('-') | string)[:20], values.current[:20], values.status) }}
       {% endfor %}
       --------------------------------------------------------------------------------
       
