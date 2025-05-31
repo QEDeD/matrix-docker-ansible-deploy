@@ -5,6 +5,14 @@
 .idea/
 .direnv/
 
+# Python virtual environments
+ansible-validation-env/
+venv/
+env/
+.venv/
+*.pyc
+__pycache__/
+
 # ignore roles pulled by ansible-galaxy
 /roles/galaxy/*
 !/roles/galaxy/.gitkeep

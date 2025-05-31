@@ -6,6 +6,7 @@ matrix_history_retention_days: 365  # Number of days to retain history entries (
 
 # Enable/disable version summary display (can be overridden with matrix_version_summary_display)
 matrix_show_version_summary: true
+matrix_version_summary_display: "{{ matrix_show_version_summary }}"
 
 # Version fact files
 matrix_versions_fact_file: "matrix_versions.fact"

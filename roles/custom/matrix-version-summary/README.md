@@ -17,11 +17,21 @@ This role tracks container version changes over time and provides tools to view 
 
 The role supports the following configuration variables:
 
-- `matrix_history_max_entries`: Maximum number of history entries to keep (default: 100). Set to 0 for unlimited.
-- `matrix_history_retention_days`: Number of days to retain history entries (default: 365). Set to 0 for unlimited.
-- `matrix_show_version_summary`: Enable/disable version summary display (default: true)
-- `matrix_container_prefix`: Container name prefix to filter for Matrix containers (default: "matrix-")
-- `matrix_table_style_unicode`: Use Unicode characters for table borders (default: true)
+| Variable | Default Value | Description |
+|----------|---------------|-------------|
+| `matrix_container_prefix` | `"matrix-"` | Container name prefix to filter for Matrix containers |
+| `matrix_history_max_entries` | `100` | Maximum number of history entries to keep (count-based limit). Set to 0 for unlimited |
+| `matrix_history_retention_days` | `365` | Number of days to retain history entries (date-based limit). Set to 0 for unlimited |
+| `matrix_show_version_summary` | `true` | Enable/disable version summary display (legacy variable) |
+| `matrix_version_summary_display` | `"{{ matrix_show_version_summary }}"` | Primary control for enabling/disabling version summary display |
+| `matrix_versions_fact_file` | `"matrix_versions.fact"` | Filename for storing current version facts |
+| `matrix_history_fact_file` | `"matrix_version_history.fact"` | Filename for storing version history facts |
+| `matrix_table_style_unicode` | `true` | Use Unicode characters for table borders (set to false for ASCII-only) |
+
+### Variable Precedence
+- `matrix_version_summary_display` takes precedence over `matrix_show_version_summary`
+- Both variables default to `true` if not explicitly set
+- Setting either to `false` will disable the version summary display
 
 ## Usage
 
@@ -87,3 +97,74 @@ Version history is stored in Ansible local facts:
 - **Version history**: `/etc/ansible/facts.d/matrix_version_history.fact`
 
 These files persist across playbook runs and system reboots.
+
+## Execution Modes
+
+The role supports two distinct execution modes:
+
+### Full Playbook Execution (Normal Mode)
+When the role runs as part of the complete `setup.yml` playbook:
+- **Behavior**: Normal change tracking - compares "before" and "after" versions
+- **Status Values**: `NEW`, `UPDATED`, `UNCHANGED`
+- **History Recording**: Records actual version changes to history files
+- **Use Case**: During normal Matrix service upgrades and deployments
+
+### Status Check Mode (Tag-Only Execution)
+When run independently with `--tags=matrix-version-summary`:
+- **Behavior**: Status checking - displays current running versions without comparison
+- **Status Values**: `CURRENT` (shows what's currently running)
+- **History Recording**: Skipped - no phantom "changes" recorded
+- **Use Case**: Quick status check of running service versions
+
+```bash
+# Normal execution (part of full playbook)
+ansible-playbook -i inventory/hosts setup.yml
+
+# Status check mode (tag-only execution)
+ansible-playbook -i inventory/hosts setup.yml --tags=matrix-version-summary
+```
+
+The role automatically detects the execution context and adjusts its behavior accordingly, preventing the logical inconsistency of recording "UNCHANGED" status when no actual upgrades have occurred.
+
+## Testing and Usage
+
+### Standard Usage (Recommended)
+```bash
+# Normal operation with change tracking
+ansible-playbook -i inventory/hosts setup.yml
+
+# Status check without recording changes
+ansible-playbook -i inventory/hosts setup.yml --tags=matrix-version-summary
+
+# Test in check mode (no actual changes)
+ansible-playbook -i inventory/hosts setup.yml --tags=matrix-version-summary --check
+
+# Mixed tag usage (still runs in normal mode)
+ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,matrix-version-summary
+```
+
+## Technical Implementation Details
+
+### Mode Detection
+The role uses `ansible_run_tags` to detect execution context:
+- **Status Check Mode**: When `ansible_run_tags` contains only `matrix-version-summary`
+- **Normal Mode**: All other execution scenarios (including mixed tags)
+
+### Error Handling
+The role includes robust error handling for common scenarios:
+- Docker command failures (service not running, docker not available)
+- Missing or malformed container data
+- Fact file access issues
+- Invalid retention policy configurations
+
+### Data Safety
+In Status Check Mode, the role operates in read-only mode:
+- **No file modifications**: Fact files remain unchanged
+- **No history updates**: Prevents phantom change records
+- **No retention operations**: Skips cleanup that could affect data
+
+### Variable Validation
+Key variables are validated during execution:
+- Container prefix format validation
+- Retention policy value validation
+- Execution mode detection verification (when verbose mode enabled)

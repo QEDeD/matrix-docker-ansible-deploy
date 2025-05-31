@@ -166,13 +166,7 @@
 
     - role: galaxy/playbook_runtime_messages
 
-- name: Display version summary
-  hosts: "{{ target_host | default('all') }}"
-  become: true
-  tags:
-    - always
-  vars:
-    matrix_version_summary_display: true
-  tasks:
-    - name: Include version summary display tasks
-      ansible.builtin.include_tasks: roles/custom/matrix-version-summary/tasks/display_summary.yml
+    - role: custom/matrix-version-summary
+      tags:
+        - always
+        - matrix-version-summary
