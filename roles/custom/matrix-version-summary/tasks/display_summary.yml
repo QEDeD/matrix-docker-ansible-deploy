@@ -66,7 +66,7 @@
 - name: Process version changes for each service
   ansible.builtin.set_fact:
     current_versions: "{{ current_versions | combine({container.split(':')[0]: container.split(':')[1:] | join(':')}) }}"
-  with_items: "{{ container_versions.stdout_lines | default([]) }}"
+  loop: "{{ container_versions.stdout_lines | default([]) }}"
   loop_control:
     loop_var: container
   when:
@@ -78,14 +78,14 @@
 - name: Build version changes dict
   ansible.builtin.set_fact:
     after_versions: "{{ after_versions | combine({item: {'current': current_versions[item], 'previous': before_versions[item] | default(none), 'status': 'NEW' if item not in before_versions else ('UPDATED' if current_versions[item] != before_versions[item] else 'UNCHANGED')}}) }}"
-  with_items: "{{ current_versions.keys() | list }}"
+  loop: "{{ current_versions.keys() | list }}"
   when: current_versions | length > 0 and not (status_check_mode | default(false) | bool)
 
 # In status check mode, create a separate display dict to avoid overwriting change detection data
 - name: Build status display dict for tag-only execution
   ansible.builtin.set_fact:
     after_versions: "{{ after_versions | combine({item: {'current': current_versions[item], 'previous': current_versions[item], 'status': 'CURRENT'}}) }}"
-  with_items: "{{ current_versions.keys() | list }}"
+  loop: "{{ current_versions.keys() | list }}"
   when:
     - current_versions | length > 0
     - status_check_mode | default(false) | bool
@@ -217,42 +217,45 @@
 - name: Display version summary as an aligned table
   ansible.builtin.debug:
     msg: |
-      Matrix Service Version Summary ({{ current_timestamp | default(ansible_date_time.year + '-' + ansible_date_time.month + '-' + ansible_date_time.day + ' ' + ansible_date_time.hour + ':' + ansible_date_time.minute + ':' + ansible_date_time.second) }})
+      Matrix Service Version Summary ({{ current_timestamp
+          | default(ansible_date_time.year ~ '-' ~ ansible_date_time.month ~ '-' ~ ansible_date_time.day ~ ' ' ~ ansible_date_time.hour ~ ':' ~ ansible_date_time.minute ~ ':' ~ ansible_date_time.second) }})
       {% if is_status_display %}Status Check Mode - Current running versions displayed{% endif %}
-      
-      {#--- Build a sorted list of services and their data ---#}
+
+      {# Build a sorted list of services and their data #}
       {% set rows = after_versions | dict2items | sort(attribute='key') %}
 
-      {#--- Determine column widths (fall back to header‐lengths if no rows) ---#}
-      {% set default_service_width = 'Service' | length %}
-      {% set default_image_width   = 'Image'   | length %}
-      {% set default_status_width  = 'Status'  | length %}
+      {# Determine column widths (fall back to header-lengths if no rows) #}
+      {% set default_sw = 'Service' | length %}
+      {% set default_iw = 'Image'   | length %}
+      {% set default_stw = 'Status' | length %}
 
       {% if rows | length > 0 %}
-        {% set service_width = (rows | map(attribute='key') | map('length') | max) %}
-        {% set image_width   = (rows | map(attribute='value.current') | map('length') | max) %}
-        {% set status_width  = (rows | map(attribute='value.status') | map('length') | max) %}
+        {% set sw  = (rows | map(attribute='key') | map('length') | max) %}
+        {% set iw  = (rows | map(attribute='value.current') | map('length') | max) %}
+        {% set stw = (rows | map(attribute='value.status') | map('length') | max) %}
       {% else %}
-        {% set service_width = default_service_width %}
-        {% set image_width   = default_image_width %}
-        {% set status_width  = default_status_width %}
+        {% set sw  = default_sw %}
+        {% set iw  = default_iw %}
+        {% set stw = default_stw %}
       {% endif %}
 
-      {#--- Header row ---#}
-      {{ '%-{}s | %-{}s | %-{}s'.format(service_width, image_width, status_width) 
-         % ('Service','Image','Status') }}
-      {{ '-' * service_width }}-+-{{ '-' * image_width }}-+-{{ '-' * status_width }}
+      {# Header row #}
+      {{ '%-{}s | %-{}s | %-{}s'.format(sw, iw, stw) % ('Service', 'Image', 'Status') }}
+      {{ '-' * sw }} | {{ '-' * iw }} | {{ '-' * stw }}
 
-      {#--- One row per service ---#}
+      {# One row per service #}
       {% for item in rows %}
-      {{ '%-{}s | %-{}s | %-{}s'.format(service_width, image_width, status_width) 
+      {{ '%-{}s | %-{}s | %-{}s'.format(sw, iw, stw)
          % (item.key, item.value.current, item.value.status) }}
       {% endfor %}
 
-      {#--- Footer summary ---#}
+      {# Blank line before the footer #}
+      {}
+
+      {# Footer summary #}
       Summary: {{ rows | length }} Matrix containers total
 
-      {#--- Result line ---#}
+      {# Result line #}
       {% if is_status_display %}
       Result: Displaying current running versions (no changes recorded)
       {% elif has_changes %}
@@ -284,3 +287,4 @@
     mode: '0644'
   become: true
   when: not is_status_display
+
