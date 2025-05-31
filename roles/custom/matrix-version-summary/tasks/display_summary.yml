@@ -221,18 +221,18 @@
       MATRIX SERVICE VERSION SUMMARY - {{ current_timestamp | default(ansible_date_time.year + '-' + ansible_date_time.month + '-' + ansible_date_time.day + ' ' + ansible_date_time.hour + ':' + ansible_date_time.minute + ':' + ansible_date_time.second) }}
       {% if is_status_display %}[STATUS CHECK MODE - Current running versions displayed]{% endif %}
       ═══════════════════════════════════════════════════════════════════════════════════
-      
+
       {{ '%-28s %-22s %-22s %-12s' | format('SERVICE/CONTAINER', 'VERSION BEFORE', 'VERSION AFTER', 'STATUS') }}
       {{ '─' * 28 }} {{ '─' * 22 }} {{ '─' * 22 }} {{ '─' * 12 }}
       {% for service_name, values in after_versions.items() | sort %}
       {{ '%-28s %-22s %-22s %-12s' | format(
-          service_name[:27], 
-          (values.previous | default('-') | string)[:21], 
-          values.current[:21], 
+          service_name[:27],
+          (values.previous | default('-') | string)[:21],
+          values.current[:21],
           values.status[:11]
         ) }}
       {% endfor %}
-      
+
       ═══════════════════════════════════════════════════════════════════════════════════
       Total matrix containers: {{ after_versions | length }}
       {% if is_status_display %}
