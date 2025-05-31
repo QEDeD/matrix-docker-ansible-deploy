@@ -220,9 +220,18 @@
 
 - name: Prepare table data for display
   ansible.builtin.set_fact:
-    table_data: "{{ [['Service', 'Image', 'Status']] + (after_versions | dict2items | sort(attribute='key') | map('extract_service_row') | list) }}"
-  vars:
-    extract_service_row: "{{ [item.key, item.value.current, item.value.status] }}"
+    table_data: []
+  when: after_versions | length > 0
+
+- name: Build table header
+  ansible.builtin.set_fact:
+    table_data: "{{ [['Service', 'Image', 'Status']] }}"
+  when: after_versions | length > 0
+
+- name: Add service rows to table data
+  ansible.builtin.set_fact:
+    table_data: "{{ table_data + [[item.key, item.value.current, item.value.status]] }}"
+  loop: "{{ after_versions | dict2items | sort(attribute='key') }}"
   when: after_versions | length > 0
 
 - name: Display version summary as a formatted table
