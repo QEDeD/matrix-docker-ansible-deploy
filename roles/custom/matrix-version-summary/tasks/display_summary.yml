@@ -214,28 +214,54 @@
   with_dict: "{{ version_history.full_history | default({}) }}"
   when: retention_cutoff_date is defined and version_history.full_history is defined and item.value.updates is defined and item.value.updates | length > 0 and updated_service_record is defined and not is_status_display
 
-- name: Display version summary table
+- name: Display version summary as an aligned table
   ansible.builtin.debug:
     msg: |
+      Matrix Service Version Summary ({{ current_timestamp | default(ansible_date_time.year + '-' + ansible_date_time.month + '-' + ansible_date_time.day + ' ' + ansible_date_time.hour + ':' + ansible_date_time.minute + ':' + ansible_date_time.second) }})
+      {% if is_status_display %}Status Check Mode - Current running versions displayed{% endif %}
       
-      ╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
-      ║                                                                          MATRIX SERVICE VERSION SUMMARY                                                                                                                        ║
-      ║                                                                                 {{ current_timestamp | default(ansible_date_time.year + '-' + ansible_date_time.month + '-' + ansible_date_time.day + ' ' + ansible_date_time.hour + ':' + ansible_date_time.minute + ':' + ansible_date_time.second) }}                                                                                ║
-      {% if is_status_display %}║                                                                      [STATUS CHECK MODE - Current running versions displayed]                                                                       ║{% endif %}
-      ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
-      
-      {% for service_name, values in after_versions.items() | sort %}
-      ┌─ {{ service_name }} ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-      │ Current Version:  {{ values.current }}
-      {% if not is_status_display and values.previous and values.previous != values.current %}│ Previous Version: {{ values.previous }}{% endif %}
-      │ Status:           {{ values.status }}{% if values.status == 'UPDATED' %} ⬆️{% elif values.status == 'NEW' %} 🆕{% elif values.status == 'CURRENT' %} ✅{% endif %}
-      └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+      {#--- Build a sorted list of services and their data ---#}
+      {% set rows = after_versions | dict2items | sort(attribute='key') %}
+
+      {#--- Determine column widths (fall back to header‐lengths if no rows) ---#}
+      {% set default_service_width = 'Service' | length %}
+      {% set default_image_width   = 'Image'   | length %}
+      {% set default_status_width  = 'Status'  | length %}
+
+      {% if rows | length > 0 %}
+        {% set service_width = (rows | map(attribute='key') | map('length') | max) %}
+        {% set image_width   = (rows | map(attribute='value.current') | map('length') | max) %}
+        {% set status_width  = (rows | map(attribute='value.status') | map('length') | max) %}
+      {% else %}
+        {% set service_width = default_service_width %}
+        {% set image_width   = default_image_width %}
+        {% set status_width  = default_status_width %}
+      {% endif %}
+
+      {#--- Header row ---#}
+      {{ '%-{}s | %-{}s | %-{}s'.format(service_width, image_width, status_width) 
+         % ('Service','Image','Status') }}
+      {{ '-' * service_width }}-+-{{ '-' * image_width }}-+-{{ '-' * status_width }}
+
+      {#--- One row per service ---#}
+      {% for item in rows %}
+      {{ '%-{}s | %-{}s | %-{}s'.format(service_width, image_width, status_width) 
+         % (item.key, item.value.current, item.value.status) }}
       {% endfor %}
-      
-      ╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
-      ║ SUMMARY: {{ after_versions | length }} Matrix containers total                                                                                                                                                                                                          ║
-      {% if is_status_display %}║ STATUS: Displaying current running versions (no changes recorded)                                                                                                                                          ║{% elif has_changes %}║ RESULT: New version changes have been recorded                                                                                                                                                              ║{% elif first_run %}║ RESULT: Initial state has been recorded                                                                                                                                                                ║{% else %}║ RESULT: No changes detected since last run                                                                                                                                                              ║{% endif %}
-      ╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+      {#--- Footer summary ---#}
+      Summary: {{ rows | length }} Matrix containers total
+
+      {#--- Result line ---#}
+      {% if is_status_display %}
+      Result: Displaying current running versions (no changes recorded)
+      {% elif has_changes %}
+      Result: New version changes have been recorded
+      {% elif first_run %}
+      Result: Initial state has been recorded
+      {% else %}
+      Result: No changes detected since last run
+      {% endif %}
   when: current_versions | length > 0
 
 - name: Display empty table message when no containers found
