@@ -41,8 +41,8 @@
 
 - name: Process current versions
   ansible.builtin.set_fact:
-    current_versions: "{}"
-    after_versions: "{}"
+    current_versions: {}
+    after_versions: {}
 - name: Read local facts if they exist
   ansible.builtin.set_fact:
     before_versions: "{{ ansible_local[(matrix_versions_fact_file | regex_replace('\\.fact$', ''))] | default({}) }}"
@@ -98,7 +98,7 @@
 
 - name: Record changes to history when changes exist
   ansible.builtin.set_fact:
-    version_history_changes: "{}"
+    version_history_changes: {}
   when: has_changes and not is_status_display
 
 - name: Update history with new changes
@@ -120,7 +120,7 @@
 # Record initial state on first run
 - name: Record initial state for full history
   ansible.builtin.set_fact:
-    first_run_changes: "{}"
+    first_run_changes: {}
   when: first_run and not is_status_display
 
 - name: Build initial state record
