@@ -219,19 +219,15 @@
     msg: |
       Matrix Service Version Summary ({{ current_timestamp
         | default(ansible_date_time.year ~ '-' ~ ansible_date_time.month ~ '-' ~ ansible_date_time.day ~ ' ' ~ ansible_date_time.hour ~ ':' ~ ansible_date_time.minute ~ ':' ~ ansible_date_time.second) }})
-      {% if is_status_display %}Status Check Mode - Current running versions displayed{% endif %}
+      {% if is_status_display %}Status Check Mode - Current running versions displayed{% endif %}      {% set table_data = [] %}
+      {% for item in (after_versions | dict2items | sort(attribute='key')) %}
+      {% set _ = table_data.append({'service': item.key, 'image': item.value.current, 'status': item.value.status}) %}
+      {% endfor %}
 
-      {% set rows = after_versions
-         | dict2items
-         | sort(attribute='key')
-         | map('extract', ['key', 'value.current', 'value.status'])
-         | list
-      %}
+      {% if table_data | length > 0 %}
+      {{ table_data | community.general.to_prettytable(column_order=['service', 'image', 'status']) }}
 
-      {% if rows | length > 0 %}
-      {{ ([ ['Service','Image','Status'] ] + rows) | community.general.texttable }}
-
-      Summary: {{ rows | length }} Matrix containers total
+      Summary: {{ table_data | length }} Matrix containers total
       {% else %}
       (No Matrix containers to display)
       {% endif %}
