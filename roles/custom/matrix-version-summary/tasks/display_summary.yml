@@ -242,6 +242,16 @@
   ignore_errors: true
   register: prettytable_result
 
+- name: DEBUG: show raw table_data
+  ansible.builtin.debug:
+    var: table_data
+  when: after_versions | length > 0
+
+- name: DEBUG: show prettytable_result
+  ansible.builtin.debug:
+    var: prettytable_result
+  when: table_data | length > 0
+
 - name: Create fallback pipe-delimited table if prettytable failed
   ansible.builtin.set_fact:
     version_summary_table: |-
@@ -252,6 +262,17 @@
   when:
     - current_versions | length > 0
     - prettytable_result is failed or version_summary_table is not defined
+
+- name: DEBUG: show raw version_summary_table contents
+  ansible.builtin.debug:
+    var: version_summary_table
+
+- name: TEST minimal heredoc printing
+  ansible.builtin.shell: |
+    cat <<'EOF'
+    Hello, this is a test.
+    EOF
+  changed_when: false
 
 - name: Display version summary via shell heredoc (no escaping)
   ansible.builtin.shell: |
@@ -272,8 +293,7 @@
     EOF
   when: 
     - current_versions | length > 0
-    - version_summary_table is defined 
-    - version_summary_table | length > 0
+    - current_versions | length > 0
   changed_when: false
 
 - name: Display empty table message when no containers found
