@@ -17,12 +17,12 @@
         state: absent
       become: true
       register: clear_result
-      
+
     - name: Display confirmation message
       ansible.builtin.debug:
         msg: "Matrix version history has been cleared successfully."
       when: clear_result.changed
-      
+
     - name: Display no history message
       ansible.builtin.debug:
         msg: "No history file found to clear."

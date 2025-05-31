@@ -24,7 +24,7 @@
 
     - name: Initialize empty history if not found
       ansible.builtin.set_fact:
-        version_history: { "changes": [], "full_history": {} }
+        version_history: {"changes": [], "full_history": {}}
       when: version_history is not defined
 
     - name: Calculate original entry count
@@ -33,7 +33,7 @@
 
     - name: Trim changes history to max entries
       ansible.builtin.set_fact:
-        trimmed_history: "{{ version_history | combine({'changes': version_history.changes | default([])[:matrix_history_max_entries | int]}) }}"
+        trimmed_history: "{{ version_history | combine({'changes': (version_history.changes | default([]))[: matrix_history_max_entries | int]}) }}"
 
     - name: Write trimmed history back to fact file
       ansible.builtin.copy:
