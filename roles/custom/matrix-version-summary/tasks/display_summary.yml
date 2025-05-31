@@ -214,46 +214,28 @@
   loop: "{{ version_history.full_history | default({}) | dict2items }}"
   when: retention_cutoff_date is defined and version_history.full_history is defined and item.value.updates is defined and item.value.updates | length > 0 and updated_service_record is defined and not is_status_display
 
-- name: Display version summary as an aligned table
+- name: Display version summary as a formatted table
   ansible.builtin.debug:
     msg: |
       Matrix Service Version Summary ({{ current_timestamp
         | default(ansible_date_time.year ~ '-' ~ ansible_date_time.month ~ '-' ~ ansible_date_time.day ~ ' ' ~ ansible_date_time.hour ~ ':' ~ ansible_date_time.minute ~ ':' ~ ansible_date_time.second) }})
       {% if is_status_display %}Status Check Mode - Current running versions displayed{% endif %}
 
-      {# Build a sorted list of services and their data #}
-      {% set rows = after_versions | dict2items | sort(attribute='key') %}
-
-      {# Determine column widths (fall back to header‐lengths if no rows) #}
-      {% set default_sw = 'Service' | length %}
-      {% set default_iw = 'Image'   | length %}
-      {% set default_stw = 'Status' | length %}
+      {% set rows = after_versions
+         | dict2items
+         | sort(attribute='key')
+         | map('extract', ['key', 'value.current', 'value.status'])
+         | list
+      %}
 
       {% if rows | length > 0 %}
-      {% set sw  = (rows | map(attribute='key') | map('length') | max) %}
-      {% set iw  = (rows | map(attribute='value.current') | map('length') | max) %}
-      {% set stw = (rows | map(attribute='value.status') | map('length') | max) %}
-      {% else %}
-      {% set sw  = default_sw %}
-      {% set iw  = default_iw %}
-      {% set stw = default_stw %}
-      {% endif %}
-
-      {# Header row #}
-      {{ '%-{}s | %-{}s | %-{}s'.format(sw, iw, stw) % ('Service', 'Image', 'Status') }}
-      {{ '-' * sw }} | {{ '-' * iw }} | {{ '-' * stw }}
-
-      {# One row per service #}
-      {% for item in rows %}
-      {{ '%-{}s | %-{}s | %-{}s'.format(sw, iw, stw)
-         % (item.key, item.value.current, item.value.status) }}
-      {% endfor %}
-
-      {# EXACTLY one blank line before the footer #}
+      {{ ([ ['Service','Image','Status'] ] + rows) | community.general.texttable }}
 
       Summary: {{ rows | length }} Matrix containers total
+      {% else %}
+      (No Matrix containers to display)
+      {% endif %}
 
-      {# Result line #}
       {% if is_status_display %}
       Result: Displaying current running versions (no changes recorded)
       {% elif has_changes %}
@@ -285,4 +267,3 @@
     mode: '0644'
   become: true
   when: not is_status_display
-
