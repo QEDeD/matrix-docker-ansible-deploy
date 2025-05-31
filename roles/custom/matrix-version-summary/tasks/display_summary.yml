@@ -1,4 +1,8 @@
 ---
+# Display version summary with current states and changes
+# Requires: Python 'prettytable' module for table formatting
+# Install with: pip install prettytable
+
 # Set default variables to prevent undefined variable errors during standalone execution
 - name: Set default variables
   ansible.builtin.set_fact:
@@ -28,8 +32,7 @@
   ansible.builtin.file:
     path: /etc/ansible/facts.d
     state: directory
-    mode: '0755'
-  become: true
+    mode: '0755'  become: true
 
 - name: Get current container versions (matrix containers only)
   ansible.builtin.shell: |
@@ -214,20 +217,24 @@
   loop: "{{ version_history.full_history | default({}) | dict2items }}"
   when: retention_cutoff_date is defined and version_history.full_history is defined and item.value.updates is defined and item.value.updates | length > 0 and updated_service_record is defined and not is_status_display
 
+- name: Prepare table data for display
+  ansible.builtin.set_fact:
+    table_data: "{{ [['Service', 'Image', 'Status']] + (after_versions | dict2items | sort(attribute='key') | map('extract_service_row') | list) }}"
+  vars:
+    extract_service_row: "{{ [item.key, item.value.current, item.value.status] }}"
+  when: after_versions | length > 0
+
 - name: Display version summary as a formatted table
   ansible.builtin.debug:
     msg: |
       Matrix Service Version Summary ({{ current_timestamp
         | default(ansible_date_time.year ~ '-' ~ ansible_date_time.month ~ '-' ~ ansible_date_time.day ~ ' ' ~ ansible_date_time.hour ~ ':' ~ ansible_date_time.minute ~ ':' ~ ansible_date_time.second) }})
-      {% if is_status_display %}Status Check Mode - Current running versions displayed{% endif %}      {% set table_data = [] %}
-      {% for item in (after_versions | dict2items | sort(attribute='key')) %}
-      {% set _ = table_data.append({'service': item.key, 'image': item.value.current, 'status': item.value.status}) %}
-      {% endfor %}
+      {% if is_status_display %}Status Check Mode - Current running versions displayed{% endif %}
+      
+      {% if after_versions | length > 0 %}
+      {{ table_data | community.general.to_prettytable }}
 
-      {% if table_data | length > 0 %}
-      {{ table_data | community.general.to_prettytable(column_order=['service', 'image', 'status']) }}
-
-      Summary: {{ table_data | length }} Matrix containers total
+      Summary: {{ after_versions | length }} Matrix containers total
       {% else %}
       (No Matrix containers to display)
       {% endif %}

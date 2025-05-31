@@ -16,3 +16,6 @@ __pycache__/
 # ignore roles pulled by ansible-galaxy
 /roles/galaxy/*
 !/roles/galaxy/.gitkeep
+
+# ignore implementation documentation
+IMPLEMENTATION-SUMMARY.md
