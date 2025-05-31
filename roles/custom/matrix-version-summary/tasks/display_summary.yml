@@ -232,66 +232,49 @@
   loop: "{{ after_versions | dict2items | sort(attribute='key') }}"
   when: after_versions | length > 0
 
-- name: Display version summary as a formatted table
-  ansible.builtin.debug:
-    msg: |
-      Matrix Service Version Summary ({{ current_timestamp
-        | default(ansible_date_time.year ~ '-' ~ ansible_date_time.month ~ '-' ~ ansible_date_time.day ~ ' ' ~ ansible_date_time.hour ~ ':' ~ ansible_date_time.minute ~ ':' ~ ansible_date_time.second) }})
-      {% if is_status_display %}Status Check Mode - Current running versions displayed{% endif %}
-      
-      {% if after_versions | length > 0 %}
-      {{ table_data | community.general.to_prettytable }}
-
-      Summary: {{ after_versions | length }} Matrix containers total
-      {% else %}
-      (No Matrix containers to display)
-      {% endif %}
-
-      {% if is_status_display %}
-      Result: Displaying current running versions (no changes recorded)
-      {% elif has_changes %}
-      Result: New version changes have been recorded
-      {% elif first_run %}
-      Result: Initial state has been recorded
-      {% else %}
-      Result: No changes detected since last run
-      {% endif %}
-  when: current_versions | length > 0
-  ignore_errors: true
-  register: table_display_result
-
-- name: Display fallback table on prettytable failure
-  ansible.builtin.debug:
-    msg: |
-      Matrix Service Version Summary ({{ current_timestamp
-        | default(ansible_date_time.year ~ '-' ~ ansible_date_time.month ~ '-' ~ ansible_date_time.day ~ ' ' ~ ansible_date_time.hour ~ ':' ~ ansible_date_time.minute ~ ':' ~ ansible_date_time.second) }})
-      {% if is_status_display %}Status Check Mode - Current running versions displayed{% endif %}
-      
-      {% if after_versions | length > 0 %}
-      Service                          | Image                                      | Status
-      ---------------------------------|--------------------------------------------|----------
-      {% for item in after_versions | dict2items | sort(attribute='key') %}
-      {{ "%-32s" | format(item.key) }} | {{ "%-42s" | format(item.value.current) }} | {{ item.value.status }}
-      {% endfor %}
-
-      Summary: {{ after_versions | length }} Matrix containers total
-      Note: Fallback table formatting used (prettytable unavailable)
-      {% else %}
-      (No Matrix containers to display)
-      {% endif %}
-
-      {% if is_status_display %}
-      Result: Displaying current running versions (no changes recorded)
-      {% elif has_changes %}
-      Result: New version changes have been recorded
-      {% elif first_run %}
-      Result: Initial state has been recorded
-      {% else %}
-      Result: No changes detected since last run
-      {% endif %}
+- name: Create formatted table using prettytable
+  ansible.builtin.set_fact:
+    version_summary_table: "{{ table_data | community.general.to_prettytable }}"
   when: 
     - current_versions | length > 0
-    - table_display_result is failed
+    - table_data is defined
+    - table_data | length > 0
+  ignore_errors: true
+  register: prettytable_result
+
+- name: Create fallback pipe-delimited table if prettytable failed
+  ansible.builtin.set_fact:
+    version_summary_table: |-
+      Service | Image | Status
+      {%- for item in after_versions | dict2items | sort(attribute='key') %}
+      {{ '\n' }}{{ item.key }} | {{ item.value.current }} | {{ item.value.status }}
+      {%- endfor %}
+  when:
+    - current_versions | length > 0
+    - prettytable_result is failed or version_summary_table is not defined
+
+- name: Display version summary via shell heredoc (no escaping)
+  ansible.builtin.shell: |
+    cat <<'EOF'
+    {{ version_summary_table }}
+
+    Summary: {{ after_versions | length }} Matrix containers total
+
+    {% if is_status_display %}
+    Result: Displaying current running versions (no changes recorded)
+    {% elif has_changes %}
+    Result: New version changes have been recorded
+    {% elif first_run %}
+    Result: Initial state has been recorded
+    {% else %}
+    Result: No changes detected since last run
+    {% endif %}
+    EOF
+  when: 
+    - current_versions | length > 0
+    - version_summary_table is defined 
+    - version_summary_table | length > 0
+  changed_when: false
 
 - name: Display empty table message when no containers found
   ansible.builtin.debug:
