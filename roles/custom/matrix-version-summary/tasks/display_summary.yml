@@ -255,21 +255,21 @@
 
 - name: Display version summary via shell heredoc (no escaping)
   ansible.builtin.shell: |
-cat <<'EOF'
-{{ version_summary_table }}
+    cat <<'EOF'
+    {{ version_summary_table }}
 
-Summary: {{ after_versions | length }} Matrix containers total
+    Summary: {{ after_versions | length }} Matrix containers total
 
-{% if is_status_display %}
-Result: Displaying current running versions (no changes recorded)
-{% elif has_changes %}
-Result: New version changes have been recorded
-{% elif first_run %}
-Result: Initial state has been recorded
-{% else %}
-Result: No changes detected since last run
-{% endif %}
-EOF
+    {% if is_status_display %}
+    Result: Displaying current running versions (no changes recorded)
+    {% elif has_changes %}
+    Result: New version changes have been recorded
+    {% elif first_run %}
+    Result: Initial state has been recorded
+    {% else %}
+    Result: No changes detected since last run
+    {% endif %}
+    EOF
   when: 
     - current_versions | length > 0
     - version_summary_table is defined 
