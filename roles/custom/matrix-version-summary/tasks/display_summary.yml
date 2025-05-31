@@ -1,7 +1,8 @@
 ---
 # Display version summary with current states and changes
 # Requires: Python 'prettytable' module for table formatting
-# Install with: pip install prettytable
+# Install with: sudo apt install python3-prettytable (Ubuntu/Debian)
+#               or pip install prettytable
 
 # Set default variables to prevent undefined variable errors during standalone execution
 - name: Set default variables
@@ -37,7 +38,7 @@
 
 - name: Get current container versions (matrix containers only)
   ansible.builtin.shell: |
-    docker ps --filter "name={{ matrix_container_prefix }}" --format "{{ "{{" }}.Names{{ "}}" }}:{{ "{{" }}.Image{{ "}}" }}" | sort
+    docker ps --filter "name={{ matrix_container_prefix | regex_escape }}" --format "{{ "{{" }}.Names{{ "}}" }}:{{ "{{" }}.Image{{ "}}" }}" | sort
   register: container_versions
   changed_when: false
   failed_when: false  # Don't fail if no containers are found
@@ -218,19 +219,16 @@
   loop: "{{ version_history.full_history | default({}) | dict2items }}"
   when: retention_cutoff_date is defined and version_history.full_history is defined and item.value.updates is defined and item.value.updates | length > 0 and updated_service_record is defined and not is_status_display
 
-- name: Prepare table data for display
+- name: Prepare table data for display (as list of dictionaries)
   ansible.builtin.set_fact:
     table_data: []
   when: after_versions | length > 0
 
-- name: Build table header
+# Build table data as list of dictionaries - required format for community.general.to_prettytable
+# Each dictionary represents a table row with keys as column headers
+- name: Build service rows as dictionaries for prettytable
   ansible.builtin.set_fact:
-    table_data: "{{ [['Service', 'Image', 'Status']] }}"
-  when: after_versions | length > 0
-
-- name: Add service rows to table data
-  ansible.builtin.set_fact:
-    table_data: "{{ table_data + [[item.key, item.value.current, item.value.status]] }}"
+    table_data: "{{ table_data + [{'Service': item.key, 'Image': item.value.current, 'Status': item.value.status}] }}"
   loop: "{{ after_versions | dict2items | sort(attribute='key') }}"
   when: after_versions | length > 0
 
@@ -259,6 +257,41 @@
       Result: No changes detected since last run
       {% endif %}
   when: current_versions | length > 0
+  ignore_errors: true
+  register: table_display_result
+
+- name: Display fallback table on prettytable failure
+  ansible.builtin.debug:
+    msg: |
+      Matrix Service Version Summary ({{ current_timestamp
+        | default(ansible_date_time.year ~ '-' ~ ansible_date_time.month ~ '-' ~ ansible_date_time.day ~ ' ' ~ ansible_date_time.hour ~ ':' ~ ansible_date_time.minute ~ ':' ~ ansible_date_time.second) }})
+      {% if is_status_display %}Status Check Mode - Current running versions displayed{% endif %}
+      
+      {% if after_versions | length > 0 %}
+      Service                          | Image                                      | Status
+      ---------------------------------|--------------------------------------------|----------
+      {% for item in after_versions | dict2items | sort(attribute='key') %}
+      {{ "%-32s" | format(item.key) }} | {{ "%-42s" | format(item.value.current) }} | {{ item.value.status }}
+      {% endfor %}
+
+      Summary: {{ after_versions | length }} Matrix containers total
+      Note: Fallback table formatting used (prettytable unavailable)
+      {% else %}
+      (No Matrix containers to display)
+      {% endif %}
+
+      {% if is_status_display %}
+      Result: Displaying current running versions (no changes recorded)
+      {% elif has_changes %}
+      Result: New version changes have been recorded
+      {% elif first_run %}
+      Result: Initial state has been recorded
+      {% else %}
+      Result: No changes detected since last run
+      {% endif %}
+  when: 
+    - current_versions | length > 0
+    - table_display_result is failed
 
 - name: Display empty table message when no containers found
   ansible.builtin.debug:
