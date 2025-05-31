@@ -6,7 +6,7 @@
 
 - name: Initialize version history if not exists
   ansible.builtin.set_fact:
-    version_history: { "last_versions": {}, "changes": [], "full_history": {} }
+    version_history: {"last_versions": {}, "changes": [], "full_history": {}}
   when: version_history is not defined
 
 # Apply date-based retention cleanup when reading history
