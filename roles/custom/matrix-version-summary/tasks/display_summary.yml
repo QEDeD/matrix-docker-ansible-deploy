@@ -214,20 +214,26 @@
   with_dict: "{{ version_history.full_history | default({}) }}"
   when: retention_cutoff_date is defined and version_history.full_history is defined and item.value.updates is defined and item.value.updates | length > 0 and updated_service_record is defined and not is_status_display
 
-- name: Create ASCII summary table
-  ansible.builtin.set_fact:
-    version_table: |-
-      MATRIX SERVICE VERSION CHANGES - {{ current_timestamp | default(ansible_date_time.year + '-' + ansible_date_time.month + '-' + ansible_date_time.day + ' ' + ansible_date_time.hour + ':' + ansible_date_time.minute + ':' + ansible_date_time.second) }}
+- name: Display version summary table
+  ansible.builtin.debug:
+    msg: |
+      ═══════════════════════════════════════════════════════════════════════════════════
+      MATRIX SERVICE VERSION SUMMARY - {{ current_timestamp | default(ansible_date_time.year + '-' + ansible_date_time.month + '-' + ansible_date_time.day + ' ' + ansible_date_time.hour + ':' + ansible_date_time.minute + ':' + ansible_date_time.second) }}
       {% if is_status_display %}[STATUS CHECK MODE - Current running versions displayed]{% endif %}
-
-      ┌─────────────────────────────┬─────────────────────────────┬─────────────────────────────┬────────────┐
-      │ SERVICE/CONTAINER           │ VERSION BEFORE              │ VERSION AFTER               │ STATUS     │
-      ├─────────────────────────────┼─────────────────────────────┼─────────────────────────────┼────────────┤
+      ═══════════════════════════════════════════════════════════════════════════════════
+      
+      {{ '%-28s %-22s %-22s %-12s' | format('SERVICE/CONTAINER', 'VERSION BEFORE', 'VERSION AFTER', 'STATUS') }}
+      {{ '─' * 28 }} {{ '─' * 22 }} {{ '─' * 22 }} {{ '─' * 12 }}
       {% for service_name, values in after_versions.items() | sort %}
-      │ {{ "%-25s" | format(service_name | truncate(25, true)) }} │ {{ "%-25s" | format(values.previous | default('-') | string | truncate(25, true)) }} │ {{ "%-25s" | format(values.current | string | truncate(25, true)) }} │ {{ "%-10s" | format(values.status) }} │
+      {{ '%-28s %-22s %-22s %-12s' | format(
+          service_name[:27], 
+          (values.previous | default('-') | string)[:21], 
+          values.current[:21], 
+          values.status[:11]
+        ) }}
       {% endfor %}
-      └─────────────────────────────┴─────────────────────────────┴─────────────────────────────┴────────────┘
-
+      
+      ═══════════════════════════════════════════════════════════════════════════════════
       Total matrix containers: {{ after_versions | length }}
       {% if is_status_display %}
       [STATUS CHECK - Displaying current running versions without recording changes]
@@ -238,19 +244,13 @@
       {% else %}
       [NO CHANGES DETECTED]
       {% endif %}
+      ═══════════════════════════════════════════════════════════════════════════════════
+  when: current_versions | length > 0
 
 - name: Display empty table message when no containers found
   ansible.builtin.debug:
     msg: "{{ 'No Matrix containers found running. In status check mode - showing current state only.' if is_status_display else 'No Matrix containers found running. Start services first to see version information.' }}"
   when: current_versions | length == 0
-
-- name: Display version summary line by line
-  ansible.builtin.debug:
-    msg: "{{ item }}"
-  loop: "{{ version_table.split('\n') }}"
-  loop_control:
-    label: ""
-  when: current_versions | length > 0
 
 - name: Write current versions to fact file
   ansible.builtin.copy:
