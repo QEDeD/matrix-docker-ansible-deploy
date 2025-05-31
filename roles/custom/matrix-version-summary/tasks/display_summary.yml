@@ -32,7 +32,8 @@
   ansible.builtin.file:
     path: /etc/ansible/facts.d
     state: directory
-    mode: '0755'  become: true
+    mode: '0755'
+  become: true
 
 - name: Get current container versions (matrix containers only)
   ansible.builtin.shell: |
