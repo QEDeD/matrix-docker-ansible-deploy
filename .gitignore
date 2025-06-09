@@ -19,3 +19,12 @@ __pycache__/
 
 # ignore implementation documentation
 IMPLEMENTATION-SUMMARY.md
+
+# ignore temporary files and test files in custom roles
+/roles/custom/*/fix_*.sh
+/roles/custom/*/fix_*.py
+/roles/custom/*/*.backup
+/roles/custom/*/test_syntax.yml
+/roles/custom/*/test_version_summary_tag.yml
+/roles/custom/*/sed*
+/roles/custom/*/*.tmp

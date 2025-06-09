@@ -1,0 +1,75 @@
+---
+# Process a single service for full history view
+# This file is included by view_history.yml
+
+- name: Create service table header
+  ansible.builtin.set_fact:
+    service_table_header: |
+      {{ tl_corner }}{{ h_line * 77 }}{{ tr_corner }}
+      {{ v_line }} SERVICE: {{ ((service_name | truncate(69, true)) + ' ' * 69)[:69] }} {{ v_line }}
+      {{ v_line }} CURRENT VERSION: {{ ((service_data.version | default('Unknown') | string | truncate(59, true)) + ' ' * 59)[:59] }} {{ v_line }}
+      {{ v_line }} LAST UPDATED: {{ ((service_data.last_updated | default('Unknown') | truncate(62, true)) + ' ' * 62)[:62] }} {{ v_line }}
+
+- name: Create update history header if updates exist
+  ansible.builtin.set_fact:
+    service_updates_header: |
+      {{ t_right }}{{ h_line * 27 }}{{ t_down }}{{ h_line * 21 }}{{ t_down }}{{ h_line * 25 }}{{ t_left }}
+      {{ v_line }} TIMESTAMP{{ ' ' * 18 }}{{ v_line }} FROM VERSION{{ ' ' * 10 }}{{ v_line }} TO VERSION{{ ' ' * 15 }}{{ v_line }}
+      {{ t_right }}{{ h_line * 27 }}{{ cross }}{{ h_line * 21 }}{{ cross }}{{ h_line * 25 }}{{ t_left }}
+  when: service_data.updates | default([]) | length > 0
+
+- name: Create no updates message if no updates exist
+  ansible.builtin.set_fact:
+    service_no_updates: |
+      {{ v_line }} No version changes recorded for this service.{{ ' ' * 35 }}{{ v_line }}
+  when: service_data.updates | default([]) | length == 0
+
+- name: Process update rows
+  ansible.builtin.set_fact:
+    service_update_rows: |
+      {% for update in service_data.updates | default([]) %}
+      {{ v_line }} {{ ((update.timestamp | default('Unknown') | truncate(27, true)) + ' ' * 27)[:27] }} {{ v_line }} {{
+        (((update.previous | default('-') | string | truncate(21, true)) + ' ' * 21)[:21]) }} {{ v_line }} {{
+        (((update.current | string | truncate(25, true)) + ' ' * 25)[:25]) }} {{ v_line }}
+      {% endfor %}
+  when: service_data.updates | default([]) | length > 0
+
+- name: Create service table footer
+  ansible.builtin.set_fact:
+    service_table_footer: "{{ bl_corner }}{{ h_line * 27 }}{{
+      (service_data.updates | default([]) | length > 0) |
+      ternary(t_up + h_line * 21 + t_up + h_line * 25, h_line * 49)
+      }}{{ br_corner }}"
+
+- name: Create complete service table
+  ansible.builtin.set_fact:
+    service_table: |
+      {{ service_table_header }}
+      {% if service_data.updates | default([]) | length > 0 %}
+      {{ service_updates_header }}
+      {{ service_update_rows }}
+      {% else %}
+      {{ service_no_updates }}
+      {% endif %}
+      {{ service_table_footer }}
+
+- name: Append service table to global service tables
+  ansible.builtin.shell: |
+    tables=$(echo $SERVICE_TABLES | jq -c '. + ["{{ service_table | replace('\n', '\\n') | replace('"', '\\"') }}"]')
+    echo "SERVICE_TABLES=$tables" >> $GITHUB_ENV
+  environment:
+    SERVICE_TABLES: "{{ lookup('ansible.builtin.env', 'SERVICE_TABLES', default='[]') }}"
+    GITHUB_ENV: "/tmp/service_tables.env"
+  changed_when: false
+
+- name: Read service tables from file
+  ansible.builtin.shell: |
+    source /tmp/service_tables.env
+    echo $SERVICE_TABLES
+  register: updated_tables
+  changed_when: false
+
+- name: Update ENV variable
+  ansible.builtin.shell: |
+    export SERVICE_TABLES='{{ updated_tables.stdout }}'
+  changed_when: false

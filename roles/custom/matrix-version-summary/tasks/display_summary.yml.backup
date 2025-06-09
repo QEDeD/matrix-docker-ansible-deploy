@@ -201,11 +201,13 @@
   ansible.builtin.set_fact:
     service_record: {
       'version': "{{ item.value.current }}",
-      'last_updated': "{{ current_timestamp if item.value.status != 'UNCHANGED' else
-        (version_history.full_history[item.key].last_updated | default(current_timestamp)) }}",
+      'last_updated': >-
+        {{ current_timestamp if item.value.status != 'UNCHANGED' else 
+           (version_history.full_history[item.key].last_updated | default(current_timestamp)) }},
       'status': "{{ item.value.status }}",
-      'updates': "{{ (current_service_updates + [new_update_entry])[:20]
-        if item.value.status != 'UNCHANGED' else current_service_updates }}"
+      'updates': >-
+        {{ (current_service_updates + [new_update_entry])[:20] 
+           if item.value.status != 'UNCHANGED' else current_service_updates }}
     }
   loop: "{{ after_versions | dict2items }}"
   when: (has_changes or first_run) and item.value.status != 'UNCHANGED' and current_service_updates is defined and not is_status_display
@@ -228,10 +230,7 @@
           'event_type': 'update'
         }] + version_history.changes)
       }) }}
-  when: >
-    has_changes and version_history_changes is defined and
-    version_history_changes | length > 0 and not first_run and
-    (matrix_history_max_entries | int == 0) and not is_status_display
+  when: has_changes and version_history_changes is defined and version_history_changes | length > 0 and not first_run and (matrix_history_max_entries | int == 0) and not is_status_display
 
 - name: Record incremental changes (limited entries)
   ansible.builtin.set_fact:
@@ -244,10 +243,7 @@
           'event_type': 'update'
         }] + version_history.changes)[: matrix_history_max_entries | int]
       }) }}
-  when: >
-    has_changes and version_history_changes is defined and
-    version_history_changes | length > 0 and not first_run and
-    (matrix_history_max_entries | int > 0) and not is_status_display
+  when: has_changes and version_history_changes is defined and version_history_changes | length > 0 and not first_run and (matrix_history_max_entries | int > 0) and not is_status_display
 
 # Update version history with last known versions
 - name: Update version history with last known versions
@@ -306,8 +302,7 @@
 # Apply retention policy with fixed date handling
 - name: Apply retention policy to changes history
   ansible.builtin.set_fact:
-    version_history: "{{ version_history | combine({'changes': version_history.changes | default([]) |
-        rejectattr('timestamp', 'lt', retention_cutoff_date) | list}) }}"
+    version_history: "{{ version_history | combine({'changes': version_history.changes | default([]) | rejectattr('timestamp', 'lt', retention_cutoff_date) | list}) }}"
   when:
     - retention_cutoff_date is defined
     - retention_cutoff_date != 'null'
@@ -357,13 +352,9 @@
 # Build table structure with fixed column widths for proper ASCII alignment
 - name: Create table header
   ansible.builtin.set_fact:
-    top_line: "{{ tl_corner }}{{ h_line * 32 }}{{ t_down }}{{ h_line * 32 }}{{ t_down }}{{
-      h_line * 32 }}{{ t_down }}{{ h_line * 11 }}{{ tr_corner }}"
-    header_row: "{{ v_line }} {{ ('SERVICE/CONTAINER' + ' ' * 30)[:30] }} {{ v_line }} {{
-      ('VERSION BEFORE' + ' ' * 30)[:30] }} {{ v_line }} {{ ('VERSION AFTER' + ' ' * 30)[:30] }} {{ v_line }} {{
-      ('STATUS' + ' ' * 9)[:9] }} {{ v_line }}"
-    header_sep: "{{ t_right }}{{ double_h_line * 32 }}{{ double_cross }}{{ double_h_line * 32 }}{{
-      double_cross }}{{ double_h_line * 32 }}{{ double_cross }}{{ double_h_line * 11 }}{{ t_left }}"
+    top_line: "{{ tl_corner }}{{ h_line * 32 }}{{ t_down }}{{ h_line * 32 }}{{ t_down }}{{ h_line * 32 }}{{ t_down }}{{ h_line * 11 }}{{ tr_corner }}"
+    header_row: "{{ v_line }} {{ 'SERVICE/CONTAINER' | ljust(30) }} {{ v_line }} {{ 'VERSION BEFORE' | ljust(30) }} {{ v_line }} {{ 'VERSION AFTER' | ljust(30) }} {{ v_line }} {{ 'STATUS' | ljust(9) }} {{ v_line }}"
+    header_sep: "{{ t_right }}{{ double_h_line * 32 }}{{ double_cross }}{{ double_h_line * 32 }}{{ double_cross }}{{ double_h_line * 32 }}{{ double_cross }}{{ double_h_line * 11 }}{{ t_left }}"
     bottom_line: "{{ bl_corner }}{{ h_line * 32 }}{{ t_up }}{{ h_line * 32 }}{{ t_up }}{{ h_line * 32 }}{{ t_up }}{{ h_line * 11 }}{{ br_corner }}"
   when: after_versions | length > 0
 
@@ -378,13 +369,13 @@
     table_rows: >-
       {{ table_rows + [
         v_line + ' ' +
-        ((item.key | truncate(30, true)) + ' ' * 30)[:30] + ' ' +
+        (item.key | truncate(30, true) | ljust(30)) + ' ' +
         v_line + ' ' +
-        (((item.value.previous | default('-') | string | truncate(30, true)) + ' ' * 30)[:30]) + ' ' +
+        ((item.value.previous | default('-') | string | truncate(30, true)) | ljust(30)) + ' ' +
         v_line + ' ' +
-        (((item.value.current | string | truncate(30, true)) + ' ' * 30)[:30]) + ' ' +
+        ((item.value.current | string | truncate(30, true)) | ljust(30)) + ' ' +
         v_line + ' ' +
-        ((item.value.status + ' ' * 9)[:9]) + ' ' +
+        (item.value.status | ljust(9)) + ' ' +
         v_line
       ] }}
   loop: "{{ after_versions | dict2items | sort(attribute='key') }}"
@@ -426,11 +417,7 @@
 # Display empty message if no containers found
 - name: Display empty table message
   ansible.builtin.debug:
-    msg: >-
-      {{ ['MATRIX VERSION CHANGES - ' + ansible_date_time.iso8601, '',
-         'No Matrix containers found running. ' +
-         ('In status check mode - showing current state only.' if is_status_display
-          else 'Start services first to see version information.')] }}
+    msg: "{{ ['MATRIX VERSION CHANGES - ' + ansible_date_time.iso8601, '', 'No Matrix containers found running. ' + ('In status check mode - showing current state only.' if is_status_display else 'Start services first to see version information.')] }}"
   when: current_versions | length == 0 or after_versions | length == 0
 
 # Write facts to filesystem
@@ -449,3 +436,4 @@
     mode: '0644'
   become: true
   when: not is_status_display
+

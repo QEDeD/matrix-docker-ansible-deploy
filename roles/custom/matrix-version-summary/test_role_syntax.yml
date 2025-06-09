@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Include matrix-version-summary tasks
+      include_tasks: tasks/main.yml
+      vars:
+        matrix_docker_src_files_path: "/tmp/test"
+        matrix_version_summary_enabled: true

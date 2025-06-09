@@ -1,10 +1,20 @@
 ---
+# Main entry point for the matrix-version-summary role
+
+- name: Ensure facts directory exists
+  ansible.builtin.file:
+    path: "/etc/ansible/facts.d"
+    state: directory
+    mode: '0755'
+  become: true
+  tags: ["matrix-version-summary", "setup"]
+
 - name: Display current version summary
   ansible.builtin.import_tasks: display_summary.yml
-  tags: ["version_summary", "matrix-version-summary"]
+  tags: ["matrix-version-summary", "version_summary"]
   when: matrix_version_summary_display | default(matrix_show_version_summary) | default(true) | bool
 
 - name: View version history
   ansible.builtin.import_tasks: view_history.yml
-  tags: ["version_history"]
+  tags: ["matrix-version-summary", "version_history"]
   when: matrix_playbook_show_version_history | default(false) | bool

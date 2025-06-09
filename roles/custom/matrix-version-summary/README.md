@@ -39,26 +39,26 @@ The role supports the following configuration variables:
 
 ```bash
 # View changes history (default mode)
-ansible-playbook -i inventory/hosts roles/custom/matrix-version-summary/tasks/history_playbook.yml -e "target_host=your-matrix-server.com" -K
+ansible-playbook -i inventory/hosts playbooks/matrix-version-summary/history_playbook.yml -e "target_host=your-matrix-server.com" -K
 
 # View full service history
-ansible-playbook -i inventory/hosts roles/custom/matrix-version-summary/tasks/history_playbook.yml -e "target_host=your-matrix-server.com view_mode=full" -K
+ansible-playbook -i inventory/hosts playbooks/matrix-version-summary/history_playbook.yml -e "target_host=your-matrix-server.com view_mode=full" -K
 
 # Filter for a specific service
-ansible-playbook -i inventory/hosts roles/custom/matrix-version-summary/tasks/history_playbook.yml -e "target_host=your-matrix-server.com service_filter=matrix-synapse" -K
+ansible-playbook -i inventory/hosts playbooks/matrix-version-summary/history_playbook.yml -e "target_host=your-matrix-server.com service_filter=matrix-synapse" -K
 ```
 
 ### Manage History
 
 ```bash
 # Clear all version history (requires confirmation)
-ansible-playbook -i inventory/hosts roles/custom/matrix-version-summary/tasks/clear_history_playbook.yml -e "target_host=your-matrix-server.com confirm_clear=yes" -K
+ansible-playbook -i inventory/hosts playbooks/matrix-version-summary/clear_history_playbook.yml -e "target_host=your-matrix-server.com confirm_clear=yes" -K
 
 # Trim history to maximum entries (requires confirmation)
-ansible-playbook -i inventory/hosts roles/custom/matrix-version-summary/tasks/trim_history_playbook.yml -e "target_host=your-matrix-server.com confirm_trim=yes" -K
+ansible-playbook -i inventory/hosts playbooks/matrix-version-summary/trim_history_playbook.yml -e "target_host=your-matrix-server.com confirm_trim=yes" -K
 
 # Trim history to custom entry count
-ansible-playbook -i inventory/hosts roles/custom/matrix-version-summary/tasks/trim_history_playbook.yml -e "target_host=your-matrix-server.com confirm_trim=yes matrix_history_max_entries=50" -K
+ansible-playbook -i inventory/hosts playbooks/matrix-version-summary/trim_history_playbook.yml -e "target_host=your-matrix-server.com confirm_trim=yes matrix_history_max_entries=50" -K
 ```
 
 ### Configure Unlimited Retention

@@ -1,16 +1,20 @@
 ---
 # Default configuration for Matrix version history tracking
-matrix_container_prefix: "matrix-"
-matrix_history_max_entries: 100  # Maximum number of history entries to keep (count-based limit). Set to 0 for unlimited.
-matrix_history_retention_days: 365  # Number of days to retain history entries (date-based limit). Set to 0 for unlimited.
 
-# Enable/disable version summary display (can be overridden with matrix_version_summary_display)
-matrix_show_version_summary: true
-matrix_version_summary_display: "{{ matrix_show_version_summary }}"
+# Container identification
+matrix_container_prefix: "matrix-"  # Prefix used to identify Matrix containers
 
-# Version fact files
-matrix_versions_fact_file: "matrix_versions.fact"
-matrix_history_fact_file: "matrix_version_history.fact"
+# Retention policy configuration
+matrix_history_max_entries: 100  # Maximum number of history entries to keep (0 = unlimited)
+matrix_history_retention_days: 365  # Number of days to retain history entries (0 = unlimited)
 
-# Table style options
-matrix_table_style_unicode: true  # Set to false for ASCII-only tables
+# Display settings
+matrix_show_version_summary: true  # Legacy variable - kept for backward compatibility
+matrix_version_summary_display: "{{ matrix_show_version_summary | bool }}"  # Primary control variable
+
+# Fact file locations
+matrix_versions_fact_file: "matrix_versions.fact"  # Current versions fact file
+matrix_history_fact_file: "matrix_version_history.fact"  # Version history fact file
+
+# Table display settings
+matrix_table_style_unicode: false  # Set to false for ASCII-only tables (recommended for consistent display)

@@ -1,0 +1,13 @@
+---
+- name: Test Matrix Version Summary Role
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    matrix_container_prefix: "matrix-"
+    matrix_table_style_unicode: false
+    matrix_version_summary_display: true
+  tasks:
+    - name: Include matrix version summary role
+      include_role:
+        name: "{{ playbook_dir }}"
