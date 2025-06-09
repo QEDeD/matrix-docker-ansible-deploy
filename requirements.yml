@@ -25,10 +25,10 @@
   version: v11.6.2-0
   name: grafana
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-jitsi.git
-  version: v10184-0
+  version: v10314-0
   name: jitsi
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-livekit-server.git
-  version: v1.8.4-5
+  version: v1.9.0-0
   name: livekit_server
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-ntfy.git
   version: v2.11.0-5
@@ -49,7 +49,7 @@
   version: v17-3
   name: postgres_backup
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus.git
-  version: v3.4.0-1
+  version: v3.4.1-0
   name: prometheus
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus-node-exporter.git
   version: v1.9.1-3
