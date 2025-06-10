@@ -49,103 +49,110 @@
     - item.value.updates is defined
     - item.value.updates | length > 0
 
-- name: Set view mode
+- name: Set view mode and service filter
   ansible.builtin.set_fact:
     view_mode: "{{ view_mode | default('changes') }}"
-    service_filter: "{{ service_filter | default('') }}"
+    matrix_version_service_filter: "{{ matrix_version_service_filter | default(service_filter | default('')) }}"
 
-- name: Prepare changes history table
-  ansible.builtin.set_fact:
-    changes_history_table: |-
-      ┌─────────────────────────────────────────────────────────────────────────────────┐
-      │ MATRIX VERSION HISTORY - CHANGES                                                │
-      └─────────────────────────────────────────────────────────────────────────────────┘
-      {% if version_history.changes | default([]) | length == 0 %}
-      ┌─────────────────────────────────────────────────────────────────────────────────┐
-      │ No version changes have been recorded yet.                                      │
-      │ Run the playbook with container updates to generate history.                    │
-      └─────────────────────────────────────────────────────────────────────────────────┘
-      {% else %}
-      {% for change_record in version_history.changes %}
-      {% if change_record.event_type is defined and change_record.event_type == 'initial' %}
-      ┌─────────────────────────────────────────────────────────────────────────────────┐
-      │ INITIAL STATE RECORDED: {{ "%-48s" | format(change_record.timestamp) }} │
-      │ RECORDED BY: {{ "%-61s" | format(change_record.user | default('Unknown')) }} │
-      ├───────────────────────────┬───────────────────────────┬───────────────────────────┤
-      │ SERVICE                   │ INITIAL VERSION           │                           │
-      ├───────────────────────────┼───────────────────────────┼───────────────────────────┤
-      {% for service_name, change in change_record.changes.items() | sort %}
-      {% if service_filter == '' or service_filter in service_name %}
-      │ {{ "%-25s" | format(service_name | truncate(25, true)) }} │ {{ "%-25s" |
-         format(change.current | string | truncate(25, true)) }} │                           │
-      {% endif %}
-      {% endfor %}
-      └───────────────────────────┴───────────────────────────┴───────────────────────────┘
-      {% else %}
-      ┌─────────────────────────────────────────────────────────────────────────────────┐
-      │ UPDATE RECORDED: {{ "%-53s" | format(change_record.timestamp) }} │
-      │ UPDATED BY: {{ "%-60s" | format(change_record.user | default('Unknown')) }} │
-      ├───────────────────────────┬───────────────────────────┬───────────────────────────┤
-      │ SERVICE                   │ FROM VERSION              │ TO VERSION                │
-      ├───────────────────────────┼───────────────────────────┼───────────────────────────┤
-      {% for service_name, change in change_record.changes.items() | sort %}
-      {% if service_filter == '' or service_filter in service_name %}
-      │ {{ "%-25s" | format(service_name | truncate(25, true)) }} │ {{ "%-25s" |
-         format(change.previous | default('-') | string | truncate(25, true)) }} │ {{ "%-25s" |
-         format(change.current | string | truncate(25, true)) }} │
-      {% endif %}
-      {% endfor %}
-      └───────────────────────────┴───────────────────────────┴───────────────────────────┘
-      {% endif %}
-      {% endfor %}
-      {% endif %}
-  when: view_mode == 'changes'
-
-- name: Display changes history table
+# Display Changes History Table
+- name: Display changes history header
   ansible.builtin.shell: |
-    echo -e '{{ changes_history_table | replace("\n", "\\n") }}'
+    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
+    echo "│ MATRIX VERSION HISTORY - CHANGES                                                │"
+    echo "└─────────────────────────────────────────────────────────────────────────────────┘"
   changed_when: false
   when: view_mode == 'changes'
 
-- name: Prepare full history table
-  ansible.builtin.set_fact:
-    full_history_table: |-
-      ┌─────────────────────────────────────────────────────────────────────────────────┐
-      │ MATRIX VERSION HISTORY - FULL SERVICE HISTORY                                   │
-      └─────────────────────────────────────────────────────────────────────────────────┘
-      {% if version_history.full_history | default({}) | length == 0 %}
-      ┌─────────────────────────────────────────────────────────────────────────────────┐
-      │ No version history has been recorded yet.                                       │
-      │ Run the playbook with container updates to generate history.                    │
-      └─────────────────────────────────────────────────────────────────────────────────┘
-      {% else %}
-      {% for service_name, service_data in version_history.full_history.items() | sort %}
-      {% if service_filter == '' or service_filter in service_name %}
-      ┌─────────────────────────────────────────────────────────────────────────────────┐
-      │ SERVICE: {{ "%-69s" | format(service_name | truncate(69, true)) }} │
-      │ CURRENT VERSION: {{ "%-59s" | format(service_data.version | truncate(59, true)) }} │
-      │ LAST UPDATED: {{ "%-62s" | format(service_data.last_updated | default('Unknown')) }} │
-      {% if service_data.updates | default([]) | length > 0 %}
-      ├─────────────────────────────┬───────────────────────┬───────────────────────────┤
-      │ TIMESTAMP                   │ FROM VERSION          │ TO VERSION                │
-      ├─────────────────────────────┼───────────────────────┼───────────────────────────┤
-      {% for update in service_data.updates | default([]) %}
-      │ {{ "%-27s" | format(update.timestamp | truncate(27, true)) }} │ {{ "%-21s" |
-         format(update.previous | default('-') | string | truncate(21, true)) }} │ {{ "%-25s" |
-         format(update.current | string | truncate(25, true)) }} │
-      {% endfor %}
-      {% else %}
-      │ No version changes recorded for this service.                                   │
-      {% endif %}
-      └─────────────────────────────┴───────────────────────┴───────────────────────────┘
-
-      {% endif %}
-      {% endfor %}
-      {% endif %}
-  when: view_mode == 'full'
-
-- name: Display full history table
+- name: Display no changes message
   ansible.builtin.shell: |
-    echo -e '{{ full_history_table | replace("\n", "\\n") }}'
+    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
+    echo "│ No version changes have been recorded yet.                                      │"
+    echo "│ Run the playbook with container updates to generate history.                    │"
+    echo "└─────────────────────────────────────────────────────────────────────────────────┘"
+  changed_when: false
+  when: view_mode == 'changes' and (version_history.changes | default([]) | length == 0)
+
+- name: Display changes history records
+  ansible.builtin.shell: |
+    set -o pipefail
+    {% for change_record in version_history.changes %}
+    {% set service_filter = matrix_version_service_filter | default('') %}
+    {% if change_record.event_type is defined and change_record.event_type == 'initial' %}
+    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
+    echo "│ INITIAL STATE RECORDED: {{ (change_record.timestamp + (' ' * 48))[:48] }} │"
+    echo "│ RECORDED BY: {{ ((change_record.user | default('Unknown')) + (' ' * 61))[:61] }} │"
+    echo "├───────────────────────────┬───────────────────────────┬───────────────────────────┤"
+    echo "│ SERVICE                   │ INITIAL VERSION           │                           │"
+    echo "├───────────────────────────┼───────────────────────────┼───────────────────────────┤"
+    {% for service_name, change in change_record.changes.items() | sort %}
+    {% if service_filter == '' or service_filter in service_name %}
+    echo "│ {{ (service_name + (' ' * 25))[:25] }} │ {{ ((change.current | string) + (' ' * 25))[:25] }} │                           │"
+    {% endif %}
+    {% endfor %}
+    echo "└───────────────────────────┴───────────────────────────┴───────────────────────────┘"
+    {% else %}
+    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
+    echo "│ UPDATE RECORDED: {{ (change_record.timestamp + (' ' * 53))[:53] }} │"
+    echo "│ UPDATED BY: {{ ((change_record.user | default('Unknown')) + (' ' * 60))[:60] }} │"
+    echo "├───────────────────────────┬───────────────────────────┬───────────────────────────┤"
+    echo "│ SERVICE                   │ FROM VERSION              │ TO VERSION                │"
+    echo "├───────────────────────────┼───────────────────────────┼───────────────────────────┤"
+    {% for service_name, change in change_record.changes.items() | sort %}
+    {% if service_filter == '' or service_filter in service_name %}
+    echo "│ {{ (service_name + (' ' * 25))[:25] }} │ {{
+      ((change.previous | default('-') | string) + (' ' * 25))[:25] }} │ {{
+      ((change.current | string) + (' ' * 25))[:25] }} │"
+    {% endif %}
+    {% endfor %}
+    echo "└───────────────────────────┴───────────────────────────┴───────────────────────────┘"
+    {% endif %}
+    {% endfor %}
+  changed_when: false
+  when: view_mode == 'changes' and (version_history.changes | default([]) | length > 0)
+
+# Display Full History Table
+- name: Display full history header
+  ansible.builtin.shell: |
+    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
+    echo "│ MATRIX VERSION HISTORY - FULL SERVICE HISTORY                                   │"
+    echo "└─────────────────────────────────────────────────────────────────────────────────┘"
   changed_when: false
   when: view_mode == 'full'
+
+- name: Display no history message
+  ansible.builtin.shell: |
+    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
+    echo "│ No version history has been recorded yet.                                       │"
+    echo "│ Run the playbook with container updates to generate history.                    │"
+    echo "└─────────────────────────────────────────────────────────────────────────────────┘"
+  changed_when: false
+  when: view_mode == 'full' and (version_history.full_history | default({}) | length == 0)
+
+- name: Display full history for each service
+  ansible.builtin.shell: |
+    set -o pipefail
+    {% set service_filter = matrix_version_service_filter | default('') %}
+    {% for service_name, service_data in version_history.full_history.items() | sort %}
+    {% if service_filter == '' or service_filter in service_name %}
+    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
+    echo "│ SERVICE: {{ (service_name + (' ' * 69))[:69] }} │"
+    echo "│ CURRENT VERSION: {{ ((service_data.version | default('Unknown')) + (' ' * 59))[:59] }} │"
+    echo "│ LAST UPDATED: {{ ((service_data.last_updated | default('Unknown')) + (' ' * 62))[:62] }} │"
+    {% if service_data.updates | default([]) | length > 0 %}
+    echo "├─────────────────────────────┬───────────────────────┬───────────────────────────┤"
+    echo "│ TIMESTAMP                   │ FROM VERSION          │ TO VERSION                │"
+    echo "├─────────────────────────────┼───────────────────────┼───────────────────────────┤"
+    {% for update in service_data.updates | default([]) %}
+    echo "│ {{ (update.timestamp + (' ' * 27))[:27] }} │ {{
+      ((update.previous | default('-') | string) + (' ' * 21))[:21] }} │ {{
+      ((update.current | string) + (' ' * 25))[:25] }} │"
+    {% endfor %}
+    {% else %}
+    echo "│ No version changes recorded for this service.                                   │"
+    {% endif %}
+    echo "└─────────────────────────────┴───────────────────────┴───────────────────────────┘"
+    echo ""
+    {% endif %}
+    {% endfor %}
+  changed_when: false
+  when: view_mode == 'full' and (version_history.full_history | default({}) | length > 0)
