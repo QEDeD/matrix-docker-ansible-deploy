@@ -1,8 +1,13 @@
 ---
 - name: Read version history if it exists
   ansible.builtin.set_fact:
-    version_history: "{{ ansible_local[(matrix_history_fact_file | default('matrix_version_history.fact')) | regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}"
-  when: ansible_local is defined and ansible_local[(matrix_history_fact_file | default('matrix_version_history.fact')) | regex_replace('\\.fact$', '')] is defined
+    version_history: >-
+      {{ ansible_local[(matrix_history_fact_file | default('matrix_version_history.fact')) |
+         regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}
+  when:
+    - ansible_local is defined
+    - ansible_local[(matrix_history_fact_file | default('matrix_version_history.fact')) |
+      regex_replace('\\.fact$', '')] is defined
 
 - name: Initialize version history if not exists
   ansible.builtin.set_fact:
@@ -23,14 +28,26 @@
 
 - name: Apply retention policy to changes history for viewing
   ansible.builtin.set_fact:
-    version_history: "{{ version_history | combine({'changes': version_history.changes | default([]) | rejectattr('timestamp', 'lt', retention_cutoff_date) | list}) }}"
-  when: retention_cutoff_date is defined and version_history.changes is defined and version_history.changes | length > 0
+    version_history: >-
+      {{ version_history | combine({'changes': version_history.changes | default([]) |
+         rejectattr('timestamp', 'lt', retention_cutoff_date) | list}) }}
+  when:
+    - retention_cutoff_date is defined
+    - version_history.changes is defined
+    - version_history.changes | length > 0
 
 - name: Apply retention policy to full history updates for viewing
   ansible.builtin.set_fact:
-    version_history: "{{ version_history | combine({'full_history': version_history.full_history | default({}) | combine({item.key: item.value | combine({'updates': item.value.updates | default([]) | rejectattr('timestamp', 'lt', retention_cutoff_date) | list})}, recursive=true)}) }}"
+    version_history: >-
+      {{ version_history | combine({'full_history': version_history.full_history | default({}) |
+         combine({item.key: item.value | combine({'updates': item.value.updates | default([]) |
+         rejectattr('timestamp', 'lt', retention_cutoff_date) | list})}, recursive=true)}) }}
   with_dict: "{{ version_history.full_history | default({}) }}"
-  when: retention_cutoff_date is defined and version_history.full_history is defined and item.value.updates is defined and item.value.updates | length > 0
+  when:
+    - retention_cutoff_date is defined
+    - version_history.full_history is defined
+    - item.value.updates is defined
+    - item.value.updates | length > 0
 
 - name: Set view mode
   ansible.builtin.set_fact:
@@ -59,7 +76,8 @@
       ├───────────────────────────┼───────────────────────────┼───────────────────────────┤
       {% for service_name, change in change_record.changes.items() | sort %}
       {% if service_filter == '' or service_filter in service_name %}
-      │ {{ "%-25s" | format(service_name | truncate(25, true)) }} │ {{ "%-25s" | format(change.current | string | truncate(25, true)) }} │                           │
+      │ {{ "%-25s" | format(service_name | truncate(25, true)) }} │ {{ "%-25s" |
+         format(change.current | string | truncate(25, true)) }} │                           │
       {% endif %}
       {% endfor %}
       └───────────────────────────┴───────────────────────────┴───────────────────────────┘
@@ -72,7 +90,9 @@
       ├───────────────────────────┼───────────────────────────┼───────────────────────────┤
       {% for service_name, change in change_record.changes.items() | sort %}
       {% if service_filter == '' or service_filter in service_name %}
-      │ {{ "%-25s" | format(service_name | truncate(25, true)) }} │ {{ "%-25s" | format(change.previous | default('-') | string | truncate(25, true)) }} │ {{ "%-25s" | format(change.current | string | truncate(25, true)) }} │
+      │ {{ "%-25s" | format(service_name | truncate(25, true)) }} │ {{ "%-25s" |
+         format(change.previous | default('-') | string | truncate(25, true)) }} │ {{ "%-25s" |
+         format(change.current | string | truncate(25, true)) }} │
       {% endif %}
       {% endfor %}
       └───────────────────────────┴───────────────────────────┴───────────────────────────┘
@@ -81,12 +101,9 @@
       {% endif %}
   when: view_mode == 'changes'
 
-- name: Display changes history table line by line
+- name: Display changes history table
   ansible.builtin.debug:
-    msg: "{{ item }}"
-  loop: "{{ changes_history_table.split('\n') }}"
-  loop_control:
-    label: ""
+    msg: "{{ changes_history_table }}"
   when: view_mode == 'changes'
 
 - name: Prepare full history table
@@ -112,7 +129,9 @@
       │ TIMESTAMP                   │ FROM VERSION          │ TO VERSION                │
       ├─────────────────────────────┼───────────────────────┼───────────────────────────┤
       {% for update in service_data.updates | default([]) %}
-      │ {{ "%-27s" | format(update.timestamp | truncate(27, true)) }} │ {{ "%-21s" | format(update.previous | default('-') | string | truncate(21, true)) }} │ {{ "%-25s" | format(update.current | string | truncate(25, true)) }} │
+      │ {{ "%-27s" | format(update.timestamp | truncate(27, true)) }} │ {{ "%-21s" |
+         format(update.previous | default('-') | string | truncate(21, true)) }} │ {{ "%-25s" |
+         format(update.current | string | truncate(25, true)) }} │
       {% endfor %}
       {% else %}
       │ No version changes recorded for this service.                                   │
@@ -124,10 +143,7 @@
       {% endif %}
   when: view_mode == 'full'
 
-- name: Display full history table line by line
+- name: Display full history table
   ansible.builtin.debug:
-    msg: "{{ item }}"
-  loop: "{{ full_history_table.split('\n') }}"
-  loop_control:
-    label: ""
+    msg: "{{ full_history_table }}"
   when: view_mode == 'full'
