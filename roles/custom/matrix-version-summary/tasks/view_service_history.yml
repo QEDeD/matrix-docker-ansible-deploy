@@ -25,6 +25,8 @@
     {% else %}
     echo "│ No version changes recorded for this service.                                   │"
     {% endif %}
+  args:
+    executable: /bin/bash
   changed_when: false
 
 - name: Display service history footer

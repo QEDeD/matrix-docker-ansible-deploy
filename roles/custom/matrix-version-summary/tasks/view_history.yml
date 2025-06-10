@@ -1,13 +1,10 @@
 ---
 - name: Read version history if it exists
   ansible.builtin.set_fact:
-    version_history: >-
-      {{ ansible_local[(matrix_history_fact_file | default('matrix_version_history.fact')) |
-         regex_replace('\\.fact$', '')] | default({'changes': [], 'full_history': {}}) }}
+    version_history: "{{ ansible_local.matrix_version_history | default({'changes': [], 'full_history': {}}) }}"
   when:
     - ansible_local is defined
-    - ansible_local[(matrix_history_fact_file | default('matrix_version_history.fact')) |
-      regex_replace('\\.fact$', '')] is defined
+    - ansible_local.matrix_version_history is defined
 
 - name: Initialize version history if not exists
   ansible.builtin.set_fact:
@@ -107,6 +104,8 @@
     echo "└───────────────────────────┴───────────────────────────┴───────────────────────────┘"
     {% endif %}
     {% endfor %}
+  args:
+    executable: /bin/bash
   changed_when: false
   when: view_mode == 'changes' and (version_history.changes | default([]) | length > 0)
 
@@ -154,5 +153,7 @@
     echo ""
     {% endif %}
     {% endfor %}
+  args:
+    executable: /bin/bash
   changed_when: false
   when: view_mode == 'full' and (version_history.full_history | default({}) | length > 0)
