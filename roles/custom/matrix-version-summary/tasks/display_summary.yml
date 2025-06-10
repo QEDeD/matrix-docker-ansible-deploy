@@ -375,50 +375,39 @@
 
 - name: Add table rows
   ansible.builtin.set_fact:
-    table_rows: >-
-      {{ table_rows + [
-        v_line + ' ' +
-        ((item.key | truncate(30, true)) + ' ' * 30)[:30] + ' ' +
-        v_line + ' ' +
-        (((item.value.previous | default('-') | string | truncate(30, true)) + ' ' * 30)[:30]) + ' ' +
-        v_line + ' ' +
-        (((item.value.current | string | truncate(30, true)) + ' ' * 30)[:30]) + ' ' +
-        v_line + ' ' +
-        ((item.value.status + ' ' * 9)[:9]) + ' ' +
-        v_line
-      ] }}
+    table_rows: "{{ table_rows + [table_row] }}"
+  vars:
+    table_row: >-
+      {{ v_line + ' ' +
+         ((item.key | truncate(30, true)) + ' ' * 30)[:30] + ' ' +
+         v_line + ' ' +
+         (((item.value.previous | default('-') | string | truncate(30, true)) + ' ' * 30)[:30]) + ' ' +
+         v_line + ' ' +
+         (((item.value.current | string | truncate(30, true)) + ' ' * 30)[:30]) + ' ' +
+         v_line + ' ' +
+         ((item.value.status + ' ' * 9)[:9]) + ' ' +
+         v_line }}
   loop: "{{ after_versions | dict2items | sort(attribute='key') }}"
   when: after_versions | length > 0
 
-# Create complete table output
-- name: Build complete table
+# Create complete table output as list of lines
+- name: Build complete table as list
   ansible.builtin.set_fact:
-    version_summary_table: |
-      MATRIX VERSION CHANGES - {{ ansible_date_time.iso8601 }}
-
-      {{ top_line }}
-      {{ header_row }}
-      {{ header_sep }}
-      {{ table_rows | join('\n') }}
-      {{ bottom_line }}
-
-      Total matrix containers: {{ after_versions | length }}
-
-      {% if is_status_display %}
-      [CURRENT STATUS DISPLAY - NO CHANGES RECORDED]
-      {% elif has_changes %}
-      [NEW VERSION CHANGES RECORDED]
-      {% elif first_run %}
-      [INITIAL STATE RECORDED]
-      {% else %}
-      [NO CHANGES DETECTED]
-      {% endif %}
+    version_summary_table_lines: >-
+      {{ ['MATRIX VERSION CHANGES - ' + ansible_date_time.iso8601, ''] +
+         [top_line, header_row, header_sep] +
+         table_rows +
+         [bottom_line, '', 'Total matrix containers: ' + (after_versions | length | string), ''] +
+         (['[CURRENT STATUS DISPLAY - NO CHANGES RECORDED]'] if is_status_display
+          else ['[NEW VERSION CHANGES RECORDED]'] if has_changes
+          else ['[INITIAL STATE RECORDED]'] if first_run
+          else ['[NO CHANGES DETECTED]']) }}
   when: after_versions | length > 0
 
 # Display table using debug module
 - name: Display formatted table
   ansible.builtin.debug:
-    msg: "{{ version_summary_table.split('\n') }}"
+    msg: "{{ version_summary_table_lines }}"
   when:
     - current_versions | length > 0
     - after_versions | length > 0

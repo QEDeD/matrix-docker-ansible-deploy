@@ -1,0 +1,42 @@
+---
+- name: Test table formatting directly
+  hosts: localhost
+  gather_facts: yes
+  vars:
+    matrix_container_prefix: "matrix-"
+    matrix_version_summary_display: true
+    matrix_show_version_summary: true
+  tasks:
+    - name: Set up test facts for table display
+      ansible.builtin.set_fact:
+        current_versions:
+          "matrix-synapse": "matrixdotorg/synapse:v1.95.1"
+          "matrix-postgres": "postgres:15.4-alpine"
+          "matrix-redis": "redis:7.2-alpine"
+        
+        before_versions: {}
+        
+        after_versions:
+          "matrix-synapse":
+            previous: "-"
+            current: "matrixdotorg/synapse:v1.95.1"
+            status: "NEW"
+          "matrix-postgres": 
+            previous: "-"
+            current: "postgres:15.4-alpine"
+            status: "NEW"
+          "matrix-redis":
+            previous: "-"
+            current: "redis:7.2-alpine" 
+            status: "NEW"
+        
+        # Force table display by setting these conditions
+        has_changes: true
+        first_run: true
+        is_status_display: false
+
+    - name: Include display summary task directly
+      ansible.builtin.include_tasks: "{{ playbook_dir }}/tasks/display_summary.yml"
+      vars:
+        matrix_docker_src_files_path: "/tmp"
+        matrix_versions_fact_file: "matrix_container_versions.fact"

@@ -1,0 +1,65 @@
+---
+- name: Test table display formatting
+  hosts: localhost
+  gather_facts: yes
+  vars:
+    matrix_container_prefix: "matrix-"
+    matrix_version_summary_display: true
+    matrix_show_version_summary: true
+    matrix_docker_src_files_path: "/tmp/test"
+  tasks:
+    - name: Create test directory
+      ansible.builtin.file:
+        path: "/tmp/test"
+        state: directory
+        mode: '0755'
+
+    - name: Create mock docker compose file
+      ansible.builtin.copy:
+        content: |
+          version: '3.8'
+          services:
+            matrix-synapse:
+              image: matrixdotorg/synapse:v1.95.1
+            matrix-postgres:
+              image: postgres:15.4-alpine
+            matrix-redis:
+              image: redis:7.2-alpine
+        dest: "/tmp/test/docker-compose.yml"
+        mode: '0644'
+
+    - name: Mock some running containers with docker inspect output
+      ansible.builtin.shell: |
+        mkdir -p /tmp/mock_docker
+        cat > /tmp/mock_docker/inspect_output.json << 'EOF'
+        [
+          {
+            "Id": "abc123",
+            "Name": "/matrix-synapse",
+            "Config": {
+              "Image": "matrixdotorg/synapse:v1.95.1"
+            },
+            "State": {
+              "Running": true
+            }
+          },
+          {
+            "Id": "def456", 
+            "Name": "/matrix-postgres",
+            "Config": {
+              "Image": "postgres:15.4-alpine"
+            },
+            "State": {
+              "Running": true
+            }
+          }
+        ]
+        EOF
+      args:
+        creates: /tmp/mock_docker/inspect_output.json
+
+    - name: Include the matrix-version-summary role
+      ansible.builtin.include_role:
+        name: "{{ playbook_dir }}"
+      vars:
+        status_check_mode: true
