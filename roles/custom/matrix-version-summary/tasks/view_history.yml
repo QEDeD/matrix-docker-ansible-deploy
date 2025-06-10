@@ -102,8 +102,9 @@
   when: view_mode == 'changes'
 
 - name: Display changes history table
-  ansible.builtin.debug:
-    msg: "{{ changes_history_table }}"
+  ansible.builtin.shell: |
+    echo -e '{{ changes_history_table | replace("\n", "\\n") }}'
+  changed_when: false
   when: view_mode == 'changes'
 
 - name: Prepare full history table
@@ -144,6 +145,7 @@
   when: view_mode == 'full'
 
 - name: Display full history table
-  ansible.builtin.debug:
-    msg: "{{ full_history_table }}"
+  ansible.builtin.shell: |
+    echo -e '{{ full_history_table | replace("\n", "\\n") }}'
+  changed_when: false
   when: view_mode == 'full'

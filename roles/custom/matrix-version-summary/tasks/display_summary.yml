@@ -404,10 +404,11 @@
           else ['[NO CHANGES DETECTED]']) }}
   when: after_versions | length > 0
 
-# Display table using debug module
+# Display table using shell echo for clean output
 - name: Display formatted table
-  ansible.builtin.debug:
-    msg: "{{ version_summary_table_lines }}"
+  ansible.builtin.shell: |
+    echo -e '{{ version_summary_table_lines | join("\\n") }}'
+  changed_when: false
   when:
     - current_versions | length > 0
     - after_versions | length > 0
