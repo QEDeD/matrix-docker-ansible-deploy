@@ -53,7 +53,30 @@ traefik_dashboard_basicauth_password: "{{traefik_dashboard_basicauth_password}}"
 # For alternatives, see `docs/configuring-playbook-own-webserver.md`.
 matrix_playbook_reverse_proxy_type: playbook-managed-traefik
 
-traefik_additional_domains_to_obtain_certificates_for: "ha.int.{{domain}}"
+traefik_additional_domains_to_obtain_certificates_for: "ha.{{domain}}"
+
+traefik_configuration_extension_yaml: |
+  providers:
+    file:
+      directory: /config/
+      watch: true
+      filename: ""
+
+aux_file_definitions:
+  - dest: "{{ traefik_config_dir_path }}/provider_ha_homeassistant.yml"
+    content: |
+      http:
+        routers:
+          ha_homeassistant_router:
+            rule: "Host(`ha.{{domain}}`)"
+            service: ha_homeassistant_service
+            tls:
+              certResolver: default
+        services:
+          ha_homeassistant_service:
+            loadBalancer:
+              servers:
+                - url: "http://10.1.154.4:8123"
 
 ########################################################################
 #                                                                      #
@@ -210,6 +233,10 @@ matrix_synapse_usage_exporter_enabled: true
 
   # Bridges # 
 
+matrix_bridges_encryption_enabled: true
+matrix_bridges_encryption_default: true
+matrix_appservice_double_puppet_enabled: true
+
     ## Signal ##
 matrix_mautrix_signal_enabled: true
 
@@ -218,6 +245,9 @@ matrix_mx_puppet_discord_enabled: true
 
     ## Whatsapp ##
 matrix_mautrix_whatsapp_enabled: true
+
+    ## Meta Messenger ##
+matrix_mautrix_meta_messenger_enabled: true
 
     # extra synapse#
 #matrix_synapse_container_federation_api_plain_host_bind_port: '8048'
