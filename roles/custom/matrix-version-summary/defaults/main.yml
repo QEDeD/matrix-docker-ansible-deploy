@@ -19,13 +19,10 @@ matrix_history_fact_file: "matrix_version_history.fact"  # Version history fact 
 # Table display settings
 matrix_table_style_unicode: false  # Set to false for ASCII-only tables (recommended for consistent display)
 
-# Version display mode configuration
-matrix_version_display_mode: "smart"  # Options: "smart", "full", "compact"
-# - smart: Extract and show only version tags (e.g., "v1.95.1" from "matrixdotorg/synapse:v1.95.1")
-# - full: Show complete image names with wider columns (may wrap on narrow terminals)
-# - compact: Show truncated versions (original behavior, 30 chars max)
-
-# Column width settings (used when display_mode is "full" or "compact")
-matrix_table_service_width: 30      # Width for service/container name column
-matrix_table_version_width: 40      # Width for version columns in full mode (30 in compact)
+# Table column width settings (optimized for standard terminal display)
+matrix_table_service_width: 30      # Width for service/container name column (fits standard terminals)
+matrix_table_version_width: 25      # Width for version columns (shows most version strings clearly)
 matrix_table_status_width: 9        # Width for status column
+
+# Version extraction settings
+matrix_version_extract_smart: true  # Extract clean version tags (e.g., "synapse:v1.96.1" from full image name)

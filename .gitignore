@@ -28,3 +28,4 @@ IMPLEMENTATION-SUMMARY.md
 /roles/custom/*/test_version_summary_tag.yml
 /roles/custom/*/sed*
 /roles/custom/*/*.tmp
+/roles/custom/*/tests/

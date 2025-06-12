@@ -17,28 +17,48 @@
   ansible.builtin.set_fact:
     status_check_mode: "{{ ansible_run_tags is defined and ('matrix-version-summary' in ansible_run_tags) and (ansible_run_tags | length == 1) }}"
 
+- name: Debug execution context
+  ansible.builtin.debug:
+    msg: |
+      ansible_run_tags: {{ ansible_run_tags | default('undefined') }}
+      status_check_mode: {{ status_check_mode }}
+      current_versions length: {{ current_versions | default({}) | length }}
+      after_versions length: {{ after_versions | default({}) | length }}
+
 - name: Skip version summary display if feature disabled
   ansible.builtin.meta: end_play
   when: not matrix_version_summary_display | default(matrix_show_version_summary) | bool
 
-# Get container versions with improved error handling
-- name: Get current container versions (matrix containers only)
+# Get container versions with improved error handling - hybrid method
+- name: Get Matrix container names
   ansible.builtin.shell: |
     set -o pipefail
     docker ps --filter "name={{ matrix_container_prefix | regex_escape }}" \
-      --format "{{ "{{" }}.Names{{ "}}" }}:{{ "{{" }}.Image{{ "}}" }}" | \
+      --format "{{ "{{" }}.Names{{ "}}" }}" | \
       sort || echo "DOCKER_ERROR"
-  register: container_versions
+  register: container_names
   changed_when: false
-  failed_when: container_versions.stdout == "DOCKER_ERROR"
+  failed_when: container_names.stdout == "DOCKER_ERROR"
   args:
     executable: /bin/bash
   ignore_errors: true
 
+- name: Get detailed container image information
+  ansible.builtin.shell: |
+    docker inspect --format='{{ "{{" }}.Config.Image{{ "}}" }}' "{{ item }}" 2>/dev/null || echo "unknown"
+  register: container_images
+  loop: "{{ container_names.stdout_lines | default([]) }}"
+  changed_when: false
+  ignore_errors: true
+  when:
+    - not (container_names is failed)
+    - container_names.stdout_lines is defined
+    - container_names.stdout_lines | length > 0
+
 - name: Handle Docker command failure
   ansible.builtin.debug:
     msg: "Warning: Could not retrieve Docker container information. Docker may not be running or accessible."
-  when: container_versions is failed
+  when: container_names is failed
 
 # Initialize data structures
 - name: Process current versions
@@ -70,16 +90,26 @@
 # Process container versions with improved validation
 - name: Process version changes for each service
   ansible.builtin.set_fact:
-    current_versions: "{{ current_versions | combine({item.split(':')[0]: item.split(':')[1:] | join(':')}) }}"
-  loop: "{{ container_versions.stdout_lines | default([]) }}"
+    current_versions: "{{ current_versions | combine({item_name: item_version}) }}"
+  vars:
+    item_name: "{{ container_names.stdout_lines[ansible_loop.index0] }}"
+    full_image: "{{ item.stdout }}"
+    # Extract image name without registry (e.g., element-hq/synapse from ghcr.io/element-hq/synapse:v1.96.1)
+    image_name_part: "{{ full_image.split('/')[-1].split(':')[0] if '/' in full_image else full_image.split(':')[0] }}"
+    # Extract version tag (e.g., v1.96.1 from ghcr.io/element-hq/synapse:v1.96.1)
+    version_tag: "{{ full_image.split(':')[-1] if ':' in full_image else 'latest' }}"
+    # Combine for display: image_name:version (e.g., synapse:v1.96.1)
+    item_version: "{{ image_name_part }}:{{ version_tag }}"
+  loop: "{{ container_images.results | default([]) }}"
   loop_control:
-    loop_var: item
+    extended: true
   when:
-    - not (container_versions is failed)
-    - container_versions.stdout_lines is defined
-    - container_versions.stdout_lines | length > 0
-    - "':' in item"  # Ensure the container line has the expected format
-    - item.split(':') | length >= 2  # Ensure we have both name and image
+    - not (container_names is failed)
+    - container_images.results is defined
+    - container_images.results | length > 0
+    - item.stdout is defined
+    - item.stdout != "unknown"
+    - item.stdout != ""
 
 # Build version changes dict with status (NEW, UPDATED, UNCHANGED)
 - name: Build version changes dict
@@ -102,6 +132,13 @@
   ansible.builtin.set_fact:
     after_versions: "{{ after_versions | combine({item: {'current': current_versions[item], 'previous': current_versions[item], 'status': 'CURRENT'}}) }}"
   loop: "{{ current_versions.keys() | list }}"
+  when:
+    - current_versions | length > 0
+    - status_check_mode | default(false) | bool
+
+- name: Debug after_versions after status mode building
+  ansible.builtin.debug:
+    msg: "after_versions after status mode: {{ after_versions | length }} items"
   when:
     - current_versions | length > 0
     - status_check_mode | default(false) | bool
@@ -354,17 +391,34 @@
     - after_versions | length > 0
     - not (matrix_table_style_unicode | bool)
 
-# Build table structure with fixed column widths for proper ASCII alignment
+# Build table structure with configurable column widths
 - name: Create table header
   ansible.builtin.set_fact:
-    top_line: "{{ tl_corner }}{{ h_line * 32 }}{{ t_down }}{{ h_line * 32 }}{{ t_down }}{{
-      h_line * 32 }}{{ t_down }}{{ h_line * 11 }}{{ tr_corner }}"
-    header_row: "{{ v_line }} {{ ('SERVICE/CONTAINER' + ' ' * 30)[:30] }} {{ v_line }} {{
-      ('VERSION BEFORE' + ' ' * 30)[:30] }} {{ v_line }} {{ ('VERSION AFTER' + ' ' * 30)[:30] }} {{ v_line }} {{
-      ('STATUS' + ' ' * 9)[:9] }} {{ v_line }}"
-    header_sep: "{{ t_right }}{{ double_h_line * 32 }}{{ double_cross }}{{ double_h_line * 32 }}{{
-      double_cross }}{{ double_h_line * 32 }}{{ double_cross }}{{ double_h_line * 11 }}{{ t_left }}"
-    bottom_line: "{{ bl_corner }}{{ h_line * 32 }}{{ t_up }}{{ h_line * 32 }}{{ t_up }}{{ h_line * 32 }}{{ t_up }}{{ h_line * 11 }}{{ br_corner }}"
+    service_col_width: "{{ matrix_table_service_width | default(30) | int }}"
+    version_col_width: "{{ matrix_table_version_width | default(25) | int }}"
+    status_col_width: "{{ matrix_table_status_width | default(9) | int }}"
+    service_border_width: "{{ (matrix_table_service_width | default(30) | int) + 2 }}"
+    version_border_width: "{{ (matrix_table_version_width | default(25) | int) + 2 }}"
+    status_border_width: "{{ (matrix_table_status_width | default(9) | int) + 2 }}"
+  when: after_versions | length > 0
+
+- name: Build table lines with configurable widths
+  ansible.builtin.set_fact:
+    top_line: "{{ tl_corner }}{{ h_line * (service_border_width | int) }}{{ t_down }}{{ h_line * (version_border_width | int) }}{{ t_down }}{{ h_line * (version_border_width | int) }}{{ t_down }}{{ h_line * (status_border_width | int) }}{{ tr_corner }}"
+    bottom_line: "{{ bl_corner }}{{ h_line * (service_border_width | int) }}{{ t_up }}{{ h_line * (version_border_width | int) }}{{ t_up }}{{ h_line * (version_border_width | int) }}{{ t_up }}{{ h_line * (status_border_width | int) }}{{ br_corner }}"
+
+- name: Build header row with configurable widths
+  ansible.builtin.set_fact:
+    header_row: "{{ v_line }} {{ service_header }} {{ v_line }} {{ before_header }} {{ v_line }} {{ after_header }} {{ v_line }} {{ status_header }} {{ v_line }}"
+  vars:
+    service_header: "{{ ('SERVICE/CONTAINER' + ' ' * (service_col_width | int))[: service_col_width | int] }}"
+    before_header: "{{ ('VERSION BEFORE' + ' ' * (version_col_width | int))[: version_col_width | int] }}"
+    after_header: "{{ ('VERSION AFTER' + ' ' * (version_col_width | int))[: version_col_width | int] }}"
+    status_header: "{{ ('STATUS' + ' ' * (status_col_width | int))[: status_col_width | int] }}"
+
+- name: Build header separator with configurable widths
+  ansible.builtin.set_fact:
+    header_sep: "{{ t_right }}{{ double_h_line * (service_border_width | int) }}{{ double_cross }}{{ double_h_line * (version_border_width | int) }}{{ double_cross }}{{ double_h_line * (version_border_width | int) }}{{ double_cross }}{{ double_h_line * (status_border_width | int) }}{{ t_left }}"
   when: after_versions | length > 0
 
 # Generate table rows
@@ -379,13 +433,15 @@
   vars:
     table_row: >-
       {{ v_line + ' ' +
-         ((item.key | truncate(30, true)) + ' ' * 30)[:30] + ' ' +
+         ((item.key | truncate(service_col_width | int, true)) + ' ' * (service_col_width | int))[:service_col_width | int] + ' ' +
          v_line + ' ' +
-         (((item.value.previous | default('-') | string | truncate(30, true)) + ' ' * 30)[:30]) + ' ' +
+         (((item.value.previous | default('-') | string | truncate(version_col_width | int, true)) +
+         ' ' * (version_col_width | int))[:version_col_width | int]) + ' ' +
          v_line + ' ' +
-         (((item.value.current | string | truncate(30, true)) + ' ' * 30)[:30]) + ' ' +
+         (((item.value.current | string | truncate(version_col_width | int, true)) +
+         ' ' * (version_col_width | int))[:version_col_width | int]) + ' ' +
          v_line + ' ' +
-         ((item.value.status + ' ' * 9)[:9]) + ' ' +
+         ((item.value.status + ' ' * (status_col_width | int))[:status_col_width | int]) + ' ' +
          v_line }}
   loop: "{{ after_versions | dict2items | sort(attribute='key') }}"
   when: after_versions | length > 0
@@ -404,11 +460,10 @@
           else ['[NO CHANGES DETECTED]']) }}
   when: after_versions | length > 0
 
-# Display table using shell echo for clean output
+# Display table using debug for visible output  
 - name: Display formatted table
-  ansible.builtin.shell: |
-    echo -e '{{ version_summary_table_lines | join("\\n") }}'
-  changed_when: false
+  ansible.builtin.debug:
+    msg: "{{ version_summary_table_lines }}"
   when:
     - current_versions | length > 0
     - after_versions | length > 0

@@ -96,9 +96,9 @@
     echo "├───────────────────────────┼───────────────────────────┼───────────────────────────┤"
     {% for service_name, change in change_record.changes.items() | sort %}
     {% if service_filter == '' or service_filter in service_name %}
-    echo "│ {{ (service_name + (' ' * 25))[:25] }} │ {{
-      ((change.previous | default('-') | string) + (' ' * 25))[:25] }} │ {{
-      ((change.current | string) + (' ' * 25))[:25] }} │"
+    {% set prev_ver = ((change.previous | default('-') | string) + (' ' * 25))[:25] %}
+    {% set curr_ver = ((change.current | string) + (' ' * 25))[:25] %}
+    echo "│ {{ (service_name + (' ' * 25))[:25] }} │ {{ prev_ver }} │ {{ curr_ver }} │"
     {% endif %}
     {% endfor %}
     echo "└───────────────────────────┴───────────────────────────┴───────────────────────────┘"
@@ -142,9 +142,9 @@
     echo "│ TIMESTAMP                   │ FROM VERSION          │ TO VERSION                │"
     echo "├─────────────────────────────┼───────────────────────┼───────────────────────────┤"
     {% for update in service_data.updates | default([]) %}
-    echo "│ {{ (update.timestamp + (' ' * 27))[:27] }} │ {{
-      ((update.previous | default('-') | string) + (' ' * 21))[:21] }} │ {{
-      ((update.current | string) + (' ' * 25))[:25] }} │"
+    {% set prev_ver = ((update.previous | default('-') | string) + (' ' * 21))[:21] %}
+    {% set curr_ver = ((update.current | string) + (' ' * 25))[:25] %}
+    echo "│ {{ (update.timestamp + (' ' * 27))[:27] }} │ {{ prev_ver }} │ {{ curr_ver }} │"
     {% endfor %}
     {% else %}
     echo "│ No version changes recorded for this service.                                   │"
