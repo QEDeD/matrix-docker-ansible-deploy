@@ -53,8 +53,6 @@ traefik_dashboard_basicauth_password: "{{traefik_dashboard_basicauth_password}}"
 # For alternatives, see `docs/configuring-playbook-own-webserver.md`.
 matrix_playbook_reverse_proxy_type: playbook-managed-traefik
 
-traefik_additional_domains_to_obtain_certificates_for: "ha.{{domain}}"
-
 traefik_configuration_extension_yaml: |
   providers:
     file:
@@ -77,6 +75,15 @@ aux_file_definitions:
             loadBalancer:
               servers:
                 - url: "http://10.1.154.4:8123"
+  - dest: "{{ traefik_config_dir_path }}/provider_wildcard.yml"
+    content: |
+      http:
+        routers:
+          wildcard-cert-requester:
+            rule: "Host(`*.{{domain}}`)"
+            service: noop@internal
+            tls:
+              certResolver: default
 
 # ──────────────────────────────────────────────────────────────
 # TRAEFIK ACME / DNS‑01 SETTINGS
