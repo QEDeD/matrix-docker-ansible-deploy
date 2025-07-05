@@ -78,6 +78,24 @@ aux_file_definitions:
               servers:
                 - url: "http://10.1.154.4:8123"
 
+# ──────────────────────────────────────────────────────────────
+# TRAEFIK ACME / DNS‑01 SETTINGS
+# ──────────────────────────────────────────────────────────────
+
+# Enable the DNS‑01 challenge via Cloudflare
+traefik_config_certificatesResolvers_acme_dnsChallenge_enabled: true
+traefik_config_certificatesResolvers_acme_dnsChallenge_provider: "cloudflare"
+traefik_config_certificatesResolvers_acme_dnsChallenge_delayBeforeCheck: 60
+traefik_config_certificatesResolvers_acme_dnsChallenge_resolvers:
+  - "1.1.1.1:53"
+
+# Cloudflare API credentials (pulled from your Ansible Vault)
+traefik_environment_variables: |
+  CF_ZONE_API_TOKEN={{ vault.cloudflare_zone_read_token }}
+  CF_DNS_API_TOKEN={{ vault.cloudflare_dns_edit_token }}
+  LEGO_DISABLE_CNAME_SUPPORT=true
+# ──────────────────────────────────────────────────────────────
+
 ########################################################################
 #                                                                      #
 # /Traefik                                                             #
@@ -248,9 +266,5 @@ matrix_mautrix_whatsapp_enabled: true
 
     ## Meta Messenger ##
 matrix_mautrix_meta_messenger_enabled: true
-
-    # extra synapse#
-#matrix_synapse_container_federation_api_plain_host_bind_port: '8048'
-#matrix_synapse_container_client_api_host_bind_port: '8008'
 
 
