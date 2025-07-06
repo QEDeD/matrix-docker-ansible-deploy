@@ -53,6 +53,9 @@ traefik_dashboard_basicauth_password: "{{traefik_dashboard_basicauth_password}}"
 # For alternatives, see `docs/configuring-playbook-own-webserver.md`.
 matrix_playbook_reverse_proxy_type: playbook-managed-traefik
 
+# Additional domains for individual certificates (for your working HA setup)
+traefik_additional_domains_to_obtain_certificates_for: "ha.{{domain}}"
+
 traefik_configuration_extension_yaml: |
   providers:
     file:
@@ -61,12 +64,28 @@ traefik_configuration_extension_yaml: |
       filename: ""
 
 aux_file_definitions:
+  # This file triggers wildcard certificate acquisition for *.{{ domain }}
+  - dest: "{{ traefik_config_dir_path }}/provider_wildcard.yml"
+    content: |
+      http:
+        routers:
+          wildcard-cert-trigger:
+            rule: "Host(`wildcard-trigger.{{ domain }}`)"
+            service: "noop@internal"
+            tls:
+              certResolver: default
+              domains:
+                - main: "{{ domain }}"
+                  sans:
+                    - "*.{{ domain }}"
+
+  # This file is for the Home Assistant reverse proxy
   - dest: "{{ traefik_config_dir_path }}/provider_ha_homeassistant.yml"
     content: |
       http:
         routers:
           ha_homeassistant_router:
-            rule: "Host(`ha.{{domain}}`)"
+            rule: "Host(`ha.{{ domain }}`)"
             service: ha_homeassistant_service
             tls:
               certResolver: default
@@ -75,15 +94,6 @@ aux_file_definitions:
             loadBalancer:
               servers:
                 - url: "http://10.1.154.4:8123"
-  - dest: "{{ traefik_config_dir_path }}/provider_wildcard.yml"
-    content: |
-      http:
-        routers:
-          wildcard-cert-requester:
-            rule: "Host(`*.{{domain}}`)"
-            service: noop@internal
-            tls:
-              certResolver: default
 
 # ──────────────────────────────────────────────────────────────
 # TRAEFIK ACME / DNS‑01 SETTINGS
@@ -98,8 +108,8 @@ traefik_config_certificatesResolvers_acme_dnsChallenge_resolvers:
 
 # Cloudflare API credentials (pulled from your Ansible Vault)
 traefik_environment_variables: |
-  CF_ZONE_API_TOKEN={{ vault.cloudflare_zone_read_token }}
-  CF_DNS_API_TOKEN={{ vault.cloudflare_dns_edit_token }}
+  CF_ZONE_API_TOKEN="{{ vault.cloudflare_zone_read_token }}"
+  CF_DNS_API_TOKEN="{{ vault.cloudflare_dns_edit_token }}"
   LEGO_DISABLE_CNAME_SUPPORT=true
 # ──────────────────────────────────────────────────────────────
 
