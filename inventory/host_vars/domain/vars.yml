@@ -109,6 +109,7 @@ traefik_config_certificatesResolvers_acme_dnsChallenge_resolvers:
 # Cloudflare API credentials (pulled from your Ansible Vault)
 # Note: No quotes around Ansible variables to prevent double-quoting in final environment
 traefik_environment_variables: |
+  CLOUDFLARE_API_EMAIL={{ vault_cloudflare_api_email }}
   CLOUDFLARE_DNS_API_TOKEN={{ vault_cloudflare_dns_edit_token }}
   CLOUDFLARE_ZONE_API_TOKEN={{ vault_cloudflare_zone_read_token }}
   LEGO_DISABLE_CNAME_SUPPORT=true
@@ -119,11 +120,6 @@ traefik_environment_variables: |
 # /Traefik                                                             #
 #                                                                      #
 ########################################################################
-
-# A shared secret (between Coturn and Synapse) used for authentication.
-# You can put any string here, but generating a strong one is preferred (e.g. `pwgen -s 64 1`).
-# matrix_coturn_turn_static_auth_secret: 'IJFoEWlHchURaCPjxWgDCHOJwpM5QeYStIPy1g4zCLmd0o3nt9uCy8IAtZKVUpIq'
-# disabled 19/03/2023
 
 # A secret used to protect access keys issued by the server.
 # You can put any string here, but generating a strong one is preferred (e.g. `pwgen -s 64 1`).
