@@ -54,7 +54,7 @@ traefik_dashboard_basicauth_password: "{{traefik_dashboard_basicauth_password}}"
 matrix_playbook_reverse_proxy_type: playbook-managed-traefik
 
 # Additional domains for individual certificates (for your working HA setup)
-traefik_additional_domains_to_obtain_certificates_for: ["ha.{{ domain }}"]
+#traefik_additional_domains_to_obtain_certificates_for: ["ha.{{ domain }}"]
 
 traefik_configuration_extension_yaml: |
   providers:
@@ -78,7 +78,7 @@ aux_file_definitions:
                 - main: "{{ domain }}"
                   sans:
                     - "*.{{ domain }}"
-
+            priority: -1 
   # This file is for the Home Assistant reverse proxy
   - dest: "{{ traefik_config_dir_path }}/provider_ha_homeassistant.yml"
     content: |
@@ -263,7 +263,13 @@ matrix_synapse_usage_exporter_enabled: true
 # You can adjust the hostname and path via `matrix_synapse_usage_exporter_hostname` and `matrix_synapse_usage_exporter_path_prefix`.
 # matrix_synapse_usage_exporter_proxying_enabled: true
 
-  # Bridges # 
+
+########################################################################
+#                                                                      #
+# Bridges                                                              #
+#                                                                      #
+########################################################################
+  #  # 
 
 matrix_bridges_encryption_enabled: true
 matrix_bridges_encryption_default: true
@@ -280,3 +286,9 @@ matrix_mautrix_whatsapp_enabled: true
 
     ## Meta Messenger ##
 matrix_mautrix_meta_messenger_enabled: false
+
+########################################################################
+#                                                                      #
+# /Bridges                                                             #
+#                                                                      #
+########################################################################
