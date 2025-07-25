@@ -104,6 +104,60 @@ exim_relay_relay_auth: true
 exim_relay_relay_auth_username: "apikey"
 exim_relay_relay_auth_password: "{vault_exim_relay_relay_auth_password}}"
 
+########################################################################
+#                                                                      #
+# Docker                                                               #
+#                                                                      #
+########################################################################
+
+# To disable Docker installation (in case you'd be installing Docker in another way),
+# remove the line below.
+matrix_playbook_docker_installation_enabled: true
+
+# To disable Docker SDK for Python installation (in case you'd be installing the SDK in another way),
+# remove the line below.
+devture_docker_sdk_for_python_installation_enabled: true
+
+devture_systemd_docker_base_ipv6_enabled: true
+
+matrix_playbook_docker_installation_daemon_options_custom: {
+  "default-address-pools": [
+    {
+      "base": "172.16.0.0/16",
+      "size": 25
+    },
+    {
+      "base": "192.168.2.0/23",
+      "size": 25
+    },
+    {
+      "base": "192.168.4.0/22",
+      "size": 25
+    },
+    {
+      "base": "192.168.8.0/21",
+      "size": 25
+    },
+    {
+      "base": "192.168.16.0/20",
+      "size": 25
+    },
+    {
+      "base": "192.168.32.0/19",
+      "size": 25
+    },
+    {
+      "base": "192.168.64.0/18",
+      "size": 25
+    }
+  ]
+}
+
+########################################################################
+#                                                                      #
+# /Docker                                                              #
+#                                                                      #
+########################################################################
 
 
 ########################################################################
