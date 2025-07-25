@@ -24,8 +24,8 @@ path = [
     "flake.lock",
     "flake.nix",
     "requirements.yml",
-    "inventory/host_vars/domain/vault.yaml",
-    "inventory/host_vars/domain/vars.yaml",
+    "inventory/host_vars/domain/vault.yml",
+    "inventory/host_vars/domain/vars.yml",
     ".github/workflows/upstream-sync-pr.yml",
 ]
 SPDX-FileCopyrightText = "NONE"
