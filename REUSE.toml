@@ -23,7 +23,10 @@ path = [
     "ansible.cfg",
     "flake.lock",
     "flake.nix",
-    "requirements.yml"
+    "requirements.yml",
+    "inventory/host_vars/domain/vault.yml",
+    "inventory/host_vars/domain/vars.yml",
+    ".github/workflows/upstream-sync-pr.yml",
 ]
 SPDX-FileCopyrightText = "NONE"
 SPDX-License-Identifier = "CC0-1.0"
