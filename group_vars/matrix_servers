@@ -4388,7 +4388,7 @@ postgres_managed_databases_auto: |
       'name': etherpad_database_name,
       'username': etherpad_database_username,
       'password': etherpad_database_password,
-    }] if (etherpad_enabled and etherpad_database_engine == 'postgres' and etherpad_database_hostname == postgres_connection_hostname) else [])
+    }] if (etherpad_enabled and etherpad_database_type == 'postgres' and etherpad_database_hostname == postgres_connection_hostname) else [])
     +
     ([{
       'name': prometheus_postgres_exporter_database_name,
@@ -6194,7 +6194,7 @@ matrix_static_files_file_matrix_client_property_org_matrix_msc3575_proxy_url: "{
 
 matrix_static_files_file_matrix_client_property_org_matrix_msc2965_authentication_enabled: "{{ matrix_authentication_service_enabled }}"
 matrix_static_files_file_matrix_client_property_org_matrix_msc2965_authentication_issuer: "{{ matrix_authentication_service_config_http_issuer if matrix_authentication_service_enabled else '' }}"
-matrix_static_files_file_matrix_client_property_org_matrix_msc2965_authentication_account: "{{ matrix_authentication_service_account_management_url }}"
+matrix_static_files_file_matrix_client_property_org_matrix_msc2965_authentication_account: "{{ matrix_authentication_service_account_management_url if matrix_authentication_service_enabled else '' }}"
 
 matrix_static_files_file_matrix_client_property_m_tile_server_entries_enabled: "{{ matrix_client_element_location_sharing_enabled }}"
 matrix_static_files_file_matrix_client_property_m_tile_server_map_style_url: "{{ ('https://' if matrix_playbook_ssl_enabled else 'http://') + matrix_server_fqn_element }}/map_style.json"
@@ -6422,6 +6422,15 @@ livekit_server_config_keys_auto: |-
     )
   }}
 
+# We only wish for matrix-livekit-jwt-service to create rooms, only for users on trusted homeservers.
+# See `matrix_livekit_jwt_service_environment_variable_livekit_full_access_homeservers`.
+#
+# Ref:
+# - https://github.com/element-hq/lk-jwt-service/releases/tag/v0.3.0
+# - https://github.com/livekit/livekit/blob/5e483e7554e5afbf254acf84e3ec0aa6e108e758/config-sample.yaml#L168-L170
+# - https://github.com/mother-of-all-self-hosting/ansible-role-livekit-server/commit/2a1b04552634097bdd26d472502a8f5bf1b8528f
+livekit_server_config_room_auto_create: false
+
 # The playbook intentionally uses a non-standard port than the default used by the role (5349),
 # because Coturn is already using that port.
 # Note that TURN is not enabled by default. See `livekit_server_config_turn_enabled`.
@@ -6500,6 +6509,8 @@ matrix_livekit_jwt_service_environment_variable_livekit_url: "{{ livekit_server_
 matrix_livekit_jwt_service_environment_variable_livekit_key: "{{ '%s' | format(matrix_homeserver_generic_secret_key) | password_hash('sha512', 'lk.key', rounds=655555) | to_uuid }}"
 
 matrix_livekit_jwt_service_environment_variable_livekit_secret: "{{ '%s' | format(matrix_homeserver_generic_secret_key) | password_hash('sha512', 'lk.secret', rounds=655555) | to_uuid }}"
+
+matrix_livekit_jwt_service_environment_variable_livekit_full_access_homeservers_list: ["{{ matrix_domain }}"]
 
 ########################################################################
 #                                                                      #
