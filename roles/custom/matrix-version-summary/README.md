@@ -84,7 +84,7 @@ The role implements dual retention policies that work together:
 - **Trigger**: Applied during each playbook run when changes are recorded
 - **Manual Control**: Use the trim playbook to manually apply count limits (not applicable when set to 0)
 
-### Date-Based Retention  
+### Date-Based Retention
 - **Parameter**: `matrix_history_retention_days` (default: 365)
 - **Behavior**: Automatically filters out entries older than N days when viewing/reading history
 - **Unlimited**: Set to 0 to disable date-based filtering (unlimited retention)
@@ -179,7 +179,7 @@ This role meets enterprise production standards:
 - Cross-platform compatibility (no external filter dependencies)
 - Comprehensive test coverage
 
-**✅ Reliability**  
+**✅ Reliability**
 - Error-safe execution with proper rollback
 - Idempotent operations (multiple runs produce same result)
 - Memory-efficient processing (<50MB during execution)

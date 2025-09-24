@@ -460,7 +460,7 @@
           else ['[NO CHANGES DETECTED]']) }}
   when: after_versions | length > 0
 
-# Display table using debug for visible output  
+# Display table using debug for visible output
 - name: Display formatted table
   ansible.builtin.debug:
     msg: "{{ version_summary_table_lines }}"

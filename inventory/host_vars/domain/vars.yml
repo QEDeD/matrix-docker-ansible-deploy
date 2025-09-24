@@ -87,7 +87,7 @@ aux_file_definitions:
                 - main: "{{ domain }}"
                   sans:
                     - "*.{{ domain }}"
-            priority: -1 
+            priority: -1
   # This file is for the Home Assistant reverse proxy
   - dest: "{{ traefik_config_dir_path }}/provider_ha_homeassistant.yml"
     content: |
@@ -253,21 +253,21 @@ grafana_default_admin_password: "{{grafana_default_admin_password}}"
 
   # Workers #
 
- 
+
 matrix_synapse_workers_preset: one-of-each
 
-#added 13-06-2023 after workers started causing issues 
-#commented out again again 22-10-2023: 
- 
+#added 13-06-2023 after workers started causing issues
+#commented out again again 22-10-2023:
+
 #postgres_process_extra_arguments: [
 #  "-c 'max_connections=200'"
 #]
 
-  # Element # 
+  # Element #
 
   #matrix_client_element_enabled: false
 
-# Serve base domain # 
+# Serve base domain #
 
 matrix_static_files_container_labels_base_domain_enabled: true
 
@@ -282,7 +282,7 @@ matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{matrix
   # Element Call #
 matrix_element_call_enabled: true
 
-  # Synapse Stats #  
+  # Synapse Stats #
 matrix_synapse_usage_exporter_enabled: true
 
 
@@ -298,7 +298,7 @@ matrix_synapse_usage_exporter_enabled: true
 # Bridges                                                              #
 #                                                                      #
 ########################################################################
-  #  # 
+  #  #
 
 matrix_bridges_encryption_enabled: true
 matrix_bridges_encryption_default: true
@@ -321,4 +321,3 @@ matrix_mautrix_meta_messenger_enabled: false
 # /Bridges                                                             #
 #                                                                      #
 ########################################################################
-

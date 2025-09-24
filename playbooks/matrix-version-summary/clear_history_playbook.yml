@@ -16,7 +16,7 @@
       ansible.builtin.stat:
         path: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
       register: history_file
-      
+
     - name: Create backup of history file
       ansible.builtin.copy:
         src: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
@@ -25,7 +25,7 @@
         remote_src: true
       become: true
       when: history_file.stat.exists
-      
+
     - name: Clear version history
       ansible.builtin.file:
         path: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"

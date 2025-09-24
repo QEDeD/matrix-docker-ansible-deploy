@@ -27,12 +27,12 @@
       ansible.builtin.stat:
         path: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
       register: history_file
-      
+
     - name: Skip trimming if history file doesn't exist
       ansible.builtin.debug:
         msg: "No history file found at /etc/ansible/facts.d/{{ matrix_history_fact_file }}. Nothing to trim."
       when: not history_file.stat.exists
-      
+
     - name: End play if history file doesn't exist
       ansible.builtin.meta: end_play
       when: not history_file.stat.exists
@@ -161,11 +161,11 @@
         - ansible_local is defined
         - ansible_local[(matrix_history_fact_file | regex_replace('\\.fact$', ''))] is defined
       register: backup_result
-      
+
     - name: Verify backup creation
       ansible.builtin.fail:
         msg: "Failed to create backup file before trimming. Aborting for safety."
-      when: 
+      when:
         - backup_result is defined
         - backup_result.failed is defined and backup_result.failed
 
@@ -197,22 +197,22 @@
       ansible.builtin.debug:
         msg: |
           Matrix version history trimming completed:
-          
+
           Changes History:
           - Original entries: {{ original_changes_count }}
           - Final entries: {{ final_changes_count }}
           - Entries removed: {{ original_changes_count | int - final_changes_count | int }}
-          
+
           Full History (per-service):
           - Services tracked: {{ final_services_count }}
           - Total service updates removed: {{ total_service_updates_trimmed }}
-          
+
           Retention Policy:
           - Max entries limit: {{ matrix_history_max_entries }} {{ '(unlimited)' if matrix_history_max_entries == 0 else '(applied)' }}
           - Retention days: {{ matrix_history_retention_days }} {{ '(unlimited)' if matrix_history_retention_days == 0 else '(applied, cutoff: ' + retention_cutoff_date + ')' if retention_cutoff_date is defined }}
-          
+
           {{ 'History file updated successfully' if write_result is defined and write_result.changed else 'No changes needed - history already within limits' }}
-          
+
           Backup saved to: /etc/ansible/facts.d/{{ matrix_history_fact_file }}.backup.{{ ansible_date_time.epoch }}
       when: version_history.changes | default([]) | length > 0
 
