@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2025 MDAD project contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # Matrix Version Summary and History
 
 This role tracks container version changes over time and provides tools to view and manage the version history.

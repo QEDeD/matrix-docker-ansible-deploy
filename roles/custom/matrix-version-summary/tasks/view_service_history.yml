@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 ---
 # Process a single service for full history view
 # This file is included by view_history.yml when needed

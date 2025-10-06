@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 ---
 # Mock/Test Mode for Matrix Version Summary
 # This allows testing the role without Docker or running containers
