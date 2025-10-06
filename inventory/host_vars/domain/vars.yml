@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2025 MDAD project contributors
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
+---
+
 ########################################################################
 #                                                                      #
 # Matrix                                                               #
@@ -66,7 +68,7 @@ traefik_dashboard_basicauth_password: "{{traefik_dashboard_basicauth_password}}"
 matrix_playbook_reverse_proxy_type: playbook-managed-traefik
 
 # Additional domains for individual certificates (for your working HA setup)
-#traefik_additional_domains_to_obtain_certificates_for: ["ha.{{ domain }}"]
+# traefik_additional_domains_to_obtain_certificates_for: ["ha.{{ domain }}"]
 
 traefik_configuration_extension_yaml: |
   providers:
@@ -205,15 +207,13 @@ matrix_playbook_docker_installation_enabled: false
 #                                                                      #
 ########################################################################
 
-exim_relay_sender_address: "servadmupinhere@gmail.com" #matrix@{{domain}}"
+exim_relay_sender_address: "servadmupinhere@gmail.com"  # matrix@{{domain}}
 exim_relay_relay_use: true
 exim_relay_relay_host_name: "smtp.sendgrid.net"
 exim_relay_relay_host_port: 587
 exim_relay_relay_auth: true
 exim_relay_relay_auth_username: "apikey"
-exim_relay_relay_auth_password: "{vault_exim_relay_relay_auth_password}}"
-
-
+exim_relay_relay_auth_password: "{{ vault_exim_relay_relay_auth_password }}"
 
 ########################################################################
 #                                                                      #
@@ -229,19 +229,18 @@ exim_relay_relay_auth_password: "{vault_exim_relay_relay_auth_password}}"
 
 
 matrix_coturn_container_network: "matrix-coturn"
-#04/02/2024 - added
+# 04/02/2024 - added
 
-
-#matrix_coturn_container_network: host
-#09/03/2023 - added, #04/02/2024 - commented out
+# matrix_coturn_container_network: host
+# 09/03/2023 - added, 04/02/2024 - commented out
 
 matrix_coturn_turn_external_ip_address: ""
 
-#28/06/2023 - added, #04/02/2024 - updated
+# 28/06/2023 - added, 04/02/2024 - updated
 
 matrix_coturn_denied_peer_ips:
   - 0.0.0.0-0.255.255.255
-#  - 10.0.0.0-10.255.255.255
+  # - 10.0.0.0-10.255.255.255
   - 100.64.0.0-100.127.255.255
   - 127.0.0.0-127.255.255.255
   - 169.254.0.0-169.254.255.255
@@ -276,38 +275,36 @@ grafana_default_admin_user: "{{admin_user_email}}"
 # Changing the password subsequently won't work.
 grafana_default_admin_password: "{{grafana_default_admin_password}}"
 
-  # Workers #
-
+# Workers
 
 matrix_synapse_workers_preset: one-of-each
 
-#added 13-06-2023 after workers started causing issues
-#commented out again again 22-10-2023:
+# Added 13-06-2023 after workers started causing issues
+# Commented out again 22-10-2023
 
-#postgres_process_extra_arguments: [
-#  "-c 'max_connections=200'"
-#]
+# postgres_process_extra_arguments: [
+#   "-c 'max_connections=200'"
+# ]
 
-  # Element #
+# Element
 
-  #matrix_client_element_enabled: false
+# matrix_client_element_enabled: false
 
-# Serve base domain #
+# Serve base domain
 
 matrix_static_files_container_labels_base_domain_enabled: true
 
-  # Synapse Admin #
+# Synapse Admin
 
 matrix_synapse_admin_enabled: true
 
 matrix_synapse_ext_password_provider_shared_secret_auth_enabled: true
 matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret}}"
 
-
-  # Element Call #
+# Element Call
 matrix_element_call_enabled: true
 
-  # Synapse Stats #
+# Synapse Stats
 matrix_synapse_usage_exporter_enabled: true
 
 
@@ -323,22 +320,21 @@ matrix_synapse_usage_exporter_enabled: true
 # Bridges                                                              #
 #                                                                      #
 ########################################################################
-  #  #
 
 matrix_bridges_encryption_enabled: true
 matrix_bridges_encryption_default: true
 matrix_appservice_double_puppet_enabled: true
 
-    ## Signal ##
+# Signal bridge
 matrix_mautrix_signal_enabled: true
 
-    ## Discord ##
+# Discord bridge
 matrix_mx_puppet_discord_enabled: true
 
-    ## Whatsapp ##
+# WhatsApp bridge
 matrix_mautrix_whatsapp_enabled: true
 
-    ## Meta Messenger ##
+# Meta Messenger bridge
 matrix_mautrix_meta_messenger_enabled: false
 
 ########################################################################
