@@ -130,6 +130,28 @@ traefik_environment_variables: |
 #                                                                      #
 ########################################################################
 
+########################################################################
+#                                                                      #
+# ddclient                                                             #
+#                                                                      #
+########################################################################
+
+matrix_dynamic_dns_enabled: true
+
+matrix_dynamic_dns_domain_configurations:
+  - protocol: cloudflare
+    zone: "{{ domain }}"
+    ttl: 1
+    username: "token"
+    password: "{{ vault_matrix_dynamic_dns_cloudflare_api_token }}"
+    domain: "{{ domain }}"
+
+########################################################################
+#                                                                      #
+# /ddclient                                                            #
+#                                                                      #
+########################################################################
+
 # A secret used to protect access keys issued by the server.
 # You can put any string here, but generating a strong one is preferred (e.g. `pwgen -s 64 1`).
 matrix_synapse_macaroon_secret_key: "{{matrix_synapse_macaroon_secret_key}}"
