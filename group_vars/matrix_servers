@@ -6671,3 +6671,16 @@ matrix_livekit_jwt_service_environment_variable_livekit_full_access_homeservers_
 # /matrix-livekit-jwt-service                                          #
 #                                                                      #
 ########################################################################
+
+mdad_db_dialect_map:
+  sqlite: sqlite3
+  postgres: postgres
+
+matrix_go_skype_bridge_appservice_database_type: "{{ mdad_db_dialect_map[matrix_go_skype_bridge_database_engine] }}"
+matrix_bot_buscarron_database_dialect: "{{ mdad_db_dialect_map[matrix_bot_buscarron_database_engine] }}"
+matrix_mautrix_gmessages_appservice_database_type: "{{ mdad_db_dialect_map[matrix_mautrix_gmessages_database_engine] }}"
+matrix_mautrix_slack_appservice_database_type: "{{ mdad_db_dialect_map[matrix_mautrix_slack_database_engine] }}"
+matrix_mautrix_discord_appservice_database_type: "{{ mdad_db_dialect_map[matrix_mautrix_discord_database_engine] }}"
+matrix_postmoogle_database_dialect: "{{ mdad_db_dialect_map[matrix_postmoogle_database_engine] }}"
+matrix_bot_honoroit_database_dialect: "{{ mdad_db_dialect_map[matrix_bot_honoroit_database_engine] }}"
+
