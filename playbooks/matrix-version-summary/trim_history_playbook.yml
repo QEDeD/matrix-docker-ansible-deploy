@@ -4,7 +4,7 @@
 ---
 # Matrix Version History trimming playbook
 - name: Trim Matrix Version History
-  hosts: "{{ target_host }}"
+  hosts: "{{ target_host | default('matrix_servers') }}"
   gather_facts: true
   vars:
     confirm_trim: "{{ confirm_trim | default('no') }}"

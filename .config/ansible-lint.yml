@@ -19,3 +19,7 @@ skip_list:
   - template-instead-of-copy
 
 offline: true
+
+exclude_paths:
+  - roles/galaxy/
+
