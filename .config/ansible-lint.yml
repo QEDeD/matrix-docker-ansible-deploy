@@ -22,4 +22,3 @@ offline: true
 
 exclude_paths:
   - roles/galaxy/
-
