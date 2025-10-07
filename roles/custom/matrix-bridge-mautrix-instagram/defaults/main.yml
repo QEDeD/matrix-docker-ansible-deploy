@@ -124,11 +124,7 @@ matrix_mautrix_instagram_database_name: 'matrix_mautrix_instagram'
 
 matrix_mautrix_instagram_database_connection_string: 'postgres://{{ matrix_mautrix_instagram_database_username }}:{{ matrix_mautrix_instagram_database_password }}@{{ matrix_mautrix_instagram_database_hostname }}:{{ matrix_mautrix_instagram_database_port }}/{{ matrix_mautrix_instagram_database_name }}'
 
-matrix_mautrix_instagram_appservice_database: "{{
-	{
-		'postgres': matrix_mautrix_instagram_database_connection_string,
-	}[matrix_mautrix_instagram_database_engine]
-}}"
+matrix_mautrix_instagram_appservice_database: "{{ {'postgres': matrix_mautrix_instagram_database_connection_string}[matrix_mautrix_instagram_database_engine] }}"
 
 
 # Can be set to enable automatic double-puppeting via Shared Secret Auth (https://github.com/devture/matrix-synapse-shared-secret-auth).

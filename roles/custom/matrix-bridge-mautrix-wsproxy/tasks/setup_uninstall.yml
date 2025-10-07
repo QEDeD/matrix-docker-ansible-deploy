@@ -23,7 +23,7 @@
   when: "matrix_mautrix_wsproxy_service_stat.stat.exists"
 
 - name: Ensure systemd reloaded after matrix-mautrix-wsproxy.service removal
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     daemon_reload: true
   when: "matrix_mautrix_wsproxy_service_stat.stat.exists"
 
@@ -46,6 +46,6 @@
   when: "matrix_mautrix_wsproxy_syncproxy_service_stat.stat.exists"
 
 - name: Ensure systemd reloaded after matrix-mautrix-wsproxy-syncproxy.service removal
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     daemon_reload: true
   when: "matrix_mautrix_wsproxy_syncproxy_service_stat.stat.exists"

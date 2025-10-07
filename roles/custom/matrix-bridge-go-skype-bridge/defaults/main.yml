@@ -85,19 +85,9 @@ matrix_go_skype_bridge_database_sslmode: disable
 
 matrix_go_skype_bridge_database_connection_string: 'postgresql://{{ matrix_go_skype_bridge_database_username }}:{{ matrix_go_skype_bridge_database_password }}@{{ matrix_go_skype_bridge_database_hostname }}:{{ matrix_go_skype_bridge_database_port }}/{{ matrix_go_skype_bridge_database_name }}?sslmode={{ matrix_go_skype_bridge_database_sslmode }}'
 
-matrix_go_skype_bridge_appservice_database_type: "{{
-	{
-		'sqlite': 'sqlite3',
-		'postgres':'postgres',
-	}[matrix_go_skype_bridge_database_engine]
-}}"
+matrix_go_skype_bridge_appservice_database_type: "{{ {'sqlite': 'sqlite3', 'postgres': 'postgres'}[matrix_go_skype_bridge_database_engine] }}"
 
-matrix_go_skype_bridge_appservice_database_uri: "{{
-	{
-		'sqlite': matrix_go_skype_bridge_sqlite_database_path_in_container,
-		'postgres': matrix_go_skype_bridge_database_connection_string,
-	}[matrix_go_skype_bridge_database_engine]
-}}"
+matrix_go_skype_bridge_appservice_database_uri: "{{ {'sqlite': matrix_go_skype_bridge_sqlite_database_path_in_container, 'postgres': matrix_go_skype_bridge_database_connection_string}[matrix_go_skype_bridge_database_engine] }}"
 
 # Can be set to enable automatic double-puppeting via Shared Secret Auth (https://github.com/devture/matrix-synapse-shared-secret-auth).
 matrix_go_skype_bridge_login_shared_secret: ''
