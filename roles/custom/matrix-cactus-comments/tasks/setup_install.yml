@@ -52,7 +52,7 @@
     repo: "{{ matrix_cactus_comments_docker_repo }}"
     version: "{{ matrix_cactus_comments_docker_repo_version }}"
     dest: "{{ matrix_cactus_comments_docker_src_files_path }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_cactus_comments_git_pull_results

@@ -76,7 +76,7 @@
         repo: "{{ matrix_ma1sd_container_image_self_build_repo }}"
         dest: "{{ matrix_ma1sd_docker_src_files_path }}"
         version: "{{ matrix_ma1sd_container_image_self_build_branch }}"
-        force: "yes"
+        force: true
       become: true
       become_user: "{{ matrix_user_name }}"
       register: matrix_ma1sd_git_pull_results

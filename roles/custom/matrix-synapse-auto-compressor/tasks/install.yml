@@ -56,7 +56,7 @@
         repo: "{{ matrix_synapse_auto_compressor_container_image_self_build_repo }}"
         version: "{{ matrix_synapse_auto_compressor_container_image_self_build_version }}"
         dest: "{{ matrix_synapse_auto_compressor_container_src_files_path }}"
-        force: "yes"
+        force: true
       become: true
       become_user: "{{ matrix_user_name }}"
       register: matrix_synapse_auto_compressor_git_pull_results

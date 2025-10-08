@@ -37,7 +37,7 @@
     repo: "{{ matrix_client_cinny_container_image_self_build_repo }}"
     dest: "{{ matrix_client_cinny_docker_src_files_path }}"
     version: "{{ matrix_client_cinny_docker_image.split(':')[1] }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_client_cinny_git_pull_results

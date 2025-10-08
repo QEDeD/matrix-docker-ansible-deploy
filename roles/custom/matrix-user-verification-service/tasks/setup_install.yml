@@ -35,7 +35,7 @@
     repo: "{{ matrix_user_verification_service_container_image_self_build_repo }}"
     dest: "{{ matrix_user_verification_service_docker_src_files_path }}"
     version: "{{ matrix_user_verification_service_container_image_self_build_branch }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_user_verification_service_git_pull_results

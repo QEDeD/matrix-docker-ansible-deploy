@@ -29,7 +29,7 @@
     repo: "{{ matrix_corporal_container_image_self_build_repo }}"
     dest: "{{ matrix_corporal_container_src_files_path }}"
     version: "{{ matrix_corporal_docker_image.split(':')[1] }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_corporal_git_pull_results

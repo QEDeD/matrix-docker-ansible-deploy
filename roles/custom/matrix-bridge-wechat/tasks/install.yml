@@ -39,7 +39,7 @@
         repo: "{{ matrix_wechat_container_image_self_build_repo }}"
         dest: "{{ matrix_wechat_container_src_files_path }}"
         version: "{{ matrix_wechat_container_image_self_build_branch }}"
-        force: "yes"
+        force: true
       become: true
       become_user: "{{ matrix_user_name }}"
       register: matrix_wechat_git_pull_results
@@ -74,7 +74,7 @@
         repo: "{{ matrix_wechat_agent_container_image_self_build_repo }}"
         dest: "{{ matrix_wechat_agent_container_src_files_path }}"
         version: "{{ matrix_wechat_agent_container_image_self_build_branch }}"
-        force: "yes"
+        force: true
       become: true
       become_user: "{{ matrix_user_name }}"
       register: matrix_wechat_agent_git_pull_results

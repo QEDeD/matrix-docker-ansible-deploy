@@ -75,7 +75,7 @@
     repo: "{{ matrix_mautrix_telegram_lottieconverter_docker_repo }}"
     version: "{{ matrix_mautrix_telegram_lottieconverter_docker_repo_version }}"
     dest: "{{ matrix_mautrix_telegram_lottieconverter_docker_src_files_path }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_mautrix_telegram_lottieconverter_git_pull_results
@@ -98,7 +98,7 @@
     repo: "{{ matrix_mautrix_telegram_docker_repo }}"
     version: "{{ matrix_mautrix_telegram_docker_repo_version }}"
     dest: "{{ matrix_mautrix_telegram_docker_src_files_path }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_mautrix_telegram_git_pull_results

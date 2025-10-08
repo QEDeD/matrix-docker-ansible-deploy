@@ -45,7 +45,7 @@
         repo: "{{ matrix_bot_chatgpt_container_image_self_build_repo }}"
         version: "{{ matrix_bot_chatgpt_container_image_self_build_repo_version }}"
         dest: "{{ matrix_bot_chatgpt_container_src_path }}"
-        force: "yes"
+        force: true
       become: true
       become_user: "{{ matrix_user_name }}"
       register: matrix_bot_chatgpt_git_pull_results

@@ -38,7 +38,7 @@
     repo: "{{ matrix_steam_bridge_container_image_self_build_repo }}"
     version: "{{ matrix_steam_bridge_container_image_self_build_repo_version }}"
     dest: "{{ matrix_steam_bridge_docker_src_files_path }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_steam_bridge_git_pull_results

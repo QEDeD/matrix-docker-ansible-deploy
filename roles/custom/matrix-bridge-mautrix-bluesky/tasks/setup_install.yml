@@ -38,7 +38,7 @@
     repo: "{{ matrix_mautrix_bluesky_container_image_self_build_repo }}"
     version: "{{ matrix_mautrix_bluesky_container_image_self_build_repo_version }}"
     dest: "{{ matrix_mautrix_bluesky_docker_src_files_path }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_mautrix_bluesky_git_pull_results

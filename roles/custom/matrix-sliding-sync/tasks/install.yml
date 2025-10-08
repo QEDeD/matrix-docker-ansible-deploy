@@ -49,7 +49,7 @@
         repo: "{{ matrix_sliding_sync_container_image_self_build_repo }}"
         version: "{{ matrix_sliding_sync_container_image_self_build_repo_version }}"
         dest: "{{ matrix_sliding_sync_container_src_path }}"
-        force: "yes"
+        force: true
       become: true
       become_user: "{{ matrix_user_name }}"
       register: matrix_sliding_sync_git_pull_results

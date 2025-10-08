@@ -49,7 +49,7 @@
         repo: "{{ matrix_synapse_usage_exporter_container_image_self_build_repo }}"
         dest: "{{ matrix_synapse_usage_exporter_docker_src_files_path }}"
         version: "{{ matrix_synapse_usage_exporter_container_image.split(':')[1] }}"
-        force: "yes"
+        force: true
       become: true
       become_user: "{{ matrix_user_name }}"
       register: matrix_synapse_usage_exporter_git_pull_results

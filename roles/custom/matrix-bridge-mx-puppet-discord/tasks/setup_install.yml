@@ -88,7 +88,7 @@
   ansible.builtin.git:
     repo: "{{ matrix_mx_puppet_discord_container_image_self_build_repo }}"
     dest: "{{ matrix_mx_puppet_discord_docker_src_files_path }}"
-    force: "yes"
+    force: true
     version: "{{ matrix_mx_puppet_discord_container_image_self_build_version }}"
   become: true
   become_user: "{{ matrix_user_name }}"

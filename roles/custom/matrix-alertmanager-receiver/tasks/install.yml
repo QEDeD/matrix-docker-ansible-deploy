@@ -58,7 +58,7 @@
         repo: "{{ matrix_alertmanager_receiver_container_image_self_build_repo }}"
         version: "{{ matrix_alertmanager_receiver_container_image_self_build_repo_version }}"
         dest: "{{ matrix_alertmanager_receiver_container_src_path }}"
-        force: "yes"
+        force: true
       become: true
       become_user: "{{ matrix_user_name }}"
       register: matrix_alertmanager_receiver_git_pull_results

@@ -94,7 +94,7 @@
     repo: "{{ matrix_postmoogle_docker_repo }}"
     version: "{{ matrix_postmoogle_docker_repo_version }}"
     dest: "{{ matrix_postmoogle_docker_src_files_path }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_postmoogle_git_pull_results

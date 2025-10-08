@@ -56,7 +56,7 @@
     repo: "{{ matrix_rageshake_container_image_self_build_repo }}"
     version: "{{ matrix_rageshake_container_image_self_build_version }}"
     dest: "{{ matrix_rageshake_container_src_files_path }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_rageshake_git_pull_results

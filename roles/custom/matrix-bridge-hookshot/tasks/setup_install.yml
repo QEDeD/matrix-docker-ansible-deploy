@@ -45,7 +45,7 @@
     repo: "{{ matrix_hookshot_container_image_self_build_repo }}"
     dest: "{{ matrix_hookshot_docker_src_files_path }}"
     version: "{{ matrix_hookshot_container_image_self_build_branch }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_hookshot_git_pull_results

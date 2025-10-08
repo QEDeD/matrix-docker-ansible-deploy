@@ -49,7 +49,7 @@
         repo: "{{ matrix_element_admin_container_image_self_build_repo }}"
         version: "{{ matrix_element_admin_container_image_self_build_repo_version }}"
         dest: "{{ matrix_element_admin_container_src_path }}"
-        force: "yes"
+        force: true
       become: true
       become_user: "{{ matrix_user_name }}"
       register: matrix_element_admin_git_pull_results

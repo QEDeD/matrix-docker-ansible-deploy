@@ -46,7 +46,7 @@
         repo: "{{ matrix_livekit_jwt_service_container_repo }}"
         version: "{{ matrix_livekit_jwt_service_container_repo_version }}"
         dest: "{{ matrix_livekit_jwt_service_container_src_files_path }}"
-        force: "yes"
+        force: true
       become: true
       become_user: "{{ matrix_user_name }}"
       register: matrix_livekit_jwt_service_git_pull_results

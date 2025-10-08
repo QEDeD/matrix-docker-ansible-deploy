@@ -49,7 +49,7 @@
     repo: "{{ matrix_appservice_kakaotalk_container_image_self_build_repo }}"
     dest: "{{ matrix_appservice_kakaotalk_docker_src_files_path }}"
     version: "{{ matrix_appservice_kakaotalk_container_image_self_build_repo_version }}"
-    force: "yes"
+    force: true
   become: true
   become_user: "{{ matrix_user_name }}"
   register: matrix_appservice_kakaotalk_git_pull_results
