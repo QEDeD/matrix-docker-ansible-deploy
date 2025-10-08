@@ -29,3 +29,7 @@ IMPLEMENTATION-SUMMARY.md
 /roles/custom/*/sed*
 /roles/custom/*/*.tmp
 /roles/custom/*/tests/
+
+# local reports
+var/
+
