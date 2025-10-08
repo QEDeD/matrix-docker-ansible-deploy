@@ -6683,4 +6683,3 @@ matrix_mautrix_slack_appservice_database_type: "{{ mdad_db_dialect_map[matrix_ma
 matrix_mautrix_discord_appservice_database_type: "{{ mdad_db_dialect_map[matrix_mautrix_discord_database_engine] }}"
 matrix_postmoogle_database_dialect: "{{ mdad_db_dialect_map[matrix_postmoogle_database_engine] }}"
 matrix_bot_honoroit_database_dialect: "{{ mdad_db_dialect_map[matrix_bot_honoroit_database_engine] }}"
-
