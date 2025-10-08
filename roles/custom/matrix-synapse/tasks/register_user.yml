@@ -24,7 +24,7 @@
   when: "admin is not defined or admin not in ['yes', 'no']"
 
 - name: Ensure matrix-synapse is started
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-synapse
     state: started
     daemon_reload: true

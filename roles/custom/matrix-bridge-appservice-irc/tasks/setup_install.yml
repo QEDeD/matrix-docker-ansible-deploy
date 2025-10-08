@@ -39,7 +39,7 @@
 - when: "matrix_appservice_irc_stat_passkey.stat.exists"
   block:
     - name: (Data relocation) Ensure matrix-appservice-irc.service is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-appservice-irc
         state: stopped
         daemon_reload: true
@@ -216,7 +216,7 @@
   register: matrix_appservice_irc_systemd_service_result
 
 - name: Ensure matrix-appservice-irc.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-appservice-irc.service"
     state: restarted
     daemon_reload: true

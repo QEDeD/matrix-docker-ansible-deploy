@@ -16,7 +16,7 @@
 - when: matrix_mautrix_signal_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-mautrix-signal is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mautrix-signal
         state: stopped
         enabled: false

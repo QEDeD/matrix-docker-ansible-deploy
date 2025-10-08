@@ -14,7 +14,7 @@
 - when: matrix_appservice_irc_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-appservice-irc is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-appservice-irc
         state: stopped
         enabled: false

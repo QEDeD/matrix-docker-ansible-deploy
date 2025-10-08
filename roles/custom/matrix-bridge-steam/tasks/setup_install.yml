@@ -95,7 +95,7 @@
     mode: 0644
 
 - name: Ensure matrix-steam-bridge.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-steam-bridge.service"
     state: restarted
     daemon_reload: true

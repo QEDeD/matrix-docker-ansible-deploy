@@ -108,7 +108,7 @@
     driver_options: "{{ devture_systemd_docker_base_container_networks_driver_options }}"
 
 - name: Ensure matrix-bot-buscarron.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-bot-buscarron.service"
     state: restarted
     daemon_reload: true

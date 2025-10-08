@@ -97,7 +97,7 @@
   register: matrix_mautrix_facebook_stat_database
 
 - name: (Data relocation) Ensure matrix-mautrix-facebook.service is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-mautrix-facebook
     state: stopped
     enabled: false
@@ -152,7 +152,7 @@
     mode: 0644
 
 - name: Ensure matrix-mautrix-facebook.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mautrix-facebook.service"
     state: restarted
     daemon_reload: true

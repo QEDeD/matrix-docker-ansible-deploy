@@ -13,7 +13,7 @@
 - when: matrix_bot_chatgpt_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-chatgpt is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-bot-chatgpt
         state: stopped
         enabled: false

@@ -95,7 +95,7 @@
   register: matrix_go_skype_bridge_stat_mx_state
 
 - name: (Data relocation) Ensure matrix-go-skype-bridge.service is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-go-skype-bridge
     state: stopped
     enabled: false
@@ -148,7 +148,7 @@
   register: matrix_go_skype_bridge_systemd_service_result
 
 - name: Ensure matrix-go-skype-bridge.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-go-skype-bridge.service"
     state: restarted
     daemon_reload: true

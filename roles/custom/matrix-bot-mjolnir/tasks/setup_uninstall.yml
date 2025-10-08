@@ -15,7 +15,7 @@
 - when: matrix_bot_mjolnir_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-bot-mjolnir is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-bot-mjolnir
         state: stopped
         enabled: false

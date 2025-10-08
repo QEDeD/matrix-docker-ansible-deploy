@@ -84,7 +84,7 @@
   register: matrix_bot_mjolnir_systemd_service_result
 
 - name: Ensure matrix-bot-mjolnir.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-bot-mjolnir.service"
     state: restarted
     daemon_reload: true

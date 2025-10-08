@@ -95,7 +95,7 @@
   register: matrix_mautrix_gmessages_stat_mx_state
 
 - name: (Data relocation) Ensure matrix-mautrix-gmessages.service is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-mautrix-gmessages
     state: stopped
     enabled: false
@@ -157,7 +157,7 @@
     driver_options: "{{ devture_systemd_docker_base_container_networks_driver_options }}"
 
 - name: Ensure matrix-mautrix-gmessages.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mautrix-gmessages.service"
     state: restarted
     daemon_reload: true

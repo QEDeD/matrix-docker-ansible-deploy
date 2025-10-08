@@ -15,7 +15,7 @@
 - when: matrix_client_element_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-client-element is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-client-element
         state: stopped
         enabled: false

@@ -22,7 +22,7 @@
   when: "admin is not defined or admin not in ['yes', 'no']"
 
 - name: Ensure matrix-dendrite is started
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-dendrite
     state: started
     daemon_reload: true

@@ -13,7 +13,7 @@
 - when: matrix_mautrix_discord_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-mautrix-discord is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mautrix-discord
         state: stopped
         enabled: false

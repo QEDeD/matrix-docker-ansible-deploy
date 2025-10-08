@@ -14,7 +14,7 @@
 - when: matrix_bot_matrix_reminder_bot_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-matrix-reminder-bot is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-bot-matrix-reminder-bot
         state: stopped
         enabled: false

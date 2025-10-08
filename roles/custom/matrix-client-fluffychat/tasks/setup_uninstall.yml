@@ -12,7 +12,7 @@
 - when: matrix_client_fluffychat_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-client-fluffychat is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-client-fluffychat
         state: stopped
         enabled: false

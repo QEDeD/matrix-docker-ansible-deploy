@@ -93,7 +93,7 @@
   register: matrix_bot_draupnir_systemd_service_result
 
 - name: Ensure matrix-bot-draupnir.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-bot-draupnir.service"
     state: restarted
     daemon_reload: true

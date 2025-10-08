@@ -21,7 +21,7 @@
 # Actual import work
 
 - name: Ensure Postgres is started
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "{{ postgres_identifier }}"
     state: started
     daemon_reload: true

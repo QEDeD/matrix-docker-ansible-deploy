@@ -98,7 +98,7 @@
   register: matrix_appservice_draupnir_for_all_systemd_service_result
 
 - name: Ensure matrix-appservice-draupnir-for-all.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-appservice-draupnir-for-all.service"
     state: restarted
     daemon_reload: true

@@ -125,7 +125,7 @@
   register: matrix_mautrix_discord_systemd_service_result
 
 - name: Ensure matrix-mautrix-discord.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mautrix-discord.service"
     state: restarted
     daemon_reload: true

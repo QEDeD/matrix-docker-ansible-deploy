@@ -14,7 +14,7 @@
 - when: matrix_appservice_discord_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-appservice-discord is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-appservice-discord
         state: stopped
         enabled: false

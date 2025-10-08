@@ -13,7 +13,7 @@
 - when: matrix_user_verification_service_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-user-verification-service is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: "{{ matrix_user_verification_service_systemd_service_basename }}"
         state: stopped
         daemon_reload: true

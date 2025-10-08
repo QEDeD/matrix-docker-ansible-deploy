@@ -12,7 +12,7 @@
 - when: nginx_proxy_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-nginx-proxy is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-nginx-proxy
         state: stopped
         enabled: false

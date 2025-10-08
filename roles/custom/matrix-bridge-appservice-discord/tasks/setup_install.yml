@@ -69,7 +69,7 @@
   register: matrix_appservice_discord_stat_db
 
 - name: (Data relocation) Ensure matrix-appservice-discord.service is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-appservice-discord
     state: stopped
     enabled: false
@@ -132,7 +132,7 @@
   register: matrix_appservice_discord_systemd_service_result
 
 - name: Ensure matrix-appservice-discord.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-appservice-discord.service"
     state: restarted
     daemon_reload: true

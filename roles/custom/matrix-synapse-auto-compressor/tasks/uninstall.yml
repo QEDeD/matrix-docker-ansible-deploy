@@ -11,7 +11,7 @@
 - when: matrix_synapse_auto_compressor_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-synapse-auto-compressor is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-synapse-auto-compressor
         state: stopped
         enabled: false

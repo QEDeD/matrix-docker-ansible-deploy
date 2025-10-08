@@ -10,7 +10,7 @@
   register: matrix_mautrix_wsproxy_service_stat
 
 - name: Ensure matrix-mautrix-wsproxy is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-mautrix-wsproxy
     state: stopped
     daemon_reload: true
@@ -33,7 +33,7 @@
   register: matrix_mautrix_wsproxy_syncproxy_service_stat
 
 - name: Ensure matrix-mautrix-wsproxy-syncproxy is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-mautrix-wsproxy-syncproxy
     state: stopped
     daemon_reload: true

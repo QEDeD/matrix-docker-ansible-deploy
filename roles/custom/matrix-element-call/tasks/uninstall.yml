@@ -14,7 +14,7 @@
 - when: matrix_element_call_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-element-call is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-element-call
         state: stopped
         enabled: false

@@ -12,7 +12,7 @@
 - when: matrix_mautrix_gmessages_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-mautrix-gmessages is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mautrix-gmessages
         state: stopped
         enabled: false

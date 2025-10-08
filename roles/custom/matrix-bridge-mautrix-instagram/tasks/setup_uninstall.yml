@@ -13,7 +13,7 @@
 - when: matrix_mautrix_instagram_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-mautrix-instagram is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mautrix-instagram
         state: stopped
         enabled: false

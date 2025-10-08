@@ -12,7 +12,7 @@
 - when: matrix_element_admin_service_stat.stat.exists | bool
   block:
     - name: Ensure Element Admin is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-element-admin
         state: stopped
         enabled: false

@@ -20,7 +20,7 @@
   when: "admin is not defined or admin not in ['yes', 'no']"
 
 - name: Ensure Matrix Authentication Service is started
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-authentication-service
     state: started
     daemon_reload: true

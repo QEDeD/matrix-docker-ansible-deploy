@@ -92,7 +92,7 @@
   register: matrix_mautrix_googlechat_stat_database
 
 - name: (Data relocation) Ensure matrix-mautrix-googlechat.service is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-mautrix-googlechat
     state: stopped
     enabled: false
@@ -147,7 +147,7 @@
     mode: 0644
 
 - name: Ensure matrix-mautrix-googlechat.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mautrix-googlechat.service"
     state: restarted
     daemon_reload: true

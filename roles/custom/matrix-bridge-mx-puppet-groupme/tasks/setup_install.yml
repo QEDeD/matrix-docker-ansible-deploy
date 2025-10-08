@@ -30,7 +30,7 @@
   register: matrix_mx_puppet_groupme_stat_database
 
 - name: (Data relocation) Ensure matrix-mx-puppet-groupme.service is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-mx-puppet-groupme
     state: stopped
     enabled: false
@@ -137,7 +137,7 @@
     mode: 0644
 
 - name: Ensure matrix-mx-puppet-groupme.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mx-puppet-groupme.service"
     state: restarted
     daemon_reload: true

@@ -13,7 +13,7 @@
 - when: matrix_bot_draupnir_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-appservice-draupnir-for-all is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-appservice-draupnir-for-all
         state: stopped
         enabled: false

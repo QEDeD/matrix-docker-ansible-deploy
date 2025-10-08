@@ -100,7 +100,7 @@
   register: matrix_mautrix_signal_stat_mx_state
 
 - name: (Data relocation) Ensure matrix-mautrix-signal.service is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-mautrix-signal
     state: stopped
     enabled: false
@@ -162,7 +162,7 @@
     mode: 0644
 
 - name: Ensure matrix-mautrix-signal.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mautrix-signal.service"
     state: restarted
     daemon_reload: true

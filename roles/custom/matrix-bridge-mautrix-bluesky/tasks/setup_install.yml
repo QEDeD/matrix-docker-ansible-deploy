@@ -95,7 +95,7 @@
     mode: 0644
 
 - name: Ensure matrix-mautrix-bluesky.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mautrix-bluesky.service"
     state: restarted
     daemon_reload: true

@@ -10,7 +10,7 @@
   register: matrix_appservice_kakaotalk_service_stat
 
 - name: Ensure matrix-appservice-kakaotalk is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-appservice-kakaotalk
     state: stopped
     enabled: false
@@ -23,7 +23,7 @@
   register: matrix_appservice_kakaotalk_node_service_stat
 
 - name: Ensure matrix-appservice-kakaotalk-node is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-appservice-kakaotalk-node
     state: stopped
     enabled: false

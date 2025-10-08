@@ -101,7 +101,7 @@
     mode: 0644
 
 - name: Ensure matrix-mautrix-twitter.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mautrix-twitter.service"
     state: restarted
     daemon_reload: true

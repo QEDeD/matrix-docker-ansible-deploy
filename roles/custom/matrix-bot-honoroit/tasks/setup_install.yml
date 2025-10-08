@@ -111,7 +111,7 @@
   register: matrix_bot_honoroit_systemd_service_result
 
 - name: Ensure matrix-bot-honoroit.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-bot-honoroit.service"
     state: restarted
     daemon_reload: true

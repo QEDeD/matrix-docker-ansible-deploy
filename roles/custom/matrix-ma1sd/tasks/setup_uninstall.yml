@@ -14,7 +14,7 @@
 - when: matrix_ma1sd_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-ma1sd is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-ma1sd
         state: stopped
         enabled: false

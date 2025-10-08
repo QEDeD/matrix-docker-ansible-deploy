@@ -12,7 +12,7 @@
 - when: matrix_wechat_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-wechat is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-wechat
         state: stopped
         enabled: false
@@ -31,7 +31,7 @@
 - when: matrix_wechat_agent_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-wechat-agent is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-wechat-agent
         state: stopped
         enabled: false

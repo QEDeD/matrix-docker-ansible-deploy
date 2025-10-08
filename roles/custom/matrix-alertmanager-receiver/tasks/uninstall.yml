@@ -12,7 +12,7 @@
 - when: matrix_alertmanager_receiver_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-alertmanager-receiver is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-alertmanager-receiver
         state: stopped
         enabled: false

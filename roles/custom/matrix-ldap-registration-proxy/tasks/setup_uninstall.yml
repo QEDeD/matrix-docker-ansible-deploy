@@ -14,7 +14,7 @@
 - when: matrix_ldap_registration_proxy_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-matrix_ldap_registration_proxy is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-ldap-registration-proxy
         state: stopped
         enabled: false

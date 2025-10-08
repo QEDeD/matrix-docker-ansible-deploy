@@ -13,7 +13,7 @@
 - when: matrix_go_skype_bridge_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-go-skype-bridge is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-go-skype-bridge
         state: stopped
         enabled: false

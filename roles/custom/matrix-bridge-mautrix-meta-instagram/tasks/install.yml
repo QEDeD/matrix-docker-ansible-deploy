@@ -121,7 +121,7 @@
     mode: 0644
 
 - name: Ensure mautrix-meta-instagram.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "{{ matrix_mautrix_meta_instagram_identifier }}.service"
     state: restarted
     daemon_reload: true

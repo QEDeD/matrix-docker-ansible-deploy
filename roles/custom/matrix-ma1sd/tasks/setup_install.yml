@@ -160,7 +160,7 @@
     mode: 0644
 
 - name: Ensure matrix-ma1sd.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-ma1sd.service"
     state: restarted
     daemon_reload: true

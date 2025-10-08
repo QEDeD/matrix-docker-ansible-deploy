@@ -16,7 +16,7 @@
 - when: matrix_bot_honoroit_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-honoroit is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-bot-honoroit
         state: stopped
         enabled: false

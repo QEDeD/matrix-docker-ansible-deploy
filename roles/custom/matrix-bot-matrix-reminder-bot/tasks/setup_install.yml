@@ -110,7 +110,7 @@
   register: matrix_bot_matrix_reminder_bot_systemd_service_result
 
 - name: Ensure matrix-bot-matrix-reminder-bot.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-bot-matrix-reminder-bot.service"
     state: restarted
     daemon_reload: true

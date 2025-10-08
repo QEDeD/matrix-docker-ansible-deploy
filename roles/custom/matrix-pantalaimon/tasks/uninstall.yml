@@ -12,7 +12,7 @@
 - when: matrix_pantalaimon_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-pantalaimon is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-pantalaimon
         state: stopped
         enabled: false

@@ -12,7 +12,7 @@
 - when: matrix_synapse_admin_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-synapse-admin is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-synapse-admin
         state: stopped
         enabled: false

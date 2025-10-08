@@ -155,7 +155,7 @@
     mode: 0644
 
 - name: Ensure matrix-dimension.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-dimension.service"
     state: restarted
     daemon_reload: true

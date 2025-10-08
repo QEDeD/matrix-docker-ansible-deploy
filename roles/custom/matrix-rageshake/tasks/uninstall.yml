@@ -13,7 +13,7 @@
 - when: matrix_rageshake_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-rageshake is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-rageshake
         state: stopped
         enabled: false

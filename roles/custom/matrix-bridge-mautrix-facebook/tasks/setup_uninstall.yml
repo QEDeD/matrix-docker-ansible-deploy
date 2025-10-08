@@ -14,7 +14,7 @@
 - when: matrix_mautrix_facebook_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-mautrix-facebook is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mautrix-facebook
         state: stopped
         enabled: false

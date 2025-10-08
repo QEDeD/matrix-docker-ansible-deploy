@@ -12,7 +12,7 @@
 - when: matrix_mautrix_slack_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-mautrix-slack is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mautrix-slack
         state: stopped
         enabled: false

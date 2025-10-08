@@ -15,7 +15,7 @@
 - when: matrix_heisenbridge_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-heisenbridge is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-heisenbridge
         state: stopped
         enabled: false

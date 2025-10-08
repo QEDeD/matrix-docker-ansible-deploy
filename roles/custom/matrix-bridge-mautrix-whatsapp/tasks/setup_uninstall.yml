@@ -14,7 +14,7 @@
 - when: matrix_mautrix_whatsapp_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-mautrix-whatsapp is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mautrix-whatsapp
         state: stopped
         enabled: false

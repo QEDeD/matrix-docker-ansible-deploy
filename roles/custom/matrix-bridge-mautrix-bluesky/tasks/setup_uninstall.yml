@@ -12,7 +12,7 @@
 - when: matrix_mautrix_bluesky_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-mautrix-bluesky is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mautrix-bluesky
         state: stopped
         daemon_reload: true

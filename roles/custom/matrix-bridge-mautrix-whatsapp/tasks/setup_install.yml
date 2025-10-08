@@ -105,7 +105,7 @@
   register: matrix_mautrix_whatsapp_stat_mx_state
 
 - name: (Data relocation) Ensure matrix-mautrix-whatsapp.service is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-mautrix-whatsapp
     state: stopped
     enabled: false
@@ -167,7 +167,7 @@
     mode: 0644
 
 - name: Ensure matrix-mautrix-whatsapp.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mautrix-whatsapp.service"
     state: restarted
     daemon_reload: true

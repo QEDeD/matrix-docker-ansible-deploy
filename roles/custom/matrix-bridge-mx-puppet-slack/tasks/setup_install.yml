@@ -26,7 +26,7 @@
   register: matrix_mx_puppet_slack_stat_database
 
 - name: (Data relocation) Ensure matrix-mx-puppet-slack.service is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-mx-puppet-slack
     state: stopped
     enabled: false
@@ -143,7 +143,7 @@
     mode: 0644
 
 - name: Ensure matrix-mx-puppet-slack.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mx-puppet-slack.service"
     state: restarted
     daemon_reload: true

@@ -14,14 +14,14 @@
 - when: matrix_coturn_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-coturn is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-coturn
         state: stopped
         enabled: false
         daemon_reload: true
 
     - name: Ensure matrix-coturn-reload.timer is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-coturn
         state: stopped
         enabled: false

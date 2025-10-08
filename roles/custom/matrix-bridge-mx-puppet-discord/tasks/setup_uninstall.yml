@@ -14,7 +14,7 @@
 - when: matrix_mx_puppet_discord_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-mx-puppet-discord is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mx-puppet-discord
         state: stopped
         enabled: false

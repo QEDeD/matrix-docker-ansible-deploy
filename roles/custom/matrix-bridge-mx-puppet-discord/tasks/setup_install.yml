@@ -33,7 +33,7 @@
 - when: "matrix_mx_puppet_discord_stat_database.stat.exists"
   block:
     - name: (Data relocation) Ensure matrix-mx-puppet-discord.service is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mx-puppet-discord
         state: stopped
         daemon_reload: true
@@ -137,7 +137,7 @@
     mode: 0644
 
 - name: Ensure matrix-mx-puppet-discord.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mx-puppet-discord.service"
     state: restarted
     daemon_reload: true

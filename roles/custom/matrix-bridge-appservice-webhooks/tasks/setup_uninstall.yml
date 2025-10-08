@@ -15,7 +15,7 @@
 - when: matrix_appservice_webhooks_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-appservice-webhooks is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-appservice-webhooks
         state: stopped
         enabled: false

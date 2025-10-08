@@ -13,7 +13,7 @@
 - when: matrix_prometheus_nginxlog_exporter_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-prometheus-nginxlog-exporter is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-prometheus-nginxlog-exporter
         state: stopped
         enabled: false

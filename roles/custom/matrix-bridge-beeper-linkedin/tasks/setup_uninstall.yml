@@ -14,7 +14,7 @@
 - when: matrix_beeper_linkedin_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-beeper-linkedin is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-beeper-linkedin
         state: stopped
         enabled: false

@@ -12,7 +12,7 @@
   register: matrix_sms_bridge_service_stat
 
 - name: Ensure matrix-sms-bridge is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-sms-bridge
     state: stopped
     enabled: false

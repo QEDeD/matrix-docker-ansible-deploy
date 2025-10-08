@@ -124,7 +124,7 @@
   register: matrix_mautrix_telegram_stat_database
 
 - name: (Data relocation) Ensure matrix-mautrix-telegram.service is stopped
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: matrix-mautrix-telegram
     state: stopped
     enabled: false
@@ -179,7 +179,7 @@
     mode: 0644
 
 - name: Ensure matrix-mautrix-telegram.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mautrix-telegram.service"
     state: restarted
     daemon_reload: true

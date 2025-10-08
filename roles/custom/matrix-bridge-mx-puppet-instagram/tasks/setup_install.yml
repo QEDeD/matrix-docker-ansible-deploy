@@ -117,7 +117,7 @@
     mode: 0644
 
 - name: Ensure matrix-mx-puppet-instagram.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mx-puppet-instagram.service"
     state: restarted
     daemon_reload: true

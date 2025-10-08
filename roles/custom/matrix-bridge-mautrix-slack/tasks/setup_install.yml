@@ -114,7 +114,7 @@
   register: matrix_mautrix_slack_systemd_service_result
 
 - name: Ensure matrix-mautrix-slack.service restarted, if necessary
-  ansible.builtin.service:
+  ansible.builtin.systemd:
     name: "matrix-mautrix-slack.service"
     state: restarted
     daemon_reload: true

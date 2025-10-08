@@ -14,7 +14,7 @@
 - when: matrix_mautrix_googlechat_service_stat.stat.exists | bool
   block:
     - name: Ensure matrix-mautrix-googlechat is stopped
-      ansible.builtin.service:
+      ansible.builtin.systemd:
         name: matrix-mautrix-googlechat
         state: stopped
         enabled: false
