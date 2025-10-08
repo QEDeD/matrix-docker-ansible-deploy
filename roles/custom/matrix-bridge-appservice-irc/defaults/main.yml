@@ -68,13 +68,7 @@ matrix_appservice_irc_database_container_network: ''
 matrix_appservice_irc_database_connection_string: 'postgresql://{{ matrix_appservice_irc_database_username }}:{{ matrix_appservice_irc_database_password }}@{{ matrix_appservice_irc_database_hostname }}:{{ matrix_appservice_irc_database_port }}/{{ matrix_appservice_irc_database_name }}?sslmode={{ matrix_appservice_irc_database_sslmode }}'
 
 # This is what actually goes into `database.connectionString` for the bridge.
-matrix_appservice_irc_database_connectionString: |-  # noqa var-naming
-  {{
-    {
-      'nedb': 'nedb:///data',
-      'postgres': matrix_appservice_irc_database_connection_string,
-    }[matrix_appservice_irc_database_engine]
-  }}
+matrix_appservice_irc_database_connectionString: "{{ {'nedb': 'nedb:///data', 'postgres': matrix_appservice_irc_database_connection_string}[matrix_appservice_irc_database_engine] }}"  # noqa var-naming
 
 matrix_appservice_irc_ircService_servers: []  # noqa var-naming
 
