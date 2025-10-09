@@ -32,3 +32,15 @@ IMPLEMENTATION-SUMMARY.md
 
 # local reports
 var/
+
+# local/editor stuff (not for upstream)
+.vscode/
+
+# local inventory (not for upstream)
+inventory/
+
+# not ready for upstream
+playbooks/matrix-version-summary/
+
+# already ignoring reports, but ensure it’s here
+var/

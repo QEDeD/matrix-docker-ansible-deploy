@@ -167,8 +167,3 @@
         - install-all
 
     - role: galaxy/playbook_runtime_messages
-
-    - role: custom/matrix-version-summary
-      tags:
-        - always
-        - matrix-version-summary
