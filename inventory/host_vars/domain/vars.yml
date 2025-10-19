@@ -227,6 +227,7 @@ exim_relay_relay_auth_password: "{{ vault_exim_relay_relay_auth_password }}"
 #                                                                      #
 ########################################################################
 
+matrix_coturn_enabled: false
 
 matrix_coturn_container_network: "matrix-coturn"
 # 04/02/2024 - added
