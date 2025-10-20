@@ -22,7 +22,7 @@ matrix_authentication_service_container_repo_version: "{{ 'main' if matrix_authe
 matrix_authentication_service_container_src_files_path: "{{ matrix_base_data_path }}/matrix-authentication-service/container-src"
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/matrix-authentication-service
-matrix_authentication_service_version: 1.3.0
+matrix_authentication_service_version: 1.4.1
 matrix_authentication_service_container_image_registry_prefix: "{{ 'localhost/' if matrix_authentication_service_container_image_self_build else matrix_authentication_service_container_image_registry_prefix_upstream }}"
 matrix_authentication_service_container_image_registry_prefix_upstream: "{{ matrix_authentication_service_container_image_registry_prefix_upstream_default }}"
 matrix_authentication_service_container_image_registry_prefix_upstream_default: "ghcr.io/"
@@ -218,6 +218,11 @@ matrix_authentication_service_config_account_displayname_change_allowed: true
 # Whether to enable self-service password registration.
 # This has no effect if password login is disabled.
 matrix_authentication_service_config_account_password_registration_enabled: false
+
+# Controls the `account.password_registration_email_required` configuration setting.
+#
+# Whether self-service password registrations require a valid email.
+matrix_authentication_service_config_account_password_registration_email_required: true
 
 # Controls the `account.password_change_allowed` configuration setting.
 #
