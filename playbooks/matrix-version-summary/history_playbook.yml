@@ -27,4 +27,4 @@
       when: not history_file.stat.exists
 
     - name: Include version history display task
-      include_tasks: ../../roles/custom/matrix-version-summary/tasks/view_history.yml
+      ansible.builtin.include_tasks: ../../roles/custom/matrix-version-summary/tasks/view_history.yml

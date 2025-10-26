@@ -12,5 +12,5 @@
     matrix_version_summary_display: true
   tasks:
     - name: Include matrix version summary role
-      include_role:
+      ansible.builtin.include_role:
         name: "{{ playbook_dir }}"
