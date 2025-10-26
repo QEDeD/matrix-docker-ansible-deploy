@@ -19,7 +19,7 @@
 # because you can't change the Domain after deployment.
 #
 # Example value: example.com
-matrix_domain: "{{domain}}"
+matrix_domain: "{{ domain }}"
 
 # The Matrix homeserver software to install.
 # See:
@@ -27,11 +27,28 @@ matrix_domain: "{{domain}}"
 # - the `docs/configuring-playbook-IMPLEMENTATION_NAME.md` documentation page, if one is available for your implementation choice
 matrix_homeserver_implementation: synapse
 
-matrix_homeserver_generic_secret_key: "{{matrix_homeserver_generic_secret_key}}"
+matrix_homeserver_generic_secret_key: "{{ matrix_homeserver_generic_secret_key }}"
 
 matrix_sliding_sync_enabled: true
 
 matrix_synapse_max_upload_size_mb: 150
+
+# Enable generation of `/.well-known/matrix/support`.
+matrix_static_files_file_matrix_support_enabled: true
+
+# Homeserver admin contacts as per MSC 1929 https://github.com/matrix-org/matrix-spec-proposals/pull/1929
+matrix_static_files_file_matrix_support_property_m_contacts:
+  - matrix_id: "@qed:{{ matrix_domain }}"
+    email_address: admin@{{ domain }}
+    role: m.role.admin
+#  - matrix_id: "@admin2:{{ matrix_domain }}"
+#    email_address: admin2@example.com
+#    role: m.role.admin
+#  - email_address: security@example.com
+#    role: m.role.security
+
+# Your organization's support page on the base (or another) domain, if any
+# matrix_static_files_file_matrix_support_property_m_support_page: "https://example.com/support"
 
 ########################################################################
 #                                                                      #
