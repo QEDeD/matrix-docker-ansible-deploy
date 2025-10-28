@@ -8,19 +8,10 @@
   gather_facts: true
   vars:
     confirm_trim: "{{ confirm_trim | default('no') }}"
-    docker_summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
-    docker_summary_history_max_entries: "{{ docker_summary_history_max_entries | default(100) | int }}"
-    docker_summary_retention_days: "{{ docker_summary_retention_days | default(365) | int }}"
-    matrix_history_fact_file: "{{ matrix_history_fact_file | default(docker_summary_history_fact_file) }}"
-    matrix_history_max_entries: "{{ matrix_history_max_entries | default(docker_summary_history_max_entries) }}"
-    matrix_history_retention_days: "{{ matrix_history_retention_days | default(docker_summary_retention_days) }}"
+    summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    summary_history_max_entries: "{{ docker_summary_history_max_entries | default(100) | int }}"
+    summary_retention_days: "{{ docker_summary_retention_days | default(365) | int }}"
   tasks:
-    - name: Resolve trimming configuration
-      ansible.builtin.set_fact:
-        summary_history_fact_file: "{{ docker_summary_history_fact_file | default(matrix_history_fact_file | default('matrix_version_history.fact'), true) }}"
-        summary_history_max_entries: "{{ docker_summary_history_max_entries | default(matrix_history_max_entries | default(100), true) | int }}"
-        summary_retention_days: "{{ docker_summary_retention_days | default(matrix_history_retention_days | default(365), true) | int }}"
-
     - name: Confirm history trimming
       ansible.builtin.fail:
         msg: "History trimming aborted. Use -e 'confirm_trim=yes' to confirm trimming history (max entries: {{ summary_history_max_entries }}, retention days: {{ summary_retention_days }})."

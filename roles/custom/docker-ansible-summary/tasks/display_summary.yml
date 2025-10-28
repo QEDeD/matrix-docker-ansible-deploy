@@ -4,20 +4,20 @@
 ---
 # Display version summary with current states and changes
 
-# Resolve runtime configuration with backwards compatibility for legacy variables
+# Resolve runtime configuration from role variables
 - name: Resolve summary configuration
   ansible.builtin.set_fact:
-    summary_container_prefix: "{{ docker_summary_container_prefix | default(matrix_container_prefix | default('matrix-'), true) }}"
-    summary_versions_fact_file: "{{ docker_summary_versions_fact_file | default(matrix_versions_fact_file | default('matrix_versions.fact'), true) }}"
-    summary_history_fact_file: "{{ docker_summary_history_fact_file | default(matrix_history_fact_file | default('matrix_version_history.fact'), true) }}"
-    summary_display_enabled: "{{ docker_summary_display | default(matrix_version_summary_display | default(matrix_show_version_summary | default(true)), true) | bool }}"
-    summary_history_max_entries: "{{ docker_summary_history_max_entries | default(matrix_history_max_entries | default(100), true) | int }}"
-    summary_retention_days: "{{ docker_summary_retention_days | default(matrix_history_retention_days | default(365), true) | int }}"
-    summary_table_style_unicode: "{{ docker_summary_table_style_unicode | default(matrix_table_style_unicode | default(false), true) | bool }}"
-    summary_table_service_width: "{{ docker_summary_table_service_width | default(matrix_table_service_width | default(30), true) | int }}"
-    summary_table_version_width: "{{ docker_summary_table_version_width | default(matrix_table_version_width | default(25), true) | int }}"
-    summary_table_status_width: "{{ docker_summary_table_status_width | default(matrix_table_status_width | default(9), true) | int }}"
-    summary_version_extract_smart: "{{ docker_summary_version_extract_smart | default(matrix_version_extract_smart | default(true), true) | bool }}"
+    summary_container_prefix: "{{ docker_summary_container_prefix | default('matrix-') }}"
+    summary_versions_fact_file: "{{ docker_summary_versions_fact_file | default('matrix_versions.fact') }}"
+    summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    summary_display_enabled: "{{ docker_summary_display | default(true) | bool }}"
+    summary_history_max_entries: "{{ docker_summary_history_max_entries | default(100) | int }}"
+    summary_retention_days: "{{ docker_summary_retention_days | default(365) | int }}"
+    summary_table_style_unicode: "{{ docker_summary_table_style_unicode | default(false) | bool }}"
+    summary_table_service_width: "{{ docker_summary_table_service_width | default(30) | int }}"
+    summary_table_version_width: "{{ docker_summary_table_version_width | default(25) | int }}"
+    summary_table_status_width: "{{ docker_summary_table_status_width | default(9) | int }}"
+    summary_version_extract_smart: "{{ docker_summary_version_extract_smart | default(true) | bool }}"
 
 # Detect execution context to determine appropriate behavior
 - name: Detect execution context
@@ -26,7 +26,7 @@
       {{
         ansible_run_tags is defined and
         (ansible_run_tags | length == 1) and
-        ((ansible_run_tags | first) in ['docker-ansible-summary', 'matrix-version-summary'])
+        ((ansible_run_tags | first) == 'docker-ansible-summary')
       }}
 
 - name: Debug execution context

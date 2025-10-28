@@ -8,8 +8,7 @@
   gather_facts: true
   vars:
     confirm_clear: "{{ confirm_clear | default('no') }}"
-    docker_summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
-    matrix_history_fact_file: "{{ matrix_history_fact_file | default(docker_summary_history_fact_file) }}"
+    summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
   tasks:
     - name: Confirm history clearing
       ansible.builtin.fail:
@@ -18,13 +17,13 @@
 
     - name: Check if history file exists
       ansible.builtin.stat:
-        path: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
+        path: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
       register: history_file
 
     - name: Create backup of history file
       ansible.builtin.copy:
-        src: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
-        dest: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}.backup.{{ ansible_date_time.epoch }}"
+        src: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
+        dest: "/etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_date_time.epoch }}"
         mode: '0644'
         remote_src: true
       become: true
@@ -32,7 +31,7 @@
 
     - name: Clear version history
       ansible.builtin.file:
-        path: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
+        path: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
         state: absent
       become: true
       register: clear_result
@@ -41,7 +40,7 @@
       ansible.builtin.debug:
         msg: |
           Docker service version history has been cleared successfully.
-          Backup saved to: /etc/ansible/facts.d/{{ matrix_history_fact_file }}.backup.{{ ansible_date_time.epoch }}
+          Backup saved to: /etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_date_time.epoch }}
       when: clear_result.changed and history_file.stat.exists
 
     - name: Display no history message

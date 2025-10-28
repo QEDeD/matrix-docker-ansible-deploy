@@ -8,7 +8,7 @@
 - name: "=== MOCK MODE EXECUTION ==="
   ansible.builtin.debug:
     msg: "Running docker-ansible-summary in mock mode for testing"
-  when: docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
+  when: docker_summary_mock_mode | default(false) | bool
 
 # Generate mock container data for testing
 - name: Generate mock current versions
@@ -19,7 +19,7 @@
       app-proxy: "nginx:1.25.3-alpine"
       app-cache: "redis:7.2.3-alpine"
       app-turn: "coturn:4.6.2-r3"
-  when: docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
+  when: docker_summary_mock_mode | default(false) | bool
 
 - name: Generate mock after versions (same as current for status mode)
   ansible.builtin.set_fact:
@@ -30,8 +30,8 @@
       {% endfor %}
       {{ versions }}
   when:
-    - docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
-    - docker_summary_mode | default(matrix_version_summary_mode | default('status')) == 'status'
+    - docker_summary_mock_mode | default(false) | bool
+    - docker_summary_mode | default('status') == 'status'
 
 - name: Generate mock after versions (with changes for update simulation)
   ansible.builtin.set_fact:
@@ -57,19 +57,19 @@
         previous: "coturn:4.6.2-r3"
         status: "UNCHANGED"
   when:
-    - docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
-    - docker_summary_mode | default(matrix_version_summary_mode | default('status')) == 'changes'
+    - docker_summary_mock_mode | default(false) | bool
+    - docker_summary_mode | default('status') == 'changes'
 
 - name: Generate mock timestamp
   ansible.builtin.set_fact:
     summary_timestamp: "{{ ansible_date_time.iso8601 }}"
-  when: docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
+  when: docker_summary_mock_mode | default(false) | bool
 
 - name: Display mock mode notice
   ansible.builtin.debug:
     msg: |
       === MOCK MODE ACTIVE ===
       Generated {{ current_versions | length }} mock containers
-      Mode: {{ docker_summary_mode | default(matrix_version_summary_mode | default('status')) }}
+      Mode: {{ docker_summary_mode | default('status') }}
       This allows testing table display without Docker
-  when: docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
+  when: docker_summary_mock_mode | default(false) | bool

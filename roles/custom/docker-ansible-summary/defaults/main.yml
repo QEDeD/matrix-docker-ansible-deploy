@@ -4,47 +4,23 @@
 ---
 # Default configuration for Docker service version history tracking
 
-# Preferred variable names (set these in inventory/host_vars to override defaults)
-docker_summary_container_prefix: null
-docker_summary_history_max_entries: null
-docker_summary_retention_days: null
-docker_summary_display: null
-docker_summary_versions_fact_file: null
-docker_summary_history_fact_file: null
-docker_summary_table_style_unicode: null
-docker_summary_table_service_width: null
-docker_summary_table_version_width: null
-docker_summary_table_status_width: null
-docker_summary_version_extract_smart: null
-docker_summary_mock_mode: null
-docker_summary_show_history: null
-docker_summary_service_filter: null
-docker_summary_view_mode: null
-
-# Legacy variable names (maintained for backwards compatibility)
-
-# Container identification
-matrix_container_prefix: "matrix-"  # Prefix used to identify Matrix containers
-
-# Retention policy configuration
-matrix_history_max_entries: 100  # Maximum number of history entries to keep (0 = unlimited)
-matrix_history_retention_days: 365  # Number of days to retain history entries (0 = unlimited)
-
-# Display settings
-matrix_show_version_summary: true  # Legacy variable - kept for backward compatibility
-matrix_version_summary_display: "{{ matrix_show_version_summary | bool }}"  # Primary control variable
+# Primary configuration (set these in inventory/host_vars to override defaults)
+docker_summary_container_prefix: "matrix-"  # Prefix used to identify Docker containers for the summary
+docker_summary_history_max_entries: 100     # Maximum number of history entries to keep (0 = unlimited)
+docker_summary_retention_days: 365          # Number of days to retain history entries (0 = unlimited)
+docker_summary_display: true                # Enable/disable version summary display
 
 # Fact file locations
-matrix_versions_fact_file: "matrix_versions.fact"  # Current versions fact file
-matrix_history_fact_file: "matrix_version_history.fact"  # Version history fact file
+docker_summary_versions_fact_file: "matrix_versions.fact"
+docker_summary_history_fact_file: "matrix_version_history.fact"
 
 # Table display settings
-matrix_table_style_unicode: false  # Set to false for ASCII-only tables (recommended for consistent display)
-
-# Table column width settings (optimized for standard terminal display)
-matrix_table_service_width: 30      # Width for service/container name column (fits standard terminals)
-matrix_table_version_width: 25      # Width for version columns (shows most version strings clearly)
-matrix_table_status_width: 9        # Width for status column
+docker_summary_table_style_unicode: false   # Set to false for ASCII-only tables (recommended for consistent display)
+docker_summary_table_service_width: 30
+docker_summary_table_version_width: 25
+docker_summary_table_status_width: 9
 
 # Version extraction settings
-matrix_version_extract_smart: true  # Extract clean version tags (e.g., "synapse:v1.96.1" from full image name)
+docker_summary_version_extract_smart: true  # Extract clean version tags (e.g., "synapse:v1.96.1" from full image name)
+docker_summary_mock_mode: false
+docker_summary_show_history: false

@@ -7,12 +7,8 @@
   hosts: "{{ target_host | default(docker_summary_target_host | default('matrix_servers')) }}"
   gather_facts: true
   vars:
-    docker_summary_versions_fact_file: "{{ docker_summary_versions_fact_file | default('matrix_versions.fact') }}"
-    docker_summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
-    docker_summary_table_style_unicode: "{{ docker_summary_table_style_unicode | default(true) }}"
-    matrix_versions_fact_file: "{{ matrix_versions_fact_file | default(docker_summary_versions_fact_file) }}"
-    matrix_history_fact_file: "{{ matrix_history_fact_file | default(docker_summary_history_fact_file) }}"
-    matrix_table_style_unicode: "{{ matrix_table_style_unicode | default(docker_summary_table_style_unicode) }}"
+    summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    summary_table_style_unicode: "{{ docker_summary_table_style_unicode | default(true) }}"
   tasks:
     - name: Validate view mode
       ansible.builtin.fail:
@@ -21,12 +17,12 @@
 
     - name: Check if history file exists
       ansible.builtin.stat:
-        path: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
+        path: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
       register: history_file
 
     - name: Warn if history file missing
       ansible.builtin.debug:
-        msg: "Warning: No history file found at /etc/ansible/facts.d/{{ matrix_history_fact_file }}. You may not see any results."
+        msg: "Warning: No history file found at /etc/ansible/facts.d/{{ summary_history_fact_file }}. You may not see any results."
       when: not history_file.stat.exists
 
     - name: Include version history display task

@@ -4,10 +4,10 @@
 ---
 - name: Resolve history view configuration
   ansible.builtin.set_fact:
-    summary_history_fact_file: "{{ docker_summary_history_fact_file | default(matrix_history_fact_file | default('matrix_version_history.fact'), true) }}"
-    summary_retention_days: "{{ docker_summary_retention_days | default(matrix_history_retention_days | default(365), true) | int }}"
-    summary_service_filter: "{{ docker_summary_service_filter | default(matrix_version_service_filter | default(service_filter | default('')), true) }}"
-    summary_view_mode: "{{ docker_summary_view_mode | default(view_mode | default('changes'), true) }}"
+    summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    summary_retention_days: "{{ docker_summary_retention_days | default(365) | int }}"
+    summary_service_filter: "{{ docker_summary_service_filter | default(service_filter | default('')) }}"
+    summary_view_mode: "{{ docker_summary_view_mode | default(view_mode | default('changes')) }}"
 
 - name: Derive history fact key
   ansible.builtin.set_fact:
@@ -63,7 +63,6 @@
   ansible.builtin.set_fact:
     view_mode: "{{ summary_view_mode }}"
     summary_service_filter: "{{ summary_service_filter }}"
-    matrix_version_service_filter: "{{ summary_service_filter }}"
 
 # Display Changes History Table
 - name: Display changes history header

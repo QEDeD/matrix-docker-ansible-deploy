@@ -10,20 +10,20 @@
     state: directory
     mode: '0755'
   become: true
-  tags: ["docker-ansible-summary", "matrix-version-summary", "setup"]
+  tags: ["docker-ansible-summary", "setup"]
 
 # Enable mock mode for testing without Docker
 - name: Execute mock mode
   ansible.builtin.import_tasks: mock_mode.yml
-  tags: ["docker-ansible-summary", "matrix-version-summary", "mock"]
-  when: docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false), true) | bool
+  tags: ["docker-ansible-summary", "mock"]
+  when: docker_summary_mock_mode | default(false) | bool
 
 - name: Display current version summary
   ansible.builtin.import_tasks: display_summary.yml
-  tags: ["docker-ansible-summary", "matrix-version-summary", "version_summary"]
-  when: docker_summary_display | default(matrix_version_summary_display | default(matrix_show_version_summary | default(true)), true) | bool
+  tags: ["docker-ansible-summary", "version_summary"]
+  when: docker_summary_display | default(true) | bool
 
 - name: View version history
   ansible.builtin.import_tasks: view_history.yml
-  tags: ["docker-ansible-summary", "matrix-version-summary", "version_history"]
-  when: docker_summary_show_history | default(matrix_playbook_show_version_history | default(false), true) | bool
+  tags: ["docker-ansible-summary", "version_history"]
+  when: docker_summary_show_history | default(false) | bool

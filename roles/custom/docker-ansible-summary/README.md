@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Docker Ansible Summary and History
 
-This role tracks Docker container version changes across Ansible playbook runs and provides tooling to inspect or prune the accumulated history. It succeeds the Matrix-specific implementation while remaining backwards compatible with existing `matrix_*` variables.
+This role tracks Docker container version changes across Ansible playbook runs and provides tooling to inspect or prune the accumulated history. It replaces the earlier Matrix-only implementation with a clean Docker-focused interface.
 
 ## Features
 
@@ -19,25 +19,23 @@ This role tracks Docker container version changes across Ansible playbook runs a
 
 ## Configuration
 
-Preferred variable names (recommended for new deployments):
+All tunables are exposed via the `docker_summary_*` namespace:
 
-| Variable | Default / Fallback | Description |
-|----------|--------------------|-------------|
-| `docker_summary_container_prefix` | `null` → defaults to `matrix_container_prefix` / `"matrix-"` | Container name prefix used to select services for the summary |
-| `docker_summary_history_max_entries` | `null` → defaults to `matrix_history_max_entries` / `100` | Max change records to keep; set to `0` for unlimited |
-| `docker_summary_retention_days` | `null` → defaults to `matrix_history_retention_days` / `365` | Age-based retention window; set to `0` for unlimited |
-| `docker_summary_display` | `null` → defaults to `matrix_version_summary_display` / `true` | Toggle the summary output during normal runs |
-| `docker_summary_versions_fact_file` | `null` → defaults to `matrix_versions_fact_file` / `"matrix_versions.fact"` | Local fact filename storing last-known versions |
-| `docker_summary_history_fact_file` | `null` → defaults to `matrix_history_fact_file` / `"matrix_version_history.fact"` | Local fact filename storing the change history |
-| `docker_summary_table_style_unicode` | `null` → defaults to `matrix_table_style_unicode` / `false` | Use Unicode (`true`) or ASCII (`false`) table borders |
-| `docker_summary_table_service_width` | `null` → defaults to `matrix_table_service_width` / `30` | Column width for service/container names |
-| `docker_summary_table_version_width` | `null` → defaults to `matrix_table_version_width` / `25` | Column width for version strings |
-| `docker_summary_table_status_width` | `null` → defaults to `matrix_table_status_width` / `9` | Column width for the status column |
-| `docker_summary_version_extract_smart` | `null` → defaults to `matrix_version_extract_smart` / `true` | Extract `image:tag` from the full image reference when enabled |
-| `docker_summary_mock_mode` | `null` → defaults to `matrix_version_summary_mock_mode` / `false` | Enable mock data generation for testing |
-| `docker_summary_show_history` | `null` → defaults to `matrix_playbook_show_version_history` / `false` | Include history display tasks during the main role run |
-
-**Legacy variables:** All existing `matrix_*` options remain functional and supply the fallback values above. When a `docker_summary_*` variable is unset or `null`, the role automatically falls back to its `matrix_*` counterpart to preserve backwards compatibility.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `docker_summary_container_prefix` | `"matrix-"` | Container name prefix used to select services for the summary |
+| `docker_summary_history_max_entries` | `100` | Max change records to keep; set to `0` for unlimited |
+| `docker_summary_retention_days` | `365` | Age-based retention window; set to `0` for unlimited |
+| `docker_summary_display` | `true` | Toggle the summary output during normal runs |
+| `docker_summary_versions_fact_file` | `"matrix_versions.fact"` | Local fact filename storing last-known versions |
+| `docker_summary_history_fact_file` | `"matrix_version_history.fact"` | Local fact filename storing the change history |
+| `docker_summary_table_style_unicode` | `false` | Use Unicode (`true`) or ASCII (`false`) table borders |
+| `docker_summary_table_service_width` | `30` | Column width for service/container names |
+| `docker_summary_table_version_width` | `25` | Column width for version strings |
+| `docker_summary_table_status_width` | `9` | Column width for the status column |
+| `docker_summary_version_extract_smart` | `true` | Extract `image:tag` from the full image reference when enabled |
+| `docker_summary_mock_mode` | `false` | Enable mock data generation for testing |
+| `docker_summary_show_history` | `false` | Include history display tasks during the main role run |
 
 ### Custom Fact Locations
 
@@ -48,7 +46,7 @@ docker_summary_versions_fact_file: "custom_versions.fact"
 docker_summary_history_fact_file: "custom_history.fact"
 ```
 
-The role automatically looks up `ansible_local.custom_versions` / `ansible_local.custom_history` and uses the corresponding files when writing or displaying data. (The legacy `matrix_*` fact variables continue to work the same way.)
+The role automatically looks up `ansible_local.custom_versions` / `ansible_local.custom_history` and uses the corresponding files when reading or writing data. The defaults keep the historical `matrix_*.fact` filenames so existing installations retain their data, but you can freely change them.
 
 ## Usage
 
@@ -92,27 +90,23 @@ To disable retention limits entirely, set both parameters to 0 in your configura
 # In your host_vars or group_vars file
 docker_summary_history_max_entries: 0      # Unlimited entry count
 docker_summary_retention_days: 0           # Unlimited time retention
-
-# Legacy names remain supported and can be used instead
-# matrix_history_max_entries: 0
-# matrix_history_retention_days: 0
 ```
 
-**Note**: The trim playbook only refuses to run when *both* history controls evaluate to 0 (whether provided via `docker_summary_*` or legacy `matrix_*` variables). Otherwise it enforces whichever limits remain enabled.
+**Note**: The trim playbook only refuses to run when *both* history controls evaluate to 0. Otherwise it enforces whichever limits remain enabled.
 
 ## Retention Policies
 
 The role implements dual retention policies that work together:
 
 ### Count-Based Retention
-- **Parameter**: `docker_summary_history_max_entries` (fallback to `matrix_history_max_entries`, default: 100)
+- **Parameter**: `docker_summary_history_max_entries` (default: 100)
 - **Behavior**: Automatically keeps only the most recent N entries when adding new history
 - **Unlimited**: Set to 0 to disable count-based limits (unlimited entries)
 - **Trigger**: Applied during each playbook run when changes are recorded
 - **Manual Control**: Use the trim playbook to manually apply count limits (not applicable when set to 0)
 
 ### Date-Based Retention
-- **Parameter**: `docker_summary_retention_days` (fallback to `matrix_history_retention_days`, default: 365)
+- **Parameter**: `docker_summary_retention_days` (default: 365)
 - **Behavior**: Automatically filters out entries older than N days when viewing/reading history **and before the summary task rewrites the fact files**
 - **Unlimited**: Set to 0 to disable date-based filtering (unlimited retention)
 - **Trigger**: Applied when viewing history, reading history data, or recording new summary data
@@ -137,7 +131,7 @@ When the role runs as part of the complete `setup.yml` playbook:
 - **Use Case**: During routine Docker service upgrades and deployments
 
 ### Status Check Mode (Tag-Only Execution)
-When run independently with `--tags=docker-ansible-summary` (the legacy `matrix-version-summary` tag still works):
+When run independently with `--tags=docker-ansible-summary`:
 - **Behavior**: Status checking - displays current running versions without comparison
 - **Status Values**: `CURRENT` (shows what's currently running)
 - **History Recording**: Skipped - no phantom "changes" recorded
@@ -174,7 +168,7 @@ ansible-playbook -i inventory/hosts setup.yml --tags=setup-all,docker-ansible-su
 
 ### Mode Detection
 The role uses `ansible_run_tags` to detect execution context:
-- **Status Check Mode**: When `ansible_run_tags` contains only `docker-ansible-summary` (or the legacy `matrix-version-summary`)
+- **Status Check Mode**: When `ansible_run_tags` contains only `docker-ansible-summary`
 - **Normal Mode**: All other execution scenarios (including mixed tags)
 
 ### Error Handling
@@ -239,7 +233,6 @@ This role meets enterprise production standards:
     name: custom/docker-ansible-summary
   tags:
     - docker-ansible-summary
-    - matrix-version-summary  # legacy tag still honoured
 ```
 
 ### Status Check (Read-Only Mode)
@@ -271,11 +264,4 @@ docker_summary_retention_days: 180                   # 6 months retention
 docker_summary_history_max_entries: 200              # Maximum 200 history entries
 docker_summary_table_style_unicode: false            # ASCII tables for consistent display
 docker_summary_display: true
-
-# Legacy names remain available if preferred
-# matrix_container_prefix: "matrix-"
-# matrix_history_retention_days: 180
-# matrix_history_max_entries: 200
-# matrix_table_style_unicode: false
-# matrix_version_summary_display: true
 ```
