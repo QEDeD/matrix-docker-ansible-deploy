@@ -9,6 +9,7 @@ docker_summary_scope: "matrix-*"            # Glob pattern(s) selecting containe
 docker_summary_history_max_entries: 100     # Maximum number of history entries to keep (0 = unlimited)
 docker_summary_retention_days: 365          # Number of days to retain history entries (0 = unlimited)
 docker_summary_display: true                # Enable/disable version summary display
+docker_summary_enabled: true                # Master switch for the role
 
 # Fact file locations
 docker_summary_versions_fact_file: "matrix_versions.fact"

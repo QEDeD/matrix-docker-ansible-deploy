@@ -107,18 +107,30 @@
          | list }}
   when: not summary_scope_all
 
-- name: Apply container scope
+- name: Apply container scope (all containers)
   ansible.builtin.set_fact:
-    filtered_containers: >-
-      {{
-        all_containers if summary_scope_all else
-        ((summary_scope_regexes | default([])) | length == 0
-          | ternary([],
-            all_containers | selectattr('name', 'match', combined_scope_regex) | list))
-      }}
-  when: not (container_list is failed)
+    filtered_containers: "{{ all_containers }}"
+  when:
+    - not (container_list is failed)
+    - summary_scope_all
+
+- name: Apply container scope (filtered list)
+  ansible.builtin.set_fact:
+    filtered_containers: "{{ all_containers | selectattr('name', 'match', combined_scope_regex) | list }}"
   vars:
-    combined_scope_regex: "^(?:{{ (summary_scope_regexes | default([])) | join('|') }})$"
+    combined_scope_regex: "^(?:{{ summary_scope_regexes | join('|') }})$"
+  when:
+    - not (container_list is failed)
+    - not summary_scope_all
+    - summary_scope_regexes | length > 0
+
+- name: Apply container scope (no matches)
+  ansible.builtin.set_fact:
+    filtered_containers: []
+  when:
+    - not (container_list is failed)
+    - not summary_scope_all
+    - summary_scope_regexes | length == 0
 
 # Initialize data structures
 - name: Process current versions

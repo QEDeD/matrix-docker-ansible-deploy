@@ -27,6 +27,7 @@ All tunables are exposed via the `docker_summary_*` namespace:
 | `docker_summary_history_max_entries` | `100` | Max change records to keep; set to `0` for unlimited |
 | `docker_summary_retention_days` | `365` | Age-based retention window; set to `0` for unlimited |
 | `docker_summary_display` | `true` | Toggle the summary output during normal runs |
+| `docker_summary_enabled` | `true` | Master on/off switch for the role |
 | `docker_summary_versions_fact_file` | `"matrix_versions.fact"` | Local fact filename storing last-known versions |
 | `docker_summary_history_fact_file` | `"matrix_version_history.fact"` | Local fact filename storing the change history |
 | `docker_summary_table_style_unicode` | `false` | Use Unicode (`true`) or ASCII (`false`) table borders |
