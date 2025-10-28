@@ -2,15 +2,15 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Test Matrix Version Summary Role
+- name: Test Docker Ansible Summary Role
   hosts: localhost
   connection: local
   gather_facts: true
   vars:
-    matrix_container_prefix: "matrix-"
-    matrix_table_style_unicode: false
-    matrix_version_summary_display: true
+    docker_summary_container_prefix: "matrix-"
+    docker_summary_table_style_unicode: false
+    docker_summary_display: true
   tasks:
-    - name: Include matrix version summary role
+    - name: Include docker ansible summary role
       ansible.builtin.include_role:
         name: "{{ playbook_dir }}"

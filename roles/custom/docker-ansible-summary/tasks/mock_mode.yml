@@ -2,24 +2,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-# Mock/Test Mode for Matrix Version Summary
+# Mock/Test Mode for Docker Ansible Summary
 # This allows testing the role without Docker or running containers
 
 - name: "=== MOCK MODE EXECUTION ==="
   ansible.builtin.debug:
-    msg: "Running matrix-version-summary in mock mode for testing"
-  when: matrix_version_summary_mock_mode | default(false) | bool
+    msg: "Running docker-ansible-summary in mock mode for testing"
+  when: docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
 
 # Generate mock container data for testing
 - name: Generate mock current versions
   ansible.builtin.set_fact:
     current_versions:
-      matrix-synapse: "synapse:v1.95.1"
-      matrix-postgres: "postgres:15.4-alpine"
-      matrix-nginx-proxy: "nginx:1.25.3-alpine"
-      matrix-redis: "redis:7.2.3-alpine"
-      matrix-coturn: "coturn:4.6.2-r3"
-  when: matrix_version_summary_mock_mode | default(false) | bool
+      app-api: "api:v1.95.1"
+      app-postgres: "postgres:15.4-alpine"
+      app-proxy: "nginx:1.25.3-alpine"
+      app-cache: "redis:7.2.3-alpine"
+      app-turn: "coturn:4.6.2-r3"
+  when: docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
 
 - name: Generate mock after versions (same as current for status mode)
   ansible.builtin.set_fact:
@@ -30,46 +30,46 @@
       {% endfor %}
       {{ versions }}
   when:
-    - matrix_version_summary_mock_mode | default(false) | bool
-    - matrix_version_summary_mode | default('status') == 'status'
+    - docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
+    - docker_summary_mode | default(matrix_version_summary_mode | default('status')) == 'status'
 
 - name: Generate mock after versions (with changes for update simulation)
   ansible.builtin.set_fact:
     after_versions:
-      matrix-synapse:
-        current: "synapse:v1.96.0"
-        previous: "synapse:v1.95.1"
+      app-api:
+        current: "api:v1.96.0"
+        previous: "api:v1.95.1"
         status: "UPDATED"
-      matrix-postgres:
+      app-postgres:
         current: "postgres:15.5-alpine"
         previous: "postgres:15.4-alpine"
         status: "UPDATED"
-      matrix-nginx-proxy:
+      app-proxy:
         current: "nginx:1.25.3-alpine"
         previous: "nginx:1.25.3-alpine"
         status: "UNCHANGED"
-      matrix-redis:
+      app-cache:
         current: "redis:7.2.4-alpine"
         previous: "redis:7.2.3-alpine"
         status: "UPDATED"
-      matrix-coturn:
+      app-turn:
         current: "coturn:4.6.2-r3"
         previous: "coturn:4.6.2-r3"
         status: "UNCHANGED"
   when:
-    - matrix_version_summary_mock_mode | default(false) | bool
-    - matrix_version_summary_mode | default('status') == 'changes'
+    - docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
+    - docker_summary_mode | default(matrix_version_summary_mode | default('status')) == 'changes'
 
 - name: Generate mock timestamp
   ansible.builtin.set_fact:
     summary_timestamp: "{{ ansible_date_time.iso8601 }}"
-  when: matrix_version_summary_mock_mode | default(false) | bool
+  when: docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool
 
 - name: Display mock mode notice
   ansible.builtin.debug:
     msg: |
       === MOCK MODE ACTIVE ===
       Generated {{ current_versions | length }} mock containers
-      Mode: {{ matrix_version_summary_mode | default('status') }}
+      Mode: {{ docker_summary_mode | default(matrix_version_summary_mode | default('status')) }}
       This allows testing table display without Docker
-  when: matrix_version_summary_mock_mode | default(false) | bool
+  when: docker_summary_mock_mode | default(matrix_version_summary_mock_mode | default(false)) | bool

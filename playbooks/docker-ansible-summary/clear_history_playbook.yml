@@ -2,13 +2,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-# Matrix Version History management playbook
-- name: Clear Matrix Version History
-  hosts: "{{ target_host | default('matrix_servers') }}"
+# Docker Service Version History management playbook
+- name: Clear Docker Service Version History
+  hosts: "{{ target_host | default(docker_summary_target_host | default('matrix_servers')) }}"
   gather_facts: true
   vars:
     confirm_clear: "{{ confirm_clear | default('no') }}"
-    matrix_history_fact_file: "{{ matrix_history_fact_file | default('matrix_version_history.fact') }}"
+    docker_summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    matrix_history_fact_file: "{{ matrix_history_fact_file | default(docker_summary_history_fact_file) }}"
   tasks:
     - name: Confirm history clearing
       ansible.builtin.fail:
@@ -39,7 +40,7 @@
     - name: Display confirmation message
       ansible.builtin.debug:
         msg: |
-          Matrix version history has been cleared successfully.
+          Docker service version history has been cleared successfully.
           Backup saved to: /etc/ansible/facts.d/{{ matrix_history_fact_file }}.backup.{{ ansible_date_time.epoch }}
       when: clear_result.changed and history_file.stat.exists
 

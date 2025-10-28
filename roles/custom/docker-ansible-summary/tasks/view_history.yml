@@ -2,12 +2,22 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
+- name: Resolve history view configuration
+  ansible.builtin.set_fact:
+    summary_history_fact_file: "{{ docker_summary_history_fact_file | default(matrix_history_fact_file | default('matrix_version_history.fact'), true) }}"
+    summary_retention_days: "{{ docker_summary_retention_days | default(matrix_history_retention_days | default(365), true) | int }}"
+    summary_service_filter: "{{ docker_summary_service_filter | default(matrix_version_service_filter | default(service_filter | default('')), true) }}"
+    summary_view_mode: "{{ docker_summary_view_mode | default(view_mode | default('changes'), true) }}"
+
+- name: Derive history fact key
+  ansible.builtin.set_fact:
+    summary_history_fact_key: "{{ summary_history_fact_file | regex_replace('\\.fact$', '') }}"
 - name: Read version history if it exists
   ansible.builtin.set_fact:
-    version_history: "{{ ansible_local.matrix_version_history | default({'changes': [], 'full_history': {}}) }}"
+    version_history: "{{ ansible_local[summary_history_fact_key] | default({'changes': [], 'full_history': {}}) }}"
   when:
     - ansible_local is defined
-    - ansible_local.matrix_version_history is defined
+    - ansible_local[summary_history_fact_key] is defined
 
 - name: Initialize version history if not exists
   ansible.builtin.set_fact:
@@ -16,10 +26,10 @@
 
 # Apply date-based retention cleanup when reading history
 - name: Get cutoff date for retention cleanup
-  ansible.builtin.command: date -u -d "{{ matrix_history_retention_days | default(365) }} days ago" +"%Y-%m-%d %H:%M:%S"
+  ansible.builtin.command: date -u -d "{{ summary_retention_days }} days ago" +"%Y-%m-%d %H:%M:%S"
   register: cutoff_date_cmd
   changed_when: false
-  when: matrix_history_retention_days is defined and matrix_history_retention_days | int > 0
+  when: summary_retention_days | int > 0
 
 - name: Set cutoff date for retention
   ansible.builtin.set_fact:
@@ -51,14 +61,15 @@
 
 - name: Set view mode and service filter
   ansible.builtin.set_fact:
-    view_mode: "{{ view_mode | default('changes') }}"
-    matrix_version_service_filter: "{{ matrix_version_service_filter | default(service_filter | default('')) }}"
+    view_mode: "{{ summary_view_mode }}"
+    summary_service_filter: "{{ summary_service_filter }}"
+    matrix_version_service_filter: "{{ summary_service_filter }}"
 
 # Display Changes History Table
 - name: Display changes history header
   ansible.builtin.shell: |
     echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
-    echo "│ MATRIX VERSION HISTORY - CHANGES                                                │"
+    echo "│ DOCKER SERVICE VERSION HISTORY - CHANGES                                       │"
     echo "└─────────────────────────────────────────────────────────────────────────────────┘"
   changed_when: false
   when: view_mode == 'changes'
@@ -76,7 +87,7 @@
   ansible.builtin.shell: |
     set -o pipefail
     {% for change_record in version_history.changes %}
-    {% set service_filter = matrix_version_service_filter | default('') %}
+    {% set service_filter = summary_service_filter | default('') %}
     {% if change_record.event_type is defined and change_record.event_type == 'initial' %}
     echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
     echo "│ INITIAL STATE RECORDED: {{ (change_record.timestamp + (' ' * 48))[:48] }} │"
@@ -133,7 +144,7 @@
 - name: Display full history for each service
   ansible.builtin.shell: |
     set -o pipefail
-    {% set service_filter = matrix_version_service_filter | default('') %}
+    {% set service_filter = summary_service_filter | default('') %}
     {% for service_name, service_data in version_history.full_history.items() | sort %}
     {% if service_filter == '' or service_filter in service_name %}
     echo "┌─────────────────────────────────────────────────────────────────────────────────┐"

@@ -4,21 +4,30 @@
 ---
 # Display version summary with current states and changes
 
-# Set default variables to prevent undefined variable errors
-- name: Set default variables
+# Resolve runtime configuration with backwards compatibility for legacy variables
+- name: Resolve summary configuration
   ansible.builtin.set_fact:
-    matrix_container_prefix: "{{ matrix_container_prefix | default('matrix-') }}"
-    matrix_versions_fact_file: "{{ matrix_versions_fact_file | default('matrix_versions.fact') }}"
-    matrix_history_fact_file: "{{ matrix_history_fact_file | default('matrix_version_history.fact') }}"
-    matrix_show_version_summary: "{{ matrix_show_version_summary | default(true) | bool }}"
-    matrix_history_max_entries: "{{ matrix_history_max_entries | default(100) | int }}"
-    matrix_history_retention_days: "{{ matrix_history_retention_days | default(365) | int }}"
-    matrix_table_style_unicode: "{{ matrix_table_style_unicode | default(false) | bool }}"
+    summary_container_prefix: "{{ docker_summary_container_prefix | default(matrix_container_prefix | default('matrix-'), true) }}"
+    summary_versions_fact_file: "{{ docker_summary_versions_fact_file | default(matrix_versions_fact_file | default('matrix_versions.fact'), true) }}"
+    summary_history_fact_file: "{{ docker_summary_history_fact_file | default(matrix_history_fact_file | default('matrix_version_history.fact'), true) }}"
+    summary_display_enabled: "{{ docker_summary_display | default(matrix_version_summary_display | default(matrix_show_version_summary | default(true)), true) | bool }}"
+    summary_history_max_entries: "{{ docker_summary_history_max_entries | default(matrix_history_max_entries | default(100), true) | int }}"
+    summary_retention_days: "{{ docker_summary_retention_days | default(matrix_history_retention_days | default(365), true) | int }}"
+    summary_table_style_unicode: "{{ docker_summary_table_style_unicode | default(matrix_table_style_unicode | default(false), true) | bool }}"
+    summary_table_service_width: "{{ docker_summary_table_service_width | default(matrix_table_service_width | default(30), true) | int }}"
+    summary_table_version_width: "{{ docker_summary_table_version_width | default(matrix_table_version_width | default(25), true) | int }}"
+    summary_table_status_width: "{{ docker_summary_table_status_width | default(matrix_table_status_width | default(9), true) | int }}"
+    summary_version_extract_smart: "{{ docker_summary_version_extract_smart | default(matrix_version_extract_smart | default(true), true) | bool }}"
 
 # Detect execution context to determine appropriate behavior
 - name: Detect execution context
   ansible.builtin.set_fact:
-    status_check_mode: "{{ ansible_run_tags is defined and ('matrix-version-summary' in ansible_run_tags) and (ansible_run_tags | length == 1) }}"
+    status_check_mode: >-
+      {{
+        ansible_run_tags is defined and
+        (ansible_run_tags | length == 1) and
+        ((ansible_run_tags | first) in ['docker-ansible-summary', 'matrix-version-summary'])
+      }}
 
 - name: Debug execution context
   ansible.builtin.debug:
@@ -30,13 +39,13 @@
 
 - name: Skip version summary display if feature disabled
   ansible.builtin.meta: end_play
-  when: not matrix_version_summary_display | default(matrix_show_version_summary) | bool
+  when: not (summary_display_enabled | bool)
 
 # Get container versions with improved error handling - hybrid method
-- name: Get Matrix container names
+- name: Discover Docker containers matching prefix
   ansible.builtin.shell: |
     set -o pipefail
-    docker ps --filter "name={{ matrix_container_prefix | regex_escape }}" \
+    docker ps --filter "name={{ summary_container_prefix | regex_escape }}" \
       --format "{{ "{{" }}.Names{{ "}}" }}" | \
       sort || echo "DOCKER_ERROR"
   register: container_names
@@ -72,8 +81,8 @@
 # Read existing version info
 - name: Read local facts if they exist
   ansible.builtin.set_fact:
-    before_versions: "{{ ansible_local[(matrix_versions_fact_file | regex_replace('\\.fact$', ''))] | default({}) }}"
-  when: ansible_local is defined and ansible_local[(matrix_versions_fact_file | regex_replace('\\.fact$', ''))] is defined
+    before_versions: "{{ ansible_local[(summary_versions_fact_file | regex_replace('\\.fact$', ''))] | default({}) }}"
+  when: ansible_local is defined and ansible_local[(summary_versions_fact_file | regex_replace('\\.fact$', ''))] is defined
 
 - name: Initialize before_versions if not exists
   ansible.builtin.set_fact:
@@ -82,8 +91,8 @@
 
 - name: Read version history if it exists
   ansible.builtin.set_fact:
-    version_history: "{{ ansible_local[(matrix_history_fact_file | regex_replace('\\.fact$', ''))] | default({'changes': [], 'full_history': {}}) }}"
-  when: ansible_local is defined and ansible_local[(matrix_history_fact_file | regex_replace('\\.fact$', ''))] is defined
+    version_history: "{{ ansible_local[(summary_history_fact_file | regex_replace('\\.fact$', ''))] | default({'changes': [], 'full_history': {}}) }}"
+  when: ansible_local is defined and ansible_local[(summary_history_fact_file | regex_replace('\\.fact$', ''))] is defined
 
 - name: Initialize version history if not exists
   ansible.builtin.set_fact:
@@ -101,8 +110,15 @@
     image_name_part: "{{ full_image.split('/')[-1].split(':')[0] if '/' in full_image else full_image.split(':')[0] }}"
     # Extract version tag (e.g., v1.96.1 from ghcr.io/element-hq/synapse:v1.96.1)
     version_tag: "{{ full_image.split(':')[-1] if ':' in full_image else 'latest' }}"
-    # Combine for display: image_name:version (e.g., synapse:v1.96.1)
-    item_version: "{{ image_name_part }}:{{ version_tag }}"
+    # Combine for display: image_name:version (e.g., synapse:v1.96.1) unless smart extraction disabled
+    item_version: >-
+      {{
+        summary_version_extract_smart |
+        ternary(
+          image_name_part ~ ':' ~ version_tag,
+          full_image
+        )
+      }}
   loop: "{{ container_images.results | default([]) }}"
   loop_control:
     extended: true
@@ -209,7 +225,7 @@
           'event_type': 'initial'
         }] + version_history.changes)
       }) }}
-  when: first_run and first_run_changes is defined and (matrix_history_max_entries | int == 0) and not is_status_display
+  when: first_run and first_run_changes is defined and (summary_history_max_entries | int == 0) and not is_status_display
 
 - name: Add initial state to changes history (limited entries)
   ansible.builtin.set_fact:
@@ -220,9 +236,9 @@
           'user': current_user,
           'changes': first_run_changes,
           'event_type': 'initial'
-        }] + version_history.changes)[: matrix_history_max_entries | int]
+        }] + version_history.changes)[: (summary_history_max_entries | int)]
       }) }}
-  when: first_run and first_run_changes is defined and (matrix_history_max_entries | int > 0) and not is_status_display
+  when: first_run and first_run_changes is defined and (summary_history_max_entries | int > 0) and not is_status_display
 
 # Update full history for tracking every service independently
 - name: Update full history for each service (prepare update record)
@@ -271,7 +287,7 @@
   when: >
     has_changes and version_history_changes is defined and
     version_history_changes | length > 0 and not first_run and
-    (matrix_history_max_entries | int == 0) and not is_status_display
+    (summary_history_max_entries | int == 0) and not is_status_display
 
 - name: Record incremental changes (limited entries)
   ansible.builtin.set_fact:
@@ -282,12 +298,12 @@
           'user': current_user,
           'changes': version_history_changes,
           'event_type': 'update'
-        }] + version_history.changes)[: matrix_history_max_entries | int]
+        }] + version_history.changes)[: (summary_history_max_entries | int)]
       }) }}
   when: >
     has_changes and version_history_changes is defined and
     version_history_changes | length > 0 and not first_run and
-    (matrix_history_max_entries | int > 0) and not is_status_display
+    (summary_history_max_entries | int > 0) and not is_status_display
 
 # Update version history with last known versions
 - name: Update version history with last known versions
@@ -298,22 +314,22 @@
 # Apply date-based retention cleanup (only when retention days > 0 and not in status check mode)
 # FIXED: Use cross-platform date command instead of strftime filter for reliable date calculation
 - name: Calculate cutoff date for retention cleanup (Linux)
-  ansible.builtin.command: date -u -d "{{ matrix_history_retention_days }} days ago" +"%Y-%m-%d %H:%M:%S"
+  ansible.builtin.command: date -u -d "{{ summary_retention_days }} days ago" +"%Y-%m-%d %H:%M:%S"
   register: linux_cutoff_date
   changed_when: false
   failed_when: false
   when:
-    - matrix_history_retention_days | int > 0
+    - summary_retention_days | int > 0
     - not is_status_display
     - ansible_system == "Linux"
 
 - name: Calculate cutoff date for retention cleanup (BSD/macOS)
-  ansible.builtin.command: date -u -v-{{ matrix_history_retention_days }}d +"%Y-%m-%d %H:%M:%S"
+  ansible.builtin.command: date -u -v-{{ summary_retention_days }}d +"%Y-%m-%d %H:%M:%S"
   register: bsd_cutoff_date
   changed_when: false
   failed_when: false
   when:
-    - matrix_history_retention_days | int > 0
+    - summary_retention_days | int > 0
     - not is_status_display
     - ansible_system != "Linux"
 
@@ -328,19 +344,19 @@
       null
       {% endif %}
   when:
-    - matrix_history_retention_days | int > 0
+    - summary_retention_days | int > 0
     - not is_status_display
 
 - name: Log retention date calculation status
   ansible.builtin.debug:
     msg: >-
       {% if retention_cutoff_date is defined and retention_cutoff_date != 'null' %}
-      Using retention cutoff date: {{ retention_cutoff_date }} (retention days: {{ matrix_history_retention_days }})
+      Using retention cutoff date: {{ retention_cutoff_date }} (retention days: {{ summary_retention_days }})
       {% else %}
       Warning: Could not calculate retention cutoff date. Using all history entries.
       {% endif %}
   when:
-    - matrix_history_retention_days | int > 0
+    - summary_retention_days | int > 0
     - not is_status_display
 
 # Apply retention policy with fixed date handling
@@ -373,7 +389,7 @@
     double_cross: "╪"
   when:
     - after_versions | length > 0
-    - matrix_table_style_unicode | bool
+    - summary_table_style_unicode | bool
 
 - name: Set table characters (ASCII)
   ansible.builtin.set_fact:
@@ -392,17 +408,17 @@
     double_cross: "+"
   when:
     - after_versions | length > 0
-    - not (matrix_table_style_unicode | bool)
+    - not (summary_table_style_unicode | bool)
 
 # Build table structure with configurable column widths
 - name: Create table header
   ansible.builtin.set_fact:
-    service_col_width: "{{ matrix_table_service_width | default(30) | int }}"
-    version_col_width: "{{ matrix_table_version_width | default(25) | int }}"
-    status_col_width: "{{ matrix_table_status_width | default(9) | int }}"
-    service_border_width: "{{ (matrix_table_service_width | default(30) | int) + 2 }}"
-    version_border_width: "{{ (matrix_table_version_width | default(25) | int) + 2 }}"
-    status_border_width: "{{ (matrix_table_status_width | default(9) | int) + 2 }}"
+    service_col_width: "{{ summary_table_service_width }}"
+    version_col_width: "{{ summary_table_version_width }}"
+    status_col_width: "{{ summary_table_status_width }}"
+    service_border_width: "{{ (summary_table_service_width | int) + 2 }}"
+    version_border_width: "{{ (summary_table_version_width | int) + 2 }}"
+    status_border_width: "{{ (summary_table_status_width | int) + 2 }}"
   when: after_versions | length > 0
 
 - name: Build table lines with configurable widths
@@ -453,10 +469,10 @@
 - name: Build complete table as list
   ansible.builtin.set_fact:
     version_summary_table_lines: >-
-      {{ ['MATRIX VERSION CHANGES - ' + ansible_date_time.iso8601, ''] +
+      {{ ['DOCKER SERVICE VERSION CHANGES - ' + ansible_date_time.iso8601, ''] +
          [top_line, header_row, header_sep] +
          table_rows +
-         [bottom_line, '', 'Total matrix containers: ' + (after_versions | length | string), ''] +
+         [bottom_line, '', 'Total containers discovered: ' + (after_versions | length | string), ''] +
          (['[CURRENT STATUS DISPLAY - NO CHANGES RECORDED]'] if is_status_display
           else ['[NEW VERSION CHANGES RECORDED]'] if has_changes
           else ['[INITIAL STATE RECORDED]'] if first_run
@@ -475,8 +491,8 @@
 - name: Display empty table message
   ansible.builtin.debug:
     msg: >-
-      {{ ['MATRIX VERSION CHANGES - ' + ansible_date_time.iso8601, '',
-         'No Matrix containers found running. ' +
+      {{ ['DOCKER SERVICE VERSION CHANGES - ' + ansible_date_time.iso8601, '',
+         'No matching containers found running. ' +
          ('In status check mode - showing current state only.' if is_status_display
           else 'Start services first to see version information.')] }}
   when: current_versions | length == 0 or after_versions | length == 0
@@ -485,7 +501,7 @@
 - name: Write current versions to fact file
   ansible.builtin.copy:
     content: "{{ current_versions | to_nice_json }}"
-    dest: "/etc/ansible/facts.d/{{ matrix_versions_fact_file }}"
+    dest: "/etc/ansible/facts.d/{{ summary_versions_fact_file }}"
     mode: '0644'
   become: true
   when: not is_status_display
@@ -493,7 +509,7 @@
 - name: Write version history to fact file
   ansible.builtin.copy:
     content: "{{ version_history | to_nice_json }}"
-    dest: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
+    dest: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
     mode: '0644'
   become: true
   when: not is_status_display

@@ -2,38 +2,47 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-# Matrix Version History trimming playbook
-- name: Trim Matrix Version History
-  hosts: "{{ target_host | default('matrix_servers') }}"
+# Docker Service Version History trimming playbook
+- name: Trim Docker Service Version History
+  hosts: "{{ target_host | default(docker_summary_target_host | default('matrix_servers')) }}"
   gather_facts: true
   vars:
     confirm_trim: "{{ confirm_trim | default('no') }}"
-    matrix_history_fact_file: "{{ matrix_history_fact_file | default('matrix_version_history.fact') }}"
-    matrix_history_max_entries: "{{ matrix_history_max_entries | default(100) | int }}"
-    matrix_history_retention_days: "{{ matrix_history_retention_days | default(365) | int }}"
+    docker_summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    docker_summary_history_max_entries: "{{ docker_summary_history_max_entries | default(100) | int }}"
+    docker_summary_retention_days: "{{ docker_summary_retention_days | default(365) | int }}"
+    matrix_history_fact_file: "{{ matrix_history_fact_file | default(docker_summary_history_fact_file) }}"
+    matrix_history_max_entries: "{{ matrix_history_max_entries | default(docker_summary_history_max_entries) }}"
+    matrix_history_retention_days: "{{ matrix_history_retention_days | default(docker_summary_retention_days) }}"
   tasks:
+    - name: Resolve trimming configuration
+      ansible.builtin.set_fact:
+        summary_history_fact_file: "{{ docker_summary_history_fact_file | default(matrix_history_fact_file | default('matrix_version_history.fact'), true) }}"
+        summary_history_max_entries: "{{ docker_summary_history_max_entries | default(matrix_history_max_entries | default(100), true) | int }}"
+        summary_retention_days: "{{ docker_summary_retention_days | default(matrix_history_retention_days | default(365), true) | int }}"
+
     - name: Confirm history trimming
       ansible.builtin.fail:
-        msg: "History trimming aborted. Use -e 'confirm_trim=yes' to confirm trimming history (max entries: {{ matrix_history_max_entries }}, retention days: {{ matrix_history_retention_days }})."
+        msg: "History trimming aborted. Use -e 'confirm_trim=yes' to confirm trimming history (max entries: {{ summary_history_max_entries }}, retention days: {{ summary_retention_days }})."
       when: confirm_trim != 'yes'
 
     - name: Check if any trimming will be performed
       ansible.builtin.set_fact:
-        trimming_enabled: "{{ matrix_history_max_entries > 0 or matrix_history_retention_days > 0 }}"
+        trimming_enabled: "{{ (summary_history_max_entries | int > 0) or (summary_retention_days | int > 0) }}"
 
     - name: Inform about no-op mode when both retention policies are unlimited
       ansible.builtin.fail:
-        msg: "Both matrix_history_max_entries and matrix_history_retention_days are set to 0 (unlimited). No trimming will be performed. Aborting playbook."
+        msg: "Both summary_history_max_entries and summary_retention_days are set to 0 (unlimited). No trimming will be performed. Aborting playbook."
       when: not trimming_enabled
 
     - name: Check if history file exists
       ansible.builtin.stat:
-        path: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
+        path: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
       register: history_file
 
     - name: Skip trimming if history file doesn't exist
       ansible.builtin.debug:
-        msg: "No history file found at /etc/ansible/facts.d/{{ matrix_history_fact_file }}. Nothing to trim."
+        msg: "No history file found at /etc/ansible/facts.d/{{ summary_history_fact_file }}. Nothing to trim."
       when: not history_file.stat.exists
 
     - name: End play if history file doesn't exist
@@ -49,8 +58,8 @@
 
     - name: Read current version history
       ansible.builtin.set_fact:
-        version_history: "{{ ansible_local[(matrix_history_fact_file | regex_replace('\\.fact$', ''))] | default({'changes': [], 'full_history': {}}) }}"
-      when: ansible_local is defined and ansible_local[(matrix_history_fact_file | regex_replace('\\.fact$', ''))] is defined
+        version_history: "{{ ansible_local[(summary_history_fact_file | regex_replace('\\.fact$', ''))] | default({'changes': [], 'full_history': {}}) }}"
+      when: ansible_local is defined and ansible_local[(summary_history_fact_file | regex_replace('\\.fact$', ''))] is defined
 
     - name: Initialize empty history if not found
       ansible.builtin.set_fact:
@@ -63,16 +72,16 @@
         original_services_count: "{{ version_history.full_history | default({}) | length }}"
 
     - name: Get cutoff date for retention cleanup
-      ansible.builtin.command: date -u -d "{{ matrix_history_retention_days }} days ago" +"%Y-%m-%d %H:%M:%S"
+      ansible.builtin.command: date -u -d "{{ summary_retention_days }} days ago" +"%Y-%m-%d %H:%M:%S"
       register: cutoff_date_cmd
-      when: matrix_history_retention_days > 0
+      when: summary_retention_days | int > 0
       changed_when: false
       failed_when: false
 
     - name: Handle date command failure
       ansible.builtin.fail:
-        msg: "Failed to calculate cutoff date. Please check that the matrix_history_retention_days value is valid."
-      when: matrix_history_retention_days > 0 and (cutoff_date_cmd.rc is defined and cutoff_date_cmd.rc != 0)
+        msg: "Failed to calculate cutoff date. Please check that the summary_retention_days value is valid."
+      when: summary_retention_days | int > 0 and (cutoff_date_cmd.rc is defined and cutoff_date_cmd.rc != 0)
 
     - name: Set retention cutoff date
       ansible.builtin.set_fact:
@@ -94,42 +103,26 @@
       ansible.builtin.set_fact:
         count_filtered_changes: >-
           {{
-            (date_filtered_changes | default(version_history.changes | default([])))[:matrix_history_max_entries | int]
+            (date_filtered_changes | default(version_history.changes | default([])))[:summary_history_max_entries]
           }}
-      when: matrix_history_max_entries > 0
+      when: summary_history_max_entries | int > 0
 
     - name: Set final filtered changes
       ansible.builtin.set_fact:
         final_changes: "{{ count_filtered_changes | default(date_filtered_changes | default(version_history.changes | default([]))) }}"
 
+    - name: Initialize trimmed full history structure
+      ansible.builtin.set_fact:
+        trimmed_full_history: {}
+
     - name: Apply retention to full_history per-service updates
       ansible.builtin.set_fact:
-        trimmed_full_history: >-
-          {{
-            version_history.full_history | default({}) |
-            dict2items |
-            map('combine', {
-              'value': item.value | combine({
-                'updates': (
-                  item.value.updates | default([]) |
-                  (retention_cutoff_date is defined) |
-                  ternary(
-                    item.value.updates | default([]) |
-                    selectattr('timestamp', 'defined') |
-                    selectattr('timestamp', 'gt', retention_cutoff_date) |
-                    list,
-                    item.value.updates | default([])
-                  ) |
-                  (matrix_history_max_entries > 0) |
-                  ternary(
-                    _[:matrix_history_max_entries | int],
-                    _
-                  )
-                )
-              })
-            }) |
-            items2dict
-          }}
+        trimmed_full_history: "{{ trimmed_full_history | combine({item.key: item.value | combine({'updates': limited_updates})}) }}"
+      vars:
+        existing_updates: "{{ item.value.updates | default([]) }}"
+        date_filtered_updates: "{{ (retention_cutoff_date is defined and retention_cutoff_date != 'null') | ternary((existing_updates | selectattr('timestamp', 'defined') | selectattr('timestamp', 'gt', retention_cutoff_date) | list), existing_updates) }}"
+        limited_updates: "{{ (summary_history_max_entries | int > 0) | ternary(date_filtered_updates[:(summary_history_max_entries | int)], date_filtered_updates) }}"
+      loop: "{{ version_history.full_history | default({}) | dict2items }}"
 
     - name: Build trimmed history object
       ansible.builtin.set_fact:
@@ -154,15 +147,15 @@
 
     - name: Create backup of original history before trimming
       ansible.builtin.copy:
-        src: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
-        dest: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}.backup.{{ ansible_date_time.epoch }}"
+        src: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
+        dest: "/etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_date_time.epoch }}"
         mode: '0644'
         remote_src: true
       become: true
       when:
         - version_history.changes | default([]) | length > 0
         - ansible_local is defined
-        - ansible_local[(matrix_history_fact_file | regex_replace('\\.fact$', ''))] is defined
+        - ansible_local[(summary_history_fact_file | regex_replace('\\.fact$', ''))] is defined
       register: backup_result
 
     - name: Verify backup creation
@@ -175,7 +168,7 @@
     - name: Write trimmed history back to fact file
       ansible.builtin.copy:
         content: "{{ trimmed_history | to_nice_json }}"
-        dest: "/etc/ansible/facts.d/{{ matrix_history_fact_file }}"
+        dest: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
         mode: '0644'
         backup: false
       become: true
@@ -199,7 +192,7 @@
     - name: Display comprehensive trimming results
       ansible.builtin.debug:
         msg: |
-          Matrix version history trimming completed:
+          Docker service version history trimming completed:
 
           Changes History:
           - Original entries: {{ original_changes_count }}
@@ -211,12 +204,12 @@
           - Total service updates removed: {{ total_service_updates_trimmed }}
 
           Retention Policy:
-          - Max entries limit: {{ matrix_history_max_entries }} {{ '(unlimited)' if matrix_history_max_entries == 0 else '(applied)' }}
-          - Retention days: {{ matrix_history_retention_days }} {{ '(unlimited)' if matrix_history_retention_days == 0 else '(applied, cutoff: ' + retention_cutoff_date + ')' if retention_cutoff_date is defined }}
+          - Max entries limit: {{ summary_history_max_entries }} {{ '(unlimited)' if summary_history_max_entries | int == 0 else '(applied)' }}
+          - Retention days: {{ summary_retention_days }} {{ '(unlimited)' if summary_retention_days | int == 0 else '(applied, cutoff: ' + retention_cutoff_date + ')' if retention_cutoff_date is defined }}
 
           {{ 'History file updated successfully' if write_result is defined and write_result.changed else 'No changes needed - history already within limits' }}
 
-          Backup saved to: /etc/ansible/facts.d/{{ matrix_history_fact_file }}.backup.{{ ansible_date_time.epoch }}
+          Backup saved to: /etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_date_time.epoch }}
       when: version_history.changes | default([]) | length > 0
 
     - name: Display no history message

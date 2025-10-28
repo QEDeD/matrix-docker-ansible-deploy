@@ -28,13 +28,13 @@
         top_line: "{{ tl_corner }}{{ h_line * 32 }}{{ t_down }}{{ h_line * 32 }}{{ t_down }}{{ h_line * 32 }}{{ t_down }}{{ h_line * 11 }}{{ tr_corner }}"
         header_row: "{{ v_line }} {{ 'SERVICE/CONTAINER' | ljust(30) }} {{ v_line }} {{ 'VERSION BEFORE' | ljust(30) }} {{ v_line }} {{ 'VERSION AFTER' | ljust(30) }} {{ v_line }} {{ 'STATUS' | ljust(9) }} {{ v_line }}"
         header_sep: "{{ t_right }}{{ double_h_line * 32 }}{{ double_cross }}{{ double_h_line * 32 }}{{ double_cross }}{{ double_h_line * 32 }}{{ double_cross }}{{ double_h_line * 11 }}{{ t_left }}"
-        data_row: "{{ v_line }} {{ 'matrix-synapse' | ljust(30) }} {{ v_line }} {{ 'matrixdotorg/synapse:v1.95.1' | ljust(30) }} {{ v_line }} {{ 'matrixdotorg/synapse:v1.96.0' | ljust(30) }} {{ v_line }} {{ 'UPDATED' | ljust(9) }} {{ v_line }}"
+        data_row: "{{ v_line }} {{ 'service-api' | ljust(30) }} {{ v_line }} {{ 'registry.local/api:v1.95.1' | ljust(30) }} {{ v_line }} {{ 'registry.local/api:v1.96.0' | ljust(30) }} {{ v_line }} {{ 'UPDATED' | ljust(9) }} {{ v_line }}"
         bottom_line: "{{ bl_corner }}{{ h_line * 32 }}{{ t_up }}{{ h_line * 32 }}{{ t_up }}{{ h_line * 32 }}{{ t_up }}{{ h_line * 11 }}{{ br_corner }}"
 
     - name: Display test table
       ansible.builtin.debug:
         msg: |
-          MATRIX VERSION CHANGES - TEST
+          DOCKER SERVICE VERSION CHANGES - TEST
 
           {{ top_line }}
           {{ header_row }}

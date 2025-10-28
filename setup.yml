@@ -168,7 +168,8 @@
 
     - role: galaxy/playbook_runtime_messages
 
-    - role: custom/matrix-version-summary
+    - role: custom/docker-ansible-summary
       tags:
         - always
+        - docker-ansible-summary
         - matrix-version-summary
