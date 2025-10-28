@@ -291,6 +291,7 @@ ansible-playbook -i inventory/hosts playbooks/docker-ansible-summary/history_pla
 ### Configuration Examples
 ```yaml
 # Group variables for production environment
+docker_summary_enabled: true                    # Master toggle
 docker_summary_scope:
   - "matrix-*"
   - "mash-*"
