@@ -180,7 +180,7 @@
   when:
     - filtered_containers | length > 0
 
-# Build version changes dict with status (NEW, UPDATED, UNCHANGED)
+# Build version changes dict with change tracking metadata
 - name: Build version changes dict
   ansible.builtin.set_fact:
     after_versions: >-
@@ -188,18 +188,22 @@
         item: {
           'current': current_versions[item],
           'previous': before_versions[item] | default(none),
-          'status': 'NEW' if item not in before_versions else (
-            'UPDATED' if current_versions[item] != before_versions[item] else 'UNCHANGED'
-          )
+          'status': status_value,
+          'change_type': change_type
         }
       }) }}
+  vars:
+    change_type: >-
+      {{ 'added' if item not in before_versions else (
+           'updated' if current_versions[item] != before_versions[item] else 'unchanged') }}
+    status_value: "{{ 'CHANGED' if change_type != 'unchanged' else 'UNCHANGED' }}"
   loop: "{{ current_versions.keys() | list }}"
   when: current_versions | length > 0 and not (status_check_mode | default(false) | bool)
 
 # In status check mode, create a status display dict without change detection
 - name: Build status display dict for tag-only execution
   ansible.builtin.set_fact:
-    after_versions: "{{ after_versions | combine({item: {'current': current_versions[item], 'previous': current_versions[item], 'status': 'CURRENT'}}) }}"
+    after_versions: "{{ after_versions | combine({item: {'current': current_versions[item], 'previous': current_versions[item], 'status': 'CURRENT', 'change_type': 'status'}}) }}"
   loop: "{{ current_versions.keys() | list }}"
   when:
     - current_versions | length > 0
@@ -212,12 +216,43 @@
     - current_versions | length > 0
     - status_check_mode | default(false) | bool
 
+- name: Add removed services to summary (normal mode)
+  ansible.builtin.set_fact:
+    after_versions: >-
+      {{ after_versions | combine({
+        item: {
+          'current': '(removed)',
+          'previous': before_versions[item],
+          'status': 'CHANGED',
+          'change_type': 'removed'
+        }
+      }) }}
+  loop: "{{ before_versions.keys() | list }}"
+  when:
+    - not (status_check_mode | default(false) | bool)
+    - before_versions | length > 0
+    - item not in current_versions
+
+- name: Build status labels for output
+  ansible.builtin.set_fact:
+    after_versions: >-
+      {{ after_versions | combine({
+        item.key: item.value | combine({'status_label': status_label})
+      }) }}
+  vars:
+    status_label: >-
+      {{
+        item.value.status if item.value.change_type not in ['added', 'updated', 'removed']
+        else item.value.status ~ ' (' ~ (item.value.change_type | upper) ~ ')'
+      }}
+  loop: "{{ after_versions | dict2items }}"
+
 # Set display and change tracking variables
 - name: Set display and change tracking variables
   ansible.builtin.set_fact:
     has_changes: >-
       {{ after_versions.values() |
-         selectattr('status', 'in', ['NEW', 'UPDATED']) |
+         selectattr('change_type', 'in', ['added', 'updated', 'removed']) |
          list | length > 0 }}
     first_run: "{{ before_versions.keys() | length == 0 }}"
     is_status_display: "{{ status_check_mode | default(false) | bool }}"
@@ -238,7 +273,7 @@
         }
       }) }}
   loop: "{{ after_versions | dict2items }}"
-  when: has_changes and item.value.status != 'UNCHANGED' and not is_status_display
+  when: has_changes and item.value.change_type not in ['unchanged', 'status'] and not is_status_display
 
 - name: Get current timestamp
   ansible.builtin.set_fact:
@@ -293,7 +328,8 @@
 # Update full history for tracking every service independently
 - name: Update full history for each service (prepare update record)
   ansible.builtin.set_fact:
-    current_service_updates: "{{ version_history.full_history[item.key].updates | default([]) }}"
+    current_service_entry: "{{ (version_history.full_history | default({}))[item.key] | default({}) }}"
+    current_service_updates: "{{ current_service_entry.updates | default([]) }}"
     new_update_entry: {
       'timestamp': "{{ current_timestamp }}",
       'previous': "{{ item.value.previous | default('-') }}",
@@ -301,26 +337,27 @@
       'user': "{{ current_user }}"
     }
   loop: "{{ after_versions | dict2items }}"
-  when: (has_changes or first_run) and item.value.status != 'UNCHANGED' and not is_status_display
+  when: (has_changes or first_run) and item.value.change_type not in ['unchanged', 'status'] and not is_status_display
 
 - name: Update full history for each service (build service record)
   ansible.builtin.set_fact:
     service_record: {
       'version': "{{ item.value.current }}",
-      'last_updated': "{{ current_timestamp if item.value.status != 'UNCHANGED' else
-        (version_history.full_history[item.key].last_updated | default(current_timestamp)) }}",
+      'last_updated': "{{ current_timestamp if item.value.change_type not in ['unchanged', 'status'] else
+        (current_service_entry.last_updated | default(current_timestamp)) }}",
       'status': "{{ item.value.status }}",
+      'change_type': "{{ item.value.change_type }}",
       'updates': "{{ (current_service_updates + [new_update_entry])[:20]
-        if item.value.status != 'UNCHANGED' else current_service_updates }}"
+        if item.value.change_type not in ['unchanged', 'status'] else current_service_updates }}"
     }
   loop: "{{ after_versions | dict2items }}"
-  when: (has_changes or first_run) and item.value.status != 'UNCHANGED' and current_service_updates is defined and not is_status_display
+  when: (has_changes or first_run) and item.value.change_type not in ['unchanged', 'status'] and current_service_updates is defined and not is_status_display
 
 - name: Update full history for each service (commit to version history)
   ansible.builtin.set_fact:
     version_history: "{{ version_history | combine({'full_history': version_history.full_history | default({}) | combine({item.key: service_record})}) }}"
   loop: "{{ after_versions | dict2items }}"
-  when: (has_changes or first_run) and item.value.status != 'UNCHANGED' and service_record is defined and not is_status_display
+  when: (has_changes or first_run) and item.value.change_type not in ['unchanged', 'status'] and service_record is defined and not is_status_display
 
 # Record incremental changes only when not first run and changes exist
 - name: Record incremental changes (unlimited entries)
@@ -510,7 +547,7 @@
          (((item.value.current | string | truncate(version_col_width | int, true)) +
          ' ' * (version_col_width | int))[:version_col_width | int]) + ' ' +
          v_line + ' ' +
-         ((item.value.status + ' ' * (status_col_width | int))[:status_col_width | int]) + ' ' +
+         ((item.value.status_label + ' ' * (status_col_width | int))[:status_col_width | int]) + ' ' +
          v_line }}
   loop: "{{ after_versions | dict2items | sort(attribute='key') }}"
   when: after_versions | length > 0
@@ -522,7 +559,8 @@
       {{ ['DOCKER SERVICE VERSION CHANGES - ' + ansible_date_time.iso8601, ''] +
          [top_line, header_row, header_sep] +
          table_rows +
-         [bottom_line, '', 'Total containers discovered: ' + (after_versions | length | string), ''] +
+         [bottom_line, '', 'Total services listed: ' + (after_versions | length | string) +
+          ' (active: ' + (filtered_containers | length | string) + ')', ''] +
          (['[CURRENT STATUS DISPLAY - NO CHANGES RECORDED]'] if is_status_display
           else ['[NEW VERSION CHANGES RECORDED]'] if has_changes
           else ['[INITIAL STATE RECORDED]'] if first_run

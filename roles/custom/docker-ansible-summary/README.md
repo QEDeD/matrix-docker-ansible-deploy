@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Docker Ansible Summary and History
 
-This role tracks Docker container version changes across Ansible playbook runs and provides tooling to inspect or prune the accumulated history. It replaces the earlier Matrix-only implementation with a clean Docker-focused interface.
+This role tracks Docker container version changes across Ansible playbook runs and provides tooling to inspect or prune the accumulated history. It replaces the earlier Matrix-only implementation with a clean Docker-focused interface and can be toggled per-environment via `docker_summary_enabled`.
 
 ## Features
 
@@ -68,6 +68,17 @@ docker_summary_scope:
 # Inspect a single service
 docker_summary_scope: "synapse"
 ```
+
+### Scenarios Covered
+
+The summary and history views account for these lifecycle events:
+
+- **New service added** – appears with status `CHANGED (ADDED)` and is recorded in history.
+- **Service updated** – version diff shows the old/new image tags and status `CHANGED (UPDATED)`.
+- **Service removed** – the previous version is shown with the current value `(removed)` and is logged as a removal event.
+- **Unchanged services** – remain in the table with `UNCHANGED` status for context.
+- **Empty scope / filtered view** – the summary explains when no containers matched the supplied scope.
+- **Status-only runs** – when invoked via `--tags=docker-ansible-summary`, the role prints the current versions without touching history.
 
 ## Usage
 
