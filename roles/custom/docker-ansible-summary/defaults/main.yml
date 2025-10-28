@@ -5,7 +5,7 @@
 # Default configuration for Docker service version history tracking
 
 # Primary configuration (set these in inventory/host_vars to override defaults)
-docker_summary_container_prefix: "matrix-"  # Prefix used to identify Docker containers for the summary
+docker_summary_scope: "matrix-*"            # Glob pattern(s) selecting containers to include
 docker_summary_history_max_entries: 100     # Maximum number of history entries to keep (0 = unlimited)
 docker_summary_retention_days: 365          # Number of days to retain history entries (0 = unlimited)
 docker_summary_display: true                # Enable/disable version summary display

@@ -23,7 +23,7 @@ All tunables are exposed via the `docker_summary_*` namespace:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `docker_summary_container_prefix` | `"matrix-"` | Container name prefix used to select services for the summary |
+| `docker_summary_scope` | `"matrix-*"` | Glob pattern(s) selecting containers for the summary (string or list) |
 | `docker_summary_history_max_entries` | `100` | Max change records to keep; set to `0` for unlimited |
 | `docker_summary_retention_days` | `365` | Age-based retention window; set to `0` for unlimited |
 | `docker_summary_display` | `true` | Toggle the summary output during normal runs |
@@ -47,6 +47,26 @@ docker_summary_history_fact_file: "custom_history.fact"
 ```
 
 The role automatically looks up `ansible_local.custom_versions` / `ansible_local.custom_history` and uses the corresponding files when reading or writing data. The defaults keep the historical `matrix_*.fact` filenames so existing installations retain their data, but you can freely change them.
+
+### Container Scope
+
+Container selection is controlled by `docker_summary_scope`. It accepts a single Unix-style glob (`"matrix-*"`), the special values `"all"` / `"*"` for no filtering, or a list of glob patterns. Examples:
+
+```yaml
+# Include every running container
+docker_summary_scope: "all"
+
+# Only Matrix containers (default)
+docker_summary_scope: "matrix-*"
+
+# Include both Matrix and MASH services
+docker_summary_scope:
+  - "matrix-*"
+  - "mash-*"
+
+# Inspect a single service
+docker_summary_scope: "synapse"
+```
 
 ## Usage
 
@@ -259,7 +279,9 @@ ansible-playbook -i inventory/hosts playbooks/docker-ansible-summary/history_pla
 ### Configuration Examples
 ```yaml
 # Group variables for production environment
-docker_summary_container_prefix: "matrix-"          # Continue matching Matrix-style names
+docker_summary_scope:
+  - "matrix-*"
+  - "mash-*"
 docker_summary_retention_days: 180                   # 6 months retention
 docker_summary_history_max_entries: 200              # Maximum 200 history entries
 docker_summary_table_style_unicode: false            # ASCII tables for consistent display
