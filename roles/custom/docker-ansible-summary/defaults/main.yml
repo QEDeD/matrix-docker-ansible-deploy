@@ -19,7 +19,7 @@ docker_summary_history_fact_file: "matrix_version_history.fact"
 docker_summary_table_style_unicode: false   # Set to false for ASCII-only tables (recommended for consistent display)
 docker_summary_table_service_width: 30
 docker_summary_table_version_width: 25
-docker_summary_table_status_width: 9
+docker_summary_table_status_width: 18
 
 # Version extraction settings
 docker_summary_version_extract_smart: true  # Extract clean version tags (e.g., "synapse:v1.96.1" from full image name)

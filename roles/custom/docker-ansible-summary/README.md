@@ -33,7 +33,7 @@ All tunables are exposed via the `docker_summary_*` namespace:
 | `docker_summary_table_style_unicode` | `false` | Use Unicode (`true`) or ASCII (`false`) table borders |
 | `docker_summary_table_service_width` | `30` | Column width for service/container names |
 | `docker_summary_table_version_width` | `25` | Column width for version strings |
-| `docker_summary_table_status_width` | `9` | Column width for the status column |
+| `docker_summary_table_status_width` | `18` | Column width for the status column |
 | `docker_summary_version_extract_smart` | `true` | Extract `image:tag` from the full image reference when enabled |
 | `docker_summary_mock_mode` | `false` | Enable mock data generation for testing |
 | `docker_summary_show_history` | `false` | Include history display tasks during the main role run |
@@ -79,6 +79,14 @@ The summary and history views account for these lifecycle events:
 - **Unchanged services** – remain in the table with `UNCHANGED` status for context.
 - **Empty scope / filtered view** – the summary explains when no containers matched the supplied scope.
 - **Status-only runs** – when invoked via `--tags=docker-ansible-summary`, the role prints the current versions without touching history.
+
+### Stored Metadata
+
+For every service, DAS records a small metadata snapshot alongside the version information:
+
+- Image identifiers (`image`, `image_id`, `repo_digest`).
+- Container creation timestamp and runtime state (`status`, `running`, exit codes, restart count, start/finish timestamps).
+- Per-change metadata (previous/current) is persisted in the history fact (`docker_summary_history_fact_file`). This allows post-run tooling to inspect digests or state transitions even when the summary table stays compact.
 
 ## Usage
 
@@ -215,6 +223,9 @@ In Status Check Mode, the role operates in read-only mode:
 - **No file modifications**: Fact files remain unchanged
 - **No history updates**: Prevents phantom change records
 - **No retention operations**: Skips cleanup that could affect data
+
+### Run Logs
+DAS intentionally refrains from archiving the full Ansible console output. If you need persistent logs, enable `ansible-playbook --log-file` in your automation pipeline or forward stdout/stderr to your logging system of choice. This keeps the role focused on container state tracking rather than duplicating existing logging solutions.
 
 ### Variable Validation
 Key variables are validated during execution:

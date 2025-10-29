@@ -63,6 +63,8 @@
   ansible.builtin.set_fact:
     all_containers: []
     filtered_containers: []
+    container_inspect_map: {}
+    current_metadata_map: {}
 
 - name: Build container catalogue
   ansible.builtin.set_fact:
@@ -159,15 +161,39 @@
     version_history: {"last_versions": {}, "changes": [], "full_history": {}}
   when: version_history is not defined
 
+- name: Ensure version history metadata containers exist
+  ansible.builtin.set_fact:
+    version_history: "{{ version_history | combine({'last_metadata': version_history.last_metadata | default({})}, recursive=True) }}"
+
+- name: Capture previous metadata snapshot
+  ansible.builtin.set_fact:
+    before_metadata: "{{ version_history.last_metadata | default({}) }}"
+
 # Process container versions with improved validation
 - name: Process version changes for each service
   ansible.builtin.set_fact:
     current_versions: "{{ current_versions | combine({item_name: item_version}) }}"
+    current_metadata_map: "{{ current_metadata_map | combine({item_name: metadata_details}) }}"
   vars:
     item_name: "{{ item.name }}"
     full_image: "{{ item.image }}"
     image_name_part: "{{ full_image.split('/')[-1].split(':')[0] if '/' in full_image else full_image.split(':')[0] }}"
     version_tag: "{{ full_image.split(':')[-1] if ':' in full_image else 'latest' }}"
+    inspect_data: "{{ container_inspect_map[item_name] | default({}) }}"
+    metadata_details: {
+      'image': "{{ full_image }}",
+      'image_id': "{{ inspect_data.Image | default('') }}",
+      'repo_digest': "{{ (inspect_data.RepoDigests | default([])) | first | default('') }}",
+      'created': "{{ inspect_data.Created | default('') }}",
+      'state': {
+        'status': "{{ inspect_data.State.Status | default('unknown') }}",
+        'running': "{{ inspect_data.State.Running | default(false) }}",
+        'started_at': "{{ inspect_data.State.StartedAt | default('') }}",
+        'finished_at': "{{ inspect_data.State.FinishedAt | default('') }}",
+        'exit_code': "{{ inspect_data.State.ExitCode | default(none) }}",
+        'restart_count': "{{ inspect_data.RestartCount | default(0) }}"
+      }
+    }
     item_version: >-
       {{
         summary_version_extract_smart |
@@ -189,7 +215,11 @@
           'current': current_versions[item],
           'previous': before_versions[item] | default(none),
           'status': status_value,
-          'change_type': change_type
+          'change_type': change_type,
+          'metadata': {
+            'current': current_metadata_map[item] | default({}),
+            'previous': before_metadata[item] | default({})
+          }
         }
       }) }}
   vars:
@@ -203,7 +233,7 @@
 # In status check mode, create a status display dict without change detection
 - name: Build status display dict for tag-only execution
   ansible.builtin.set_fact:
-    after_versions: "{{ after_versions | combine({item: {'current': current_versions[item], 'previous': current_versions[item], 'status': 'CURRENT', 'change_type': 'status'}}) }}"
+    after_versions: "{{ after_versions | combine({item: {'current': current_versions[item], 'previous': current_versions[item], 'status': 'CURRENT', 'change_type': 'status', 'metadata': {'current': current_metadata_map[item] | default({}), 'previous': current_metadata_map[item] | default({})}}}) }}"
   loop: "{{ current_versions.keys() | list }}"
   when:
     - current_versions | length > 0
@@ -224,7 +254,11 @@
           'current': '(removed)',
           'previous': before_versions[item],
           'status': 'CHANGED',
-          'change_type': 'removed'
+          'change_type': 'removed',
+          'metadata': {
+            'current': {},
+            'previous': before_metadata[item] | default({})
+          }
         }
       }) }}
   loop: "{{ before_versions.keys() | list }}"
@@ -269,7 +303,8 @@
       {{ version_history_changes | default({}) | combine({
         item.key: {
           'previous': item.value.previous,
-          'current': item.value.current
+          'current': item.value.current,
+          'metadata': item.value.metadata
         }
       }) }}
   loop: "{{ after_versions | dict2items }}"
@@ -295,7 +330,7 @@
 
 - name: Build initial state record
   ansible.builtin.set_fact:
-    first_run_changes: "{{ first_run_changes | default({}) | combine({item.key: {'previous': '-', 'current': item.value.current}}) }}"
+    first_run_changes: "{{ first_run_changes | default({}) | combine({item.key: {'previous': '-', 'current': item.value.current, 'metadata': item.value.metadata}}) }}"
   loop: "{{ after_versions | dict2items }}"
   when: first_run and not is_status_display
 
@@ -334,7 +369,9 @@
       'timestamp': "{{ current_timestamp }}",
       'previous': "{{ item.value.previous | default('-') }}",
       'current': "{{ item.value.current }}",
-      'user': "{{ current_user }}"
+      'user': "{{ current_user }}",
+      'metadata': "{{ item.value.metadata.current | default({}) }}",
+      'change_type': "{{ item.value.change_type }}"
     }
   loop: "{{ after_versions | dict2items }}"
   when: (has_changes or first_run) and item.value.change_type not in ['unchanged', 'status'] and not is_status_display
@@ -347,6 +384,7 @@
         (current_service_entry.last_updated | default(current_timestamp)) }}",
       'status': "{{ item.value.status }}",
       'change_type': "{{ item.value.change_type }}",
+      'metadata': "{{ item.value.metadata.current | default({}) }}",
       'updates': "{{ (current_service_updates + [new_update_entry])[:20]
         if item.value.change_type not in ['unchanged', 'status'] else current_service_updates }}"
     }
@@ -395,7 +433,7 @@
 # Update version history with last known versions
 - name: Update version history with last known versions
   ansible.builtin.set_fact:
-    version_history: "{{ version_history | combine({'last_versions': current_versions}) }}"
+    version_history: "{{ version_history | combine({'last_versions': current_versions, 'last_metadata': current_metadata_map}) }}"
   when: not is_status_display
 
 # Apply date-based retention cleanup (only when retention days > 0 and not in status check mode)
@@ -603,3 +641,21 @@
     mode: '0644'
   become: true
   when: not is_status_display
+- name: Inspect containers for metadata
+  ansible.builtin.command: docker inspect {{ item.name }}
+  register: container_inspect
+  loop: "{{ filtered_containers }}"
+  changed_when: false
+  failed_when: false
+  when:
+    - not (container_list is failed)
+    - filtered_containers | length > 0
+
+- name: Build container metadata map
+  ansible.builtin.set_fact:
+    container_inspect_map: "{{ container_inspect_map | combine({item.item.name: (item.stdout | default('') | from_json | first)}) }}"
+  loop: "{{ container_inspect.results | default([]) }}"
+  when:
+    - item.stdout is defined
+    - item.stdout | length > 0
+    - not (item.failed | default(false))
