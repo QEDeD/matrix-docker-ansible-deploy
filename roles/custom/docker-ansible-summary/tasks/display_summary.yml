@@ -45,7 +45,7 @@
 - name: Discover Docker containers
   ansible.builtin.shell: |
     set -o pipefail
-    docker ps --format '{{.Names}}||{{.Image}}' | \
+    docker ps --format '{% raw %}{{.Names}}||{{.Image}}{% endraw %}' | \
       sort || echo "DOCKER_ERROR"
   register: container_list
   changed_when: false
@@ -84,6 +84,9 @@
         summary_scope_value if (summary_scope_value is sequence and summary_scope_value is not string)
         else [summary_scope_value]
       }}
+
+- name: Clean container scope patterns
+  ansible.builtin.set_fact:
     summary_scope_patterns_clean: >-
       {{ summary_scope_patterns | reject('equalto', None) | map('string') | map('trim') | list }}
 
