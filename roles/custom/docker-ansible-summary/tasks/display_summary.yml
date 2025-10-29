@@ -106,9 +106,9 @@
          | reject('equalto', 'all')
          | reject('equalto', '*')
          | reject('equalto', '')
-         | map('regex_escape')
-         | map('regex_replace', '\\*', '.*')
-         | map('regex_replace', '\\?', '.')
+         | map('regex_replace', '([.^$+{}\\[\\]|()])', '\\\\\\1')
+         | map('replace', '*', '.*')
+         | map('replace', '?', '.')
          | list }}
   when: not summary_scope_all
 
