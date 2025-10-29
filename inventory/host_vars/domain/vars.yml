@@ -58,6 +58,26 @@ matrix_static_files_file_matrix_support_property_m_contacts:
 
 ########################################################################
 #                                                                      #
+# Docker Ansible Summary                                               #
+#                                                                      #
+########################################################################
+
+docker_summary_enabled: true
+docker_summary_scope:
+  - "matrix-*"
+  - "mash-*"
+# docker_summary_history_max_entries: 100
+# docker_summary_retention_days: 365
+# docker_summary_table_style_unicode: false
+
+########################################################################
+#                                                                      #
+# /Docker Ansible Summary                                              #
+#                                                                      #
+########################################################################
+
+########################################################################
+#                                                                      #
 # Traefik                                                              #
 #                                                                      #
 ########################################################################
