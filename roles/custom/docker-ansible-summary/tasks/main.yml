@@ -11,7 +11,9 @@
     mode: '0755'
   become: true
   tags: ["docker-ansible-summary", "setup"]
-  when: docker_summary_enabled | default(true) | bool
+  when:
+    - docker_summary_enabled | default(true) | bool
+    - docker_summary_write_facts | default(true) | bool
 
 - name: Skip docker ansible summary when disabled
   ansible.builtin.meta: end_play

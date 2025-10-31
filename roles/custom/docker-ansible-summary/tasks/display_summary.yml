@@ -9,7 +9,9 @@
   ansible.builtin.set_fact:
     summary_scope_value: "{{ docker_summary_scope | default('matrix-*') }}"
     summary_versions_fact_file: "{{ docker_summary_versions_fact_file | default('matrix_versions.fact') }}"
+    summary_versions_fact_key: "{{ (docker_summary_versions_fact_file | default('matrix_versions.fact')) | regex_replace('\\.fact$', '') }}"
     summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    summary_history_fact_key: "{{ (docker_summary_history_fact_file | default('matrix_version_history.fact')) | regex_replace('\\.fact$', '') }}"
     summary_display_enabled: "{{ docker_summary_display | default(true) | bool }}"
     summary_history_max_entries: "{{ docker_summary_history_max_entries | default(100) | int }}"
     summary_retention_days: "{{ docker_summary_retention_days | default(365) | int }}"
@@ -53,11 +55,22 @@
   args:
     executable: /bin/bash
   ignore_errors: true
+  when: docker_summary_container_overrides | length == 0
 
 - name: Handle Docker command failure
   ansible.builtin.debug:
     msg: "Warning: Could not retrieve Docker container information. Docker may not be running or accessible."
-  when: container_list is failed
+  when:
+    - container_list is defined
+    - container_list is failed
+
+- name: Determine discovery availability
+  ansible.builtin.set_fact:
+    summary_discovery_available: >-
+      {{
+        (docker_summary_container_overrides | length > 0) or
+        (container_list is defined and not (container_list is failed))
+      }}
 
 - name: Initialize container catalogue
   ansible.builtin.set_fact:
@@ -68,6 +81,11 @@
     summary_skip_processing: false
     summary_skip_reason: ""
 
+- name: Seed container catalogue from provided overrides
+  ansible.builtin.set_fact:
+    all_containers: "{{ docker_summary_container_overrides | map('combine', {}) | list }}"
+  when: docker_summary_container_overrides | length > 0
+
 - name: Build container catalogue
   ansible.builtin.set_fact:
     all_containers: "{{ all_containers + [{'name': item_parts[0], 'image': item_parts[1]}] }}"
@@ -75,6 +93,8 @@
     item_parts: "{{ item.split('||', 1) }}"
   loop: "{{ container_list.stdout_lines | default([]) }}"
   when:
+    - docker_summary_container_overrides | length == 0
+    - container_list is defined
     - not (container_list is failed)
     - item is defined
     - item_parts | length == 2
@@ -114,11 +134,18 @@
          | list }}
   when: not summary_scope_all
 
+- name: Set combined scope regex
+  ansible.builtin.set_fact:
+    summary_scope_combined_regex: "^(?:{{ summary_scope_regexes | join('|') }})$"
+  when:
+    - not summary_scope_all
+    - summary_scope_regexes | length > 0
+
 - name: Apply container scope (all containers)
   ansible.builtin.set_fact:
     filtered_containers: "{{ all_containers }}"
   when:
-    - not (container_list is failed)
+    - summary_discovery_available | default(false) | bool
     - summary_scope_all
 
 - name: Apply container scope (filtered list)
@@ -127,7 +154,7 @@
   vars:
     combined_scope_regex: "^(?:{{ summary_scope_regexes | join('|') }})$"
   when:
-    - not (container_list is failed)
+    - summary_discovery_available | default(false) | bool
     - not summary_scope_all
     - summary_scope_regexes | length > 0
 
@@ -135,7 +162,7 @@
   ansible.builtin.set_fact:
     filtered_containers: []
   when:
-    - not (container_list is failed)
+    - summary_discovery_available | default(false) | bool
     - not summary_scope_all
     - summary_scope_regexes | length == 0
 
@@ -145,29 +172,29 @@
     current_versions: {}
     after_versions: {}
 
+- name: Resolve cached local facts
+  ansible.builtin.set_fact:
+    summary_local_facts: "{{ (docker_summary_ansible_local_override if docker_summary_ansible_local_override is not none else ansible_local) | default({}) }}"
+
 # Read existing version info
 - name: Read local facts if they exist
   ansible.builtin.set_fact:
-    before_versions: "{{ ansible_local[(summary_versions_fact_file | regex_replace('\\.fact$', ''))] | default({}) }}"
-  when: ansible_local is defined and ansible_local[(summary_versions_fact_file | regex_replace('\\.fact$', ''))] is defined
+    before_versions: "{{ summary_local_facts[summary_versions_fact_key] | default({}) }}"
+  when: summary_local_facts is mapping and summary_versions_fact_key in summary_local_facts
 
 - name: Initialize before_versions if not exists
   ansible.builtin.set_fact:
     before_versions: {}
   when: before_versions is not defined
 
-- name: Capture list of previously-known services
+- name: Normalise previous versions structure
   ansible.builtin.set_fact:
-    summary_known_services: "{{ before_versions.keys() | list }}"
-
-- name: Determine first run state
-  ansible.builtin.set_fact:
-    summary_first_run: "{{ summary_known_services | length == 0 }}"
+    before_versions: "{{ before_versions if (before_versions is mapping) else (before_versions | default('{}') | from_yaml) }}"
 
 - name: Read version history if it exists
   ansible.builtin.set_fact:
-    version_history: "{{ ansible_local[(summary_history_fact_file | regex_replace('\\.fact$', ''))] | default({'changes': [], 'full_history': {}}) }}"
-  when: ansible_local is defined and ansible_local[(summary_history_fact_file | regex_replace('\\.fact$', ''))] is defined
+    version_history: "{{ summary_local_facts[summary_history_fact_key] | default({'changes': [], 'full_history': {}}) }}"
+  when: summary_local_facts is mapping and summary_history_fact_key in summary_local_facts
 
 - name: Initialize version history if not exists
   ansible.builtin.set_fact:
@@ -182,33 +209,40 @@
   ansible.builtin.set_fact:
     before_metadata: "{{ version_history.last_metadata | default({}) }}"
 
+- name: Normalise previous metadata structure
+  ansible.builtin.set_fact:
+    before_metadata: "{{ before_metadata if (before_metadata is mapping) else (before_metadata | default('{}') | from_yaml) }}"
+
+- name: Filter previous versions to current scope
+  ansible.builtin.set_fact:
+    before_versions: "{{ summary_scope_all | ternary(before_versions, (summary_scope_regexes | length > 0) | ternary(before_versions | dict2items | selectattr('key', 'match', summary_scope_combined_regex) | items2dict, {})) }}"
+  when: before_versions is defined
+
+- name: Filter previous metadata to current scope
+  ansible.builtin.set_fact:
+    before_metadata: "{{ summary_scope_all | ternary(before_metadata, (summary_scope_regexes | length > 0) | ternary(before_metadata | dict2items | selectattr('key', 'match', summary_scope_combined_regex) | items2dict, {})) }}"
+  when: before_metadata is defined
+
+- name: Capture list of previously-known services
+  ansible.builtin.set_fact:
+    summary_known_services: "{{ before_versions | default({}) | dict2items | map(attribute='key') | list }}"
+
+- name: Determine first run state
+  ansible.builtin.set_fact:
+    summary_first_run: "{{ summary_known_services | length == 0 }}"
+
 - name: Flag discovery failure when Docker command fails
   ansible.builtin.set_fact:
     summary_skip_processing: true
     summary_skip_reason: "docker_command_failed"
-  when: container_list is failed
-
-- name: Flag scope mismatch when known services are filtered out
-  ansible.builtin.set_fact:
-    summary_skip_processing: true
-    summary_skip_reason: "scope_filtered_all_known"
   when:
-    - not (summary_skip_processing | bool)
-    - not summary_scope_all
-    - filtered_containers | length == 0
-    - (summary_known_services | length > 0)
-    - (all_containers | map(attribute='name') | select('in', summary_known_services) | list | length > 0)
+    - container_list is defined
+    - container_list is failed
 
 - name: Explain skipped summary processing
   ansible.builtin.debug:
     msg: >-
-      Docker Ansible Summary skipped: {{
-        (summary_skip_reason == 'docker_command_failed')
-        | ternary(
-            'Docker CLI command failed; leaving previous facts untouched.',
-            'Scope filters excluded all previously-known services; keeping prior state.'
-          )
-      }}
+      Docker Ansible Summary skipped: Docker CLI command failed; leaving previous facts untouched.
   when: summary_skip_processing | bool
 
 - name: Abort summary processing when prerequisites are missing
@@ -259,34 +293,18 @@
       {{ after_versions | combine({
         item: {
           'current': current_versions[item],
-          'previous': before_versions[item] | default(none),
+          'previous': before_versions.get(item),
           'status': status_value,
           'change_type': change_type,
           'metadata': {
             'current': current_metadata_map[item] | default({}),
-            'previous': before_metadata[item] | default({})
+            'previous': before_metadata.get(item, {})
           }
         }
       }) }}
   vars:
-    change_type: >-
-      {% if summary_first_run %}
-      baseline
-      {% elif item not in before_versions %}
-      added
-      {% elif current_versions[item] != before_versions[item] %}
-      updated
-      {% else %}
-      unchanged
-      {% endif %}
-    status_value: >-
-      {% if change_type == 'baseline' %}
-      BASELINE
-      {% elif change_type == 'unchanged' %}
-      UNCHANGED
-      {% else %}
-      CHANGED
-      {% endif %}
+    change_type: "{{ summary_first_run | ternary('baseline', (item not in before_versions) | ternary('added', (current_versions[item] != before_versions.get(item)) | ternary('updated', 'unchanged'))) }}"
+    status_value: "{{ 'BASELINE' if change_type == 'baseline' else ('UNCHANGED' if change_type == 'unchanged' else 'CHANGED') }}"
   loop: "{{ current_versions.keys() | list }}"
   when: current_versions | length > 0 and not (status_check_mode | default(false) | bool)
 
@@ -334,14 +352,7 @@
         item.key: item.value | combine({'status_label': status_label})
       }) }}
   vars:
-    status_label: >-
-      {% if item.value.change_type in ['added', 'updated', 'removed'] %}
-      {{ item.value.status ~ ' (' ~ (item.value.change_type | upper) ~ ')' }}
-      {% elif item.value.change_type == 'baseline' %}
-      {{ item.value.status ~ ' (INITIAL)' }}
-      {% else %}
-      {{ item.value.status }}
-      {% endif %}
+    status_label: "{{ (item.value.change_type in ['added', 'updated', 'removed']) | ternary(item.value.status ~ ' (' ~ (item.value.change_type | upper) ~ ')', (item.value.change_type == 'baseline') | ternary(item.value.status ~ ' (INITIAL)', item.value.status)) }}"
   loop: "{{ after_versions | dict2items }}"
 
 # Set display and change tracking variables
@@ -695,7 +706,9 @@
     dest: "/etc/ansible/facts.d/{{ summary_versions_fact_file }}"
     mode: '0644'
   become: true
-  when: not is_status_display
+  when:
+    - docker_summary_write_facts | default(true) | bool
+    - not is_status_display
 
 - name: Write version history to fact file
   ansible.builtin.copy:
@@ -703,7 +716,9 @@
     dest: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
     mode: '0644'
   become: true
-  when: not is_status_display
+  when:
+    - docker_summary_write_facts | default(true) | bool
+    - not is_status_display
 - name: Inspect containers for metadata
   ansible.builtin.command:
     argv:
@@ -716,7 +731,8 @@
   changed_when: false
   failed_when: false
   when:
-    - not (container_list is failed)
+    - docker_summary_container_overrides | length == 0
+    - summary_discovery_available | default(false) | bool
     - filtered_containers | length > 0
   vars:
     docker_inspect_format: "{{ '{{json (dict Image=.Image RepoDigests=.RepoDigests Created=.Created State=.State)}}' }}"
@@ -726,6 +742,7 @@
     container_inspect_map: "{{ container_inspect_map | combine({item.item.name: (item.stdout | default('') | from_json)}) }}"
   loop: "{{ container_inspect.results | default([]) }}"
   when:
+    - docker_summary_container_overrides | length == 0
     - item.stdout is defined
     - item.stdout | length > 0
     - not (item.failed | default(false))

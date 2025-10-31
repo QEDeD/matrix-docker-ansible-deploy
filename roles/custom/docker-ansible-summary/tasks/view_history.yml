@@ -12,12 +12,17 @@
 - name: Derive history fact key
   ansible.builtin.set_fact:
     summary_history_fact_key: "{{ summary_history_fact_file | regex_replace('\\.fact$', '') }}"
+
+- name: Resolve cached local facts
+  ansible.builtin.set_fact:
+    summary_local_facts: "{{ (docker_summary_ansible_local_override if docker_summary_ansible_local_override is not none else ansible_local) | default({}) }}"
+
 - name: Read version history if it exists
   ansible.builtin.set_fact:
-    version_history: "{{ ansible_local[summary_history_fact_key] | default({'changes': [], 'full_history': {}}) }}"
+    version_history: "{{ summary_local_facts[summary_history_fact_key] | default({'changes': [], 'full_history': {}}) }}"
   when:
-    - ansible_local is defined
-    - ansible_local[summary_history_fact_key] is defined
+    - summary_local_facts is mapping
+    - summary_history_fact_key in summary_local_facts
 
 - name: Initialize version history if not exists
   ansible.builtin.set_fact:
@@ -25,16 +30,35 @@
   when: version_history is not defined
 
 # Apply date-based retention cleanup when reading history
-- name: Get cutoff date for retention cleanup
+- name: Calculate cutoff date for retention cleanup (Linux)
   ansible.builtin.command: date -u -d "{{ summary_retention_days }} days ago" +"%Y-%m-%d %H:%M:%S"
-  register: cutoff_date_cmd
+  register: linux_history_cutoff
   changed_when: false
-  when: summary_retention_days | int > 0
+  failed_when: false
+  when:
+    - summary_retention_days | int > 0
+    - ansible_system == "Linux"
+
+- name: Calculate cutoff date for retention cleanup (BSD/macOS)
+  ansible.builtin.command: date -u -v-{{ summary_retention_days }}d +"%Y-%m-%d %H:%M:%S"
+  register: bsd_history_cutoff
+  changed_when: false
+  failed_when: false
+  when:
+    - summary_retention_days | int > 0
+    - ansible_system != "Linux"
 
 - name: Set cutoff date for retention
   ansible.builtin.set_fact:
-    retention_cutoff_date: "{{ cutoff_date_cmd.stdout }}"
-  when: cutoff_date_cmd is defined and cutoff_date_cmd.stdout is defined
+    retention_cutoff_date: >-
+      {% if ansible_system == "Linux" and linux_history_cutoff.rc is defined and linux_history_cutoff.rc == 0 %}
+      {{ linux_history_cutoff.stdout }}
+      {% elif ansible_system != "Linux" and bsd_history_cutoff.rc is defined and bsd_history_cutoff.rc == 0 %}
+      {{ bsd_history_cutoff.stdout }}
+      {% else %}
+      null
+      {% endif %}
+  when: summary_retention_days | int > 0
 
 - name: Apply retention policy to changes history for viewing
   ansible.builtin.set_fact:
@@ -43,6 +67,7 @@
          rejectattr('timestamp', 'lt', retention_cutoff_date) | list}) }}
   when:
     - retention_cutoff_date is defined
+    - retention_cutoff_date != 'null'
     - version_history.changes is defined
     - version_history.changes | length > 0
 
@@ -55,6 +80,7 @@
   with_dict: "{{ version_history.full_history | default({}) }}"
   when:
     - retention_cutoff_date is defined
+    - retention_cutoff_date != 'null'
     - version_history.full_history is defined
     - item.value.updates is defined
     - item.value.updates | length > 0

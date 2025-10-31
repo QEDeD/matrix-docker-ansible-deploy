@@ -12,3 +12,4 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - Introduce flexible table render options (ASCII/Unicode, optional additional columns).
 - Evaluate whether to expose change types (added/updated/removed) in an optional notes column or via metadata tooling while keeping the status column uniform.
 - Consider capturing ancillary run artifacts (compressed terminal output, fact snapshots) if they strengthen the change-audit story without bloating scope.
+- Keep regression coverage for the baseline (`BASELINE (INITIAL)`) and scope-change safeguards up to date (see `tests/test_scope_change.yml` once CI is wired).

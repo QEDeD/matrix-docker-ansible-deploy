@@ -28,6 +28,7 @@ All tunables are exposed via the `docker_summary_*` namespace:
 | `docker_summary_retention_days` | `365` | Age-based retention window; set to `0` for unlimited |
 | `docker_summary_display` | `true` | Toggle the summary output during normal runs |
 | `docker_summary_enabled` | `true` | Master on/off switch for the role |
+| `docker_summary_write_facts` | `true` | Disable to skip writing fact files (useful for tests) |
 | `docker_summary_versions_fact_file` | `"matrix_versions.fact"` | Local fact filename storing last-known versions |
 | `docker_summary_history_fact_file` | `"matrix_version_history.fact"` | Local fact filename storing the change history |
 | `docker_summary_table_style_unicode` | `false` | Use Unicode (`true`) or ASCII (`false`) table borders |
@@ -37,6 +38,7 @@ All tunables are exposed via the `docker_summary_*` namespace:
 | `docker_summary_version_extract_smart` | `true` | Extract `image:tag` from the full image reference when enabled |
 | `docker_summary_mock_mode` | `false` | Enable mock data generation for testing |
 | `docker_summary_show_history` | `false` | Include history display tasks during the main role run |
+| `docker_summary_container_overrides` | `[]` | Optional list of `{name, image}` dicts to bypass Docker discovery (testing) |
 
 ### Custom Fact Locations
 
@@ -77,6 +79,7 @@ The summary and history views account for these lifecycle events:
 - **Service updated** – version diff shows the old/new image tags and status `CHANGED (UPDATED)`.
 - **Service removed** – the previous version is shown with the current value `(removed)` and is logged as a removal event.
 - **Unchanged services** – remain in the table with `UNCHANGED` status for context.
+- **Baseline snapshot** – the first run for a given scope records matching services with status `BASELINE (INITIAL)` to seed future diffs without flagging them as new.
 - **Empty scope / filtered view** – the summary explains when no containers matched the supplied scope.
 - **Status-only runs** – when invoked via `--tags=docker-ansible-summary`, the role prints the current versions without touching history.
 
@@ -186,6 +189,11 @@ ansible-playbook -i inventory/hosts setup.yml --tags=docker-ansible-summary
 ```
 
 The role automatically detects the execution context and adjusts its behavior accordingly, preventing the logical inconsistency of recording "UNCHANGED" status when no actual upgrades have occurred.
+
+### Discovery Safeguards
+
+- If Docker command execution fails, the role logs a warning and leaves previously recorded facts untouched so history remains intact.
+- Deliberate scope changes no longer trigger a protective skip: the role filters the previously recorded state to the new scope and records a fresh baseline instead of treating filtered services as removals.
 
 ## Testing and Usage
 

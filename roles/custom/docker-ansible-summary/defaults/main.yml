@@ -10,6 +10,9 @@ docker_summary_history_max_entries: 100     # Maximum number of history entries 
 docker_summary_retention_days: 365          # Number of days to retain history entries (0 = unlimited)
 docker_summary_display: true                # Enable/disable version summary display
 docker_summary_enabled: true                # Master switch for the role
+docker_summary_write_facts: true            # Allow skipping fact writes in tests/diagnostics
+docker_summary_container_overrides: []      # Optional list of containers ({name, image}) to bypass docker discovery
+docker_summary_ansible_local_override: null  # Optional override for ansible_local facts (testing)
 
 # Fact file locations
 docker_summary_versions_fact_file: "matrix_versions.fact"

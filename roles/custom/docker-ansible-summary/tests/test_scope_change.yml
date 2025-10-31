@@ -1,0 +1,74 @@
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Validate baseline and scope change handling
+  hosts: localhost
+  gather_facts: true
+  vars:
+    docker_summary_write_facts: false
+    docker_summary_container_overrides:
+      - name: "matrix-app"
+        image: "example/matrix:1.0"
+      - name: "mash-app"
+        image: "example/mash:1.0"
+  tasks:
+    - name: Run DAS for initial matrix scope
+      ansible.builtin.include_role:
+        name: custom/docker-ansible-summary
+      vars:
+        docker_summary_scope: "matrix-*"
+        docker_summary_ansible_local_override: {}
+
+    - name: Capture first-run outputs
+      ansible.builtin.set_fact:
+        das_first_current_versions: "{{ current_versions }}"
+        das_first_after_versions: "{{ after_versions }}"
+        das_first_history: "{{ version_history }}"
+
+    - name: Assert initial baseline recorded for matrix scope
+      ansible.builtin.assert:
+        that:
+          - das_first_after_versions | length == 1
+          - "'matrix-app' in das_first_after_versions"
+          - das_first_after_versions["matrix-app"].change_type == "baseline"
+          - das_first_after_versions["matrix-app"].status == "BASELINE"
+          - das_first_after_versions["matrix-app"].status_label == "BASELINE (INITIAL)"
+        fail_msg: "Matrix scope baseline was not recorded as expected"
+
+    - name: Run DAS after switching to mash scope
+      ansible.builtin.include_role:
+        name: custom/docker-ansible-summary
+      vars:
+        docker_summary_scope: "mash-*"
+        docker_summary_ansible_local_override:
+          matrix_versions: "{{ das_first_current_versions }}"
+          matrix_version_history: "{{ das_first_history }}"
+
+    - name: Capture second-run outputs
+      ansible.builtin.set_fact:
+        das_second_current_versions: "{{ current_versions }}"
+        das_second_after_versions: "{{ after_versions }}"
+        das_second_history: "{{ version_history }}"
+
+    - name: Assert scope change produced fresh baseline without removals
+      ansible.builtin.assert:
+        that:
+          - das_second_after_versions | length == 1
+          - "'mash-app' in das_second_after_versions"
+          - das_second_after_versions["mash-app"].change_type == "baseline"
+          - das_second_after_versions["mash-app"].status_label == "BASELINE (INITIAL)"
+          - "'matrix-app' not in das_second_after_versions"
+        fail_msg: "Scope change did not result in the expected baseline record"
+
+    - name: Assert history retains previous baseline and adds new initial entry
+      ansible.builtin.assert:
+        that:
+          - das_second_history.changes | length >= 2
+          - das_second_history.changes[0].event_type == "initial"
+          - das_second_history.changes[0].changes | length == 1
+          - "'mash-app' in das_second_history.changes[0].changes"
+          - das_second_history.changes[1].event_type == "initial"
+          - das_second_history.changes[1].changes | length == 1
+          - "'matrix-app' in das_second_history.changes[1].changes"
+        fail_msg: "History entries do not reflect sequential baselines for scope changes"
