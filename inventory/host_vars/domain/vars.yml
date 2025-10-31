@@ -264,17 +264,14 @@ exim_relay_relay_auth_password: "{{ vault_exim_relay_relay_auth_password }}"
 #                                                                      #
 ########################################################################
 
-matrix_coturn_enabled: false
+matrix_coturn_enabled: true
 
 matrix_coturn_container_network: "matrix-coturn"
-# 04/02/2024 - added
 
 # matrix_coturn_container_network: host
 # 09/03/2023 - added, 04/02/2024 - commented out
 
 matrix_coturn_turn_external_ip_address: ""
-
-# 28/06/2023 - added, 04/02/2024 - updated
 
 matrix_coturn_denied_peer_ips:
   - 0.0.0.0-0.255.255.255
@@ -340,7 +337,8 @@ matrix_synapse_ext_password_provider_shared_secret_auth_enabled: true
 matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret}}"
 
 # Element Call
-matrix_element_call_enabled: true
+matrix_element_call_enabled: false
+matrix_rtc_enabled: true
 
 # Synapse Stats
 matrix_synapse_usage_exporter_enabled: true
