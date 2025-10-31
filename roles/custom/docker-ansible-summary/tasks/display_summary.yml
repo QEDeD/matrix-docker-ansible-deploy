@@ -645,7 +645,12 @@
   become: true
   when: not is_status_display
 - name: Inspect containers for metadata
-  ansible.builtin.command: docker inspect {{ item.name }}
+  ansible.builtin.command:
+    argv:
+      - docker
+      - inspect
+      - "--format={{ docker_inspect_format }}"
+      - "{{ item.name }}"
   register: container_inspect
   loop: "{{ filtered_containers }}"
   changed_when: false
@@ -653,10 +658,12 @@
   when:
     - not (container_list is failed)
     - filtered_containers | length > 0
+  vars:
+    docker_inspect_format: "{{ '{{json (dict Image=.Image RepoDigests=.RepoDigests Created=.Created State=.State)}}' }}"
 
 - name: Build container metadata map
   ansible.builtin.set_fact:
-    container_inspect_map: "{{ container_inspect_map | combine({item.item.name: (item.stdout | default('') | from_json | first)}) }}"
+    container_inspect_map: "{{ container_inspect_map | combine({item.item.name: (item.stdout | default('') | from_json)}) }}"
   loop: "{{ container_inspect.results | default([]) }}"
   when:
     - item.stdout is defined
