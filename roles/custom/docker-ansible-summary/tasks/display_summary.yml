@@ -160,6 +160,10 @@
   ansible.builtin.set_fact:
     summary_known_services: "{{ before_versions.keys() | list }}"
 
+- name: Determine first run state
+  ansible.builtin.set_fact:
+    summary_first_run: "{{ summary_known_services | length == 0 }}"
+
 - name: Read version history if it exists
   ansible.builtin.set_fact:
     version_history: "{{ ansible_local[(summary_history_fact_file | regex_replace('\\.fact$', ''))] | default({'changes': [], 'full_history': {}}) }}"
@@ -266,9 +270,23 @@
       }) }}
   vars:
     change_type: >-
-      {{ 'added' if item not in before_versions else (
-           'updated' if current_versions[item] != before_versions[item] else 'unchanged') }}
-    status_value: "{{ 'CHANGED' if change_type != 'unchanged' else 'UNCHANGED' }}"
+      {% if summary_first_run %}
+      baseline
+      {% elif item not in before_versions %}
+      added
+      {% elif current_versions[item] != before_versions[item] %}
+      updated
+      {% else %}
+      unchanged
+      {% endif %}
+    status_value: >-
+      {% if change_type == 'baseline' %}
+      BASELINE
+      {% elif change_type == 'unchanged' %}
+      UNCHANGED
+      {% else %}
+      CHANGED
+      {% endif %}
   loop: "{{ current_versions.keys() | list }}"
   when: current_versions | length > 0 and not (status_check_mode | default(false) | bool)
 
@@ -317,10 +335,13 @@
       }) }}
   vars:
     status_label: >-
-      {{
-        item.value.status if item.value.change_type not in ['added', 'updated', 'removed']
-        else item.value.status ~ ' (' ~ (item.value.change_type | upper) ~ ')'
-      }}
+      {% if item.value.change_type in ['added', 'updated', 'removed'] %}
+      {{ item.value.status ~ ' (' ~ (item.value.change_type | upper) ~ ')' }}
+      {% elif item.value.change_type == 'baseline' %}
+      {{ item.value.status ~ ' (INITIAL)' }}
+      {% else %}
+      {{ item.value.status }}
+      {% endif %}
   loop: "{{ after_versions | dict2items }}"
 
 # Set display and change tracking variables
@@ -330,7 +351,7 @@
       {{ after_versions.values() |
          selectattr('change_type', 'in', ['added', 'updated', 'removed']) |
          list | length > 0 }}
-    first_run: "{{ before_versions.keys() | length == 0 }}"
+    first_run: "{{ summary_first_run | default(false) }}"
     is_status_display: "{{ status_check_mode | default(false) | bool }}"
 
 # Only handle history recording when not in status check mode
