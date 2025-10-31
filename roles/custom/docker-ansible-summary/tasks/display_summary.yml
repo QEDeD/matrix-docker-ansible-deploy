@@ -65,6 +65,8 @@
     filtered_containers: []
     container_inspect_map: {}
     current_metadata_map: {}
+    summary_skip_processing: false
+    summary_skip_reason: ""
 
 - name: Build container catalogue
   ansible.builtin.set_fact:
@@ -154,6 +156,10 @@
     before_versions: {}
   when: before_versions is not defined
 
+- name: Capture list of previously-known services
+  ansible.builtin.set_fact:
+    summary_known_services: "{{ before_versions.keys() | list }}"
+
 - name: Read version history if it exists
   ansible.builtin.set_fact:
     version_history: "{{ ansible_local[(summary_history_fact_file | regex_replace('\\.fact$', ''))] | default({'changes': [], 'full_history': {}}) }}"
@@ -171,6 +177,39 @@
 - name: Capture previous metadata snapshot
   ansible.builtin.set_fact:
     before_metadata: "{{ version_history.last_metadata | default({}) }}"
+
+- name: Flag discovery failure when Docker command fails
+  ansible.builtin.set_fact:
+    summary_skip_processing: true
+    summary_skip_reason: "docker_command_failed"
+  when: container_list is failed
+
+- name: Flag scope mismatch when known services are filtered out
+  ansible.builtin.set_fact:
+    summary_skip_processing: true
+    summary_skip_reason: "scope_filtered_all_known"
+  when:
+    - not (summary_skip_processing | bool)
+    - not summary_scope_all
+    - filtered_containers | length == 0
+    - (summary_known_services | length > 0)
+    - (all_containers | map(attribute='name') | select('in', summary_known_services) | list | length > 0)
+
+- name: Explain skipped summary processing
+  ansible.builtin.debug:
+    msg: >-
+      Docker Ansible Summary skipped: {{
+        (summary_skip_reason == 'docker_command_failed')
+        | ternary(
+            'Docker CLI command failed; leaving previous facts untouched.',
+            'Scope filters excluded all previously-known services; keeping prior state.'
+          )
+      }}
+  when: summary_skip_processing | bool
+
+- name: Abort summary processing when prerequisites are missing
+  ansible.builtin.meta: end_play
+  when: summary_skip_processing | bool
 
 # Process container versions with improved validation
 - name: Process version changes for each service
