@@ -1,0 +1,35 @@
+{#
+SPDX-FileCopyrightText: 2025 MDAD project contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+{% macro cell(text, width, default='') -%}
+{{ (((text if text is not none else default)|string)[:width]) | ljust(width) }}
+{%- endmacro %}
+{% set chars = summary_table_chars %}
+{% set service_width = summary_table_service_width | int %}
+{% set version_width = summary_table_version_width | int %}
+{% set status_width = summary_table_status_width | int %}
+{% set service_border = service_width + 2 %}
+{% set version_border = version_width + 2 %}
+{% set status_border = status_width + 2 %}
+{{ 'DOCKER SERVICE VERSION CHANGES - ' ~ ansible_date_time.iso8601 }}
+
+{{ chars.tl ~ chars.h * service_border ~ chars.t_down ~ chars.h * version_border ~ chars.t_down ~ chars.h * version_border ~ chars.t_down ~ chars.h * status_border ~ chars.tr }}
+{{ chars.v }} {{ cell('SERVICE/CONTAINER', service_width) }} {{ chars.v }} {{ cell('VERSION BEFORE', version_width) }} {{ chars.v }} {{ cell('VERSION AFTER', version_width) }} {{ chars.v }} {{ cell('STATUS', status_width) }} {{ chars.v }}
+{{ chars.t_right ~ chars.double_h * service_border ~ chars.double_cross ~ chars.double_h * version_border ~ chars.double_cross ~ chars.double_h * version_border ~ chars.double_cross ~ chars.double_h * status_border ~ chars.t_left }}
+{% for key, entry in after_versions | dictsort %}
+{{ chars.v }} {{ cell(key, service_width) }} {{ chars.v }} {{ cell(entry.previous | default('-', true), version_width, '-') }} {{ chars.v }} {{ cell(entry.current, version_width) }} {{ chars.v }} {{ cell(entry.status_label, status_width) }} {{ chars.v }}
+{% endfor %}
+{{ chars.bl ~ chars.h * service_border ~ chars.t_up ~ chars.h * version_border ~ chars.t_up ~ chars.h * version_border ~ chars.t_up ~ chars.h * status_border ~ chars.br }}
+
+{{ 'Total services listed: ' ~ (after_versions | length) ~ ' (active: ' ~ (filtered_containers | length) ~ ')' }}
+
+{% if is_status_display %}
+[CURRENT STATUS DISPLAY - NO CHANGES RECORDED]
+{% elif has_changes %}
+[NEW VERSION CHANGES RECORDED]
+{% elif first_run %}
+[INITIAL STATE RECORDED]
+{% else %}
+[NO CHANGES DETECTED]
+{% endif %}
