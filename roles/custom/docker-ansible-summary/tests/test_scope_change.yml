@@ -25,6 +25,7 @@
         das_first_current_versions: "{{ current_versions }}"
         das_first_after_versions: "{{ after_versions }}"
         das_first_history: "{{ version_history }}"
+        das_first_table: "{{ version_summary_table_lines }}"
 
     - name: Assert initial baseline recorded for matrix scope
       ansible.builtin.assert:
@@ -35,6 +36,13 @@
           - das_first_after_versions["matrix-app"].status == "BASELINE"
           - das_first_after_versions["matrix-app"].status_label == "BASELINE (INITIAL)"
         fail_msg: "Matrix scope baseline was not recorded as expected"
+
+    - name: Assert baseline table renders without nulls
+      ansible.builtin.assert:
+        that:
+          - "'None' not in (das_first_table | join(' '))"
+          - "'matrix-app' in (das_first_table | join(' '))"
+        fail_msg: "Baseline table contains unexpected null values"
 
     - name: Run DAS after switching to mash scope
       ansible.builtin.include_role:
@@ -72,3 +80,52 @@
           - das_second_history.changes[1].changes | length == 1
           - "'matrix-app' in das_second_history.changes[1].changes"
         fail_msg: "History entries do not reflect sequential baselines for scope changes"
+
+    - name: Run DAS to capture removal of matrix service
+      ansible.builtin.include_role:
+        name: custom/docker-ansible-summary
+      vars:
+        docker_summary_scope: "matrix-*"
+        docker_summary_container_overrides: []
+        docker_summary_ansible_local_override:
+          matrix_versions: "{{ das_first_current_versions }}"
+          matrix_version_history: "{{ das_second_history | combine({'last_metadata': {'matrix-app': das_first_after_versions['matrix-app'].metadata.current}}, recursive=True) }}"
+
+    - name: Capture removal run outputs
+      ansible.builtin.set_fact:
+        das_removed_after_versions: "{{ after_versions }}"
+        das_removed_history: "{{ version_history }}"
+        das_removed_table: "{{ version_summary_table_lines }}"
+
+    - name: Assert removal records preserve previous metadata
+      ansible.builtin.assert:
+        that:
+          - "'matrix-app' in das_removed_after_versions"
+          - das_removed_after_versions["matrix-app"].change_type == "removed"
+          - das_removed_after_versions["matrix-app"].metadata.previous.get('image') == "example/matrix:1.0"
+          - das_removed_after_versions["matrix-app"].current == "(removed)"
+        fail_msg: "Removal handling did not retain previous metadata or table output"
+
+    - name: Run DAS with missing metadata to ensure graceful handling
+      ansible.builtin.include_role:
+        name: custom/docker-ansible-summary
+      vars:
+        docker_summary_scope: "orphan-*"
+        docker_summary_container_overrides: []
+        docker_summary_ansible_local_override:
+          matrix_versions:
+            orphan-service: "orphan:1.2"
+          matrix_version_history:
+            changes: []
+            full_history: {}
+
+    - name: Capture missing metadata outputs
+      ansible.builtin.set_fact:
+        das_missing_after_versions: "{{ after_versions }}"
+
+    - name: Assert missing metadata defaults are empty dicts
+      ansible.builtin.assert:
+        that:
+          - "'orphan-service' in das_missing_after_versions"
+          - das_missing_after_versions["orphan-service"].metadata.previous == {}
+        fail_msg: "Missing metadata scenario did not fall back to empty dictionaries"

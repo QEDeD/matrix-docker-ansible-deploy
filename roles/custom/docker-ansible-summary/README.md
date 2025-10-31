@@ -39,6 +39,7 @@ All tunables are exposed via the `docker_summary_*` namespace:
 | `docker_summary_mock_mode` | `false` | Enable mock data generation for testing |
 | `docker_summary_show_history` | `false` | Include history display tasks during the main role run |
 | `docker_summary_container_overrides` | `[]` | Optional list of `{name, image}` dicts to bypass Docker discovery (testing) |
+| `docker_summary_ansible_local_override` | `null` | Provide synthetic `ansible_local` facts (testing) |
 
 ### Custom Fact Locations
 

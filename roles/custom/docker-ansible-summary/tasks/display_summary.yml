@@ -86,6 +86,14 @@
     all_containers: "{{ docker_summary_container_overrides | map('combine', {}) | list }}"
   when: docker_summary_container_overrides | length > 0
 
+- name: Seed inspect data from overrides
+  ansible.builtin.set_fact:
+    container_inspect_map: "{{ container_inspect_map | combine({item.name: item.inspect}) }}"
+  loop: "{{ docker_summary_container_overrides }}"
+  when:
+    - docker_summary_container_overrides | length > 0
+    - item.inspect is defined
+
 - name: Build container catalogue
   ansible.builtin.set_fact:
     all_containers: "{{ all_containers + [{'name': item_parts[0], 'image': item_parts[1]}] }}"
@@ -330,12 +338,12 @@
       {{ after_versions | combine({
         item: {
           'current': '(removed)',
-          'previous': before_versions[item],
+          'previous': before_versions.get(item),
           'status': 'CHANGED',
           'change_type': 'removed',
           'metadata': {
             'current': {},
-            'previous': before_metadata[item] | default({})
+            'previous': before_metadata.get(item, {})
           }
         }
       }) }}
@@ -444,7 +452,7 @@
       'previous': "{{ item.value.previous | default('-') }}",
       'current': "{{ item.value.current }}",
       'user': "{{ current_user }}",
-      'metadata': "{{ item.value.metadata.current | default({}) }}",
+      'metadata': "{{ (item.value.change_type == 'removed') | ternary(item.value.metadata.previous | default({}), item.value.metadata.current | default({})) }}",
       'change_type': "{{ item.value.change_type }}"
     }
   loop: "{{ after_versions | dict2items }}"
@@ -458,7 +466,7 @@
         (current_service_entry.last_updated | default(current_timestamp)) }}",
       'status': "{{ item.value.status }}",
       'change_type': "{{ item.value.change_type }}",
-      'metadata': "{{ item.value.metadata.current | default({}) }}",
+      'metadata': "{{ (item.value.change_type == 'removed') | ternary(item.value.metadata.previous | default({}), item.value.metadata.current | default({})) }}",
       'updates': "{{ (current_service_updates + [new_update_entry])[:20]
         if item.value.change_type not in ['unchanged', 'status'] else current_service_updates }}"
     }
@@ -653,13 +661,13 @@
       {{ v_line + ' ' +
          ((item.key | truncate(service_col_width | int, true)) + ' ' * (service_col_width | int))[:service_col_width | int] + ' ' +
          v_line + ' ' +
-         (((item.value.previous | default('-') | string | truncate(version_col_width | int, true)) +
+         (((item.value.previous | default('-', true) | string | truncate(version_col_width | int, true)) +
          ' ' * (version_col_width | int))[:version_col_width | int]) + ' ' +
          v_line + ' ' +
          (((item.value.current | string | truncate(version_col_width | int, true)) +
          ' ' * (version_col_width | int))[:version_col_width | int]) + ' ' +
          v_line + ' ' +
-         ((item.value.status_label + ' ' * (status_col_width | int))[:status_col_width | int]) + ' ' +
+         (((item.value.status_label | string) + ' ' * (status_col_width | int))[:status_col_width | int]) + ' ' +
          v_line }}
   loop: "{{ after_versions | dict2items | sort(attribute='key') }}"
   when: after_versions | length > 0
@@ -735,7 +743,7 @@
     - summary_discovery_available | default(false) | bool
     - filtered_containers | length > 0
   vars:
-    docker_inspect_format: "{{ '{{json (dict Image=.Image RepoDigests=.RepoDigests Created=.Created State=.State)}}' }}"
+    docker_inspect_format: "{{ '{{json (dict Image=.Image RepoDigests=.RepoDigests Created=.Created State=.State RestartCount=.RestartCount)}}' }}"
 
 - name: Build container metadata map
   ansible.builtin.set_fact:
