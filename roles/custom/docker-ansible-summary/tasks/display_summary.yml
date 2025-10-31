@@ -107,72 +107,15 @@
     - item is defined
     - item_parts | length == 2
 
-- name: Normalize container scope patterns
+- name: Normalize scope configuration
   ansible.builtin.set_fact:
-    summary_scope_patterns: >-
-      {{
-        summary_scope_value if (summary_scope_value is sequence and summary_scope_value is not string)
-        else [summary_scope_value]
-      }}
+    summary_scope_patterns_clean: "{{ summary_scope_value | docker_scope_patterns }}"
+    summary_scope_all: "{{ summary_scope_value | docker_scope_all }}"
 
-- name: Clean container scope patterns
+- name: Apply container scope
   ansible.builtin.set_fact:
-    summary_scope_patterns_clean: >-
-      {{ summary_scope_patterns | reject('equalto', None) | map('string') | map('trim') | list }}
-
-- name: Detect unfiltered scope
-  ansible.builtin.set_fact:
-    summary_scope_all: >-
-      {{
-        summary_scope_patterns_clean | length == 0 or
-        ('all' in summary_scope_patterns_clean) or
-        (summary_scope_patterns_clean | length == 1 and summary_scope_patterns_clean[0] in ['*', ''])
-      }}
-
-- name: Calculate scope regexes
-  ansible.builtin.set_fact:
-    summary_scope_regexes: >-
-      {{ summary_scope_patterns_clean
-         | reject('equalto', 'all')
-         | reject('equalto', '*')
-         | reject('equalto', '')
-         | map('regex_replace', '([.^$+{}\\[\\]|()])', '\\\\\\1')
-         | map('replace', '*', '.*')
-         | map('replace', '?', '.')
-         | list }}
-  when: not summary_scope_all
-
-- name: Set combined scope regex
-  ansible.builtin.set_fact:
-    summary_scope_combined_regex: "^(?:{{ summary_scope_regexes | join('|') }})$"
-  when:
-    - not summary_scope_all
-    - summary_scope_regexes | length > 0
-
-- name: Apply container scope (all containers)
-  ansible.builtin.set_fact:
-    filtered_containers: "{{ all_containers }}"
-  when:
-    - summary_discovery_available | default(false) | bool
-    - summary_scope_all
-
-- name: Apply container scope (filtered list)
-  ansible.builtin.set_fact:
-    filtered_containers: "{{ all_containers | selectattr('name', 'match', combined_scope_regex) | list }}"
-  vars:
-    combined_scope_regex: "^(?:{{ summary_scope_regexes | join('|') }})$"
-  when:
-    - summary_discovery_available | default(false) | bool
-    - not summary_scope_all
-    - summary_scope_regexes | length > 0
-
-- name: Apply container scope (no matches)
-  ansible.builtin.set_fact:
-    filtered_containers: []
-  when:
-    - summary_discovery_available | default(false) | bool
-    - not summary_scope_all
-    - summary_scope_regexes | length == 0
+    filtered_containers: "{{ all_containers | docker_scope_filter(summary_scope_value) }}"
+  when: summary_discovery_available | default(false) | bool
 
 # Initialize data structures
 - name: Process current versions
@@ -223,12 +166,12 @@
 
 - name: Filter previous versions to current scope
   ansible.builtin.set_fact:
-    before_versions: "{{ summary_scope_all | ternary(before_versions, (summary_scope_regexes | length > 0) | ternary(before_versions | dict2items | selectattr('key', 'match', summary_scope_combined_regex) | items2dict, {})) }}"
+    before_versions: "{{ before_versions | docker_scope_filter_dict(summary_scope_value) }}"
   when: before_versions is defined
 
 - name: Filter previous metadata to current scope
   ansible.builtin.set_fact:
-    before_metadata: "{{ summary_scope_all | ternary(before_metadata, (summary_scope_regexes | length > 0) | ternary(before_metadata | dict2items | selectattr('key', 'match', summary_scope_combined_regex) | items2dict, {})) }}"
+    before_metadata: "{{ before_metadata | docker_scope_filter_dict(summary_scope_value) }}"
   when: before_metadata is defined
 
 - name: Capture list of previously-known services
