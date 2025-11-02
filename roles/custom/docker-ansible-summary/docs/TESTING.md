@@ -28,6 +28,16 @@ cd /home/ansible-admin/matrix-docker-ansible-deploy/roles/custom/docker-ansible-
 
 If `ansible-lint` warns about PATH alterations, it is safe to ignore so long as the run succeeds.
 
+Additional lint helpers:
+
+```bash
+# Run every configured hook (yamllint, reuse, trimming, etc.)
+pre-commit run --all-files
+
+# Spot-check YAML files (uses the repo’s .yamllint config)
+yamllint roles/custom/docker-ansible-summary
+```
+
 ## Targeted Playbook Tests
 
 Most regression coverage lives under `roles/custom/docker-ansible-summary/tests`. Useful subsets:
