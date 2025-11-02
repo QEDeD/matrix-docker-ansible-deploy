@@ -1,0 +1,39 @@
+---
+# Direct Table Format Test - Tests the actual table display
+- name: Test table formatting directly
+  hosts: localhost
+  gather_facts: true
+  vars:
+    docker_summary_mock_mode: true
+    docker_summary_mode: changes
+    docker_summary_scope: "matrix-*"
+    docker_summary_write_facts: false
+    docker_summary_enable_discovery: false
+
+  tasks:
+    # Include mock mode to generate test data
+    - name: Include mock mode tasks
+      ansible.builtin.include_tasks: tasks/mock_mode.yml
+
+    # Include display summary tasks
+    - name: Include display summary tasks
+      ansible.builtin.include_tasks: tasks/display_summary.yml
+
+    # Test the actual table content
+    - name: Display final table content for manual verification
+      ansible.builtin.debug:
+        msg: |
+          === TABLE CONTENT VERIFICATION ===
+
+          Expected columns (45 chars each):
+          - SERVICE/CONTAINER: 45 characters
+          - VERSION BEFORE: 45 characters
+          - VERSION AFTER: 45 characters
+
+          Total table width should be ~162 characters
+
+          Please verify the table above shows:
+          1. Proper column alignment
+          2. Version information is readable
+          3. ASCII box drawing characters work
+          4. All text fits within columns

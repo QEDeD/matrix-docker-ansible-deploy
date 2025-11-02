@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Unit test docker_scope_* filters
+  hosts: localhost
+  gather_facts: false
+  vars:
+    sample_containers:
+      - { name: "matrix-app", image: "matrix:1.0" }
+      - { name: "mash-app", image: "mash:1.0" }
+      - { name: "matrix-sidecar", image: "sidecar:1.0" }
+  tasks:
+    - name: Load role to register filter plugins
+      ansible.builtin.include_role:
+        name: custom/docker-ansible-summary
+        tasks_from: mock_mode
+      vars:
+        docker_summary_mock_mode: false
+
+    - name: Assert docker_scope_patterns trims entries
+      ansible.builtin.assert:
+        that:
+          - (['matrix-*', ' mash-* ', None] | docker_scope_patterns) == ['matrix-*', 'mash-*']
+          - (['all'] | docker_scope_all) | bool
+        fail_msg: "docker_scope_patterns/docker_scope_all failed to normalise"
+
+    - name: Assert docker_scope_filter matches fnmatch semantics
+      ansible.builtin.assert:
+        that:
+          - "(sample_containers | docker_scope_filter('matrix-*')) | length == 2"
+          - "(sample_containers | docker_scope_filter(['mash-*'])) | length == 1"
+        fail_msg: "docker_scope_filter did not match expected containers"
+
+    - name: Assert docker_scope_filter_dict filters mapping keys
+      ansible.builtin.assert:
+        that:
+          - "({'matrix-app': 1, 'mash-app': 2} | docker_scope_filter_dict('matrix-*')) == {'matrix-app': 1}"
+        fail_msg: "docker_scope_filter_dict did not filter dictionary keys"

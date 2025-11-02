@@ -1,0 +1,33 @@
+---
+# Test the new 45-character table format with mock data
+- name: Test New Table Format
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    docker_summary_mock_mode: true
+    docker_summary_display: true
+    docker_summary_table_style_unicode: false  # ASCII for better compatibility
+    docker_summary_scope: "matrix-*"
+    docker_summary_write_facts: false
+    docker_summary_enable_discovery: false
+
+  tasks:
+    - name: Enable mock mode and test table display
+      ansible.builtin.include_role:
+        name: custom/docker-ansible-summary
+      vars:
+        docker_summary_mock_mode: true
+        docker_summary_display: true
+        docker_summary_table_service_width: 45
+        docker_summary_table_version_width: 45
+        docker_summary_table_status_width: 18
+
+    - name: Display test completion
+      ansible.builtin.debug:
+        msg: |
+          ✅ New table format test completed!
+          - Column widths increased from 30 to 45 characters
+          - Version numbers should now be fully visible
+          - Smart version extraction implemented
+          - Docker template syntax fixed

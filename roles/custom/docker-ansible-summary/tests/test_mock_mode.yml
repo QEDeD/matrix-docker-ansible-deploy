@@ -1,0 +1,26 @@
+---
+- name: Test Mock Mode Locally
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    docker_summary_mock_mode: true
+    docker_summary_mode: "status"
+    docker_summary_display: true
+    docker_summary_write_facts: false
+    docker_summary_enable_discovery: false
+
+  tasks:
+    - name: Test docker-ansible-summary with mock data
+      ansible.builtin.include_role:
+        name: custom/docker-ansible-summary
+      vars:
+        docker_summary_debug: true
+
+    - name: Verify table display worked
+      ansible.builtin.debug:
+        msg: |
+          === MOCK MODE TEST RESULTS ===
+          Table generation successful: {{ version_summary_table_lines is defined and version_summary_table_lines | length > 0 }}
+          Number of table lines: {{ version_summary_table_lines | default([]) | length }}
+          Display conditions met: {{ (current_versions | default([]) | length > 0) and (after_versions | default([]) | length > 0) }}

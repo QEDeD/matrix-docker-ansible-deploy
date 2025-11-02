@@ -29,3 +29,7 @@ IMPLEMENTATION-SUMMARY.md
 /roles/custom/*/sed*
 /roles/custom/*/*.tmp
 /roles/custom/*/tests/
+
+# Track Docker Ansible Summary test assets
+!/roles/custom/docker-ansible-summary/tests/
+!/roles/custom/docker-ansible-summary/tests/**

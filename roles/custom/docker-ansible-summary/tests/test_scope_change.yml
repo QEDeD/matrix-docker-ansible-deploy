@@ -7,6 +7,7 @@
   gather_facts: true
   vars:
     docker_summary_write_facts: false
+    docker_summary_enable_discovery: false
     docker_summary_container_overrides:
       - name: "matrix-app"
         image: "example/matrix:1.0"

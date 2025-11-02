@@ -1,0 +1,40 @@
+---
+- name: Test History Functionality
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    view_mode: "changes"
+    version_history:
+      changes:
+        - timestamp: "2025-06-10 16:00:00"
+          user: "test-user"
+          event_type: "update"
+          changes:
+            matrix-synapse:
+              previous: "ghcr.io/matrix-org/synapse:v1.95.1"
+              current: "ghcr.io/matrix-org/synapse:v1.96.1"
+            matrix-postgres:
+              previous: "postgres:15.4-alpine"
+              current: "postgres:16.1-alpine"
+      full_history:
+        matrix-synapse:
+          version: "ghcr.io/matrix-org/synapse:v1.96.1"
+          last_updated: "2025-06-10 16:00:00"
+          updates:
+            - timestamp: "2025-06-10 16:00:00"
+              previous: "ghcr.io/matrix-org/synapse:v1.95.1"
+              current: "ghcr.io/matrix-org/synapse:v1.96.1"
+              user: "test-user"
+    docker_summary_enable_discovery: false
+    docker_summary_ansible_local_override:
+      matrix_version_history: "{{ version_history }}"
+  tasks:
+    - name: Test history task inclusion
+      ansible.builtin.include_role:
+        name: custom/docker-ansible-summary
+        tasks_from: view_history
+
+    - name: Verify history functionality works
+      ansible.builtin.debug:
+        msg: "History functionality test completed successfully"

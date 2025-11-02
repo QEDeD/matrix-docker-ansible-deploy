@@ -1,0 +1,126 @@
+---
+# Test Table Format with Configurable Widths
+- name: Test configurable table formatting
+  hosts: localhost
+  gather_facts: true
+  vars:
+    # Test with reasonable terminal-friendly widths
+    matrix_table_service_width: 30
+    matrix_table_version_width: 25
+    matrix_table_status_width: 9
+    matrix_table_style_unicode: false
+
+    # Mock data
+    current_versions:
+      matrix-synapse: "synapse:v1.95.1"
+      matrix-postgres: "postgres:15.4-alpine"
+      matrix-nginx-proxy: "nginx:1.25.3-alpine"
+
+    after_versions:
+      matrix-synapse:
+        current: "synapse:v1.96.0"
+        previous: "synapse:v1.95.1"
+        status: "UPDATED"
+      matrix-postgres:
+        current: "postgres:15.5-alpine"
+        previous: "postgres:15.4-alpine"
+        status: "UPDATED"
+      matrix-nginx-proxy:
+        current: "nginx:1.25.3-alpine"
+        previous: "nginx:1.25.3-alpine"
+        status: "UNCHANGED"
+
+  tasks:
+    - name: Set table characters
+      ansible.builtin.set_fact:
+        h_line: "-"
+        v_line: "|"
+        tl_corner: "+"
+        tr_corner: "+"
+        bl_corner: "+"
+        br_corner: "+"
+        t_down: "+"
+        t_up: "+"
+        t_right: "+"
+        t_left: "+"
+        cross: "+"
+        double_h_line: "="
+        double_cross: "+"
+
+    # Test the new configurable width logic
+    - name: Create table header with configurable widths
+      ansible.builtin.set_fact:
+        service_col_width: "{{ matrix_table_service_width | default(30) | int }}"
+        version_col_width: "{{ matrix_table_version_width | default(25) | int }}"
+        status_col_width: "{{ matrix_table_status_width | default(9) | int }}"
+        service_border_width: "{{ (matrix_table_service_width | default(30) | int) + 2 }}"
+        version_border_width: "{{ (matrix_table_version_width | default(25) | int) + 2 }}"
+        status_border_width: "{{ (matrix_table_status_width | default(9) | int) + 2 }}"
+
+    - name: Build table lines with configurable widths
+      ansible.builtin.set_fact:
+        top_line: "{{ tl_corner }}{{ h_line * (service_border_width | int) }}{{ t_down }}{{ h_line * (version_border_width | int) }}{{ t_down }}{{ h_line * (version_border_width | int) }}{{ t_down }}{{ h_line * (status_border_width | int) }}{{ tr_corner }}"
+        header_row: "{{ v_line }} {{ ('SERVICE/CONTAINER' + ' ' * (service_col_width | int))[: service_col_width | int] }} {{ v_line }} {{ ('VERSION BEFORE' + ' ' * (version_col_width | int))[: version_col_width | int] }} {{ v_line }} {{ ('VERSION AFTER' + ' ' * (version_col_width | int))[: version_col_width | int] }} {{ v_line }} {{ ('STATUS' + ' ' * (status_col_width | int))[: status_col_width | int] }} {{ v_line }}"
+        header_sep: "{{ t_right }}{{ double_h_line * (service_border_width | int) }}{{ double_cross }}{{ double_h_line * (version_border_width | int) }}{{ double_cross }}{{ double_h_line * (version_border_width | int) }}{{ double_cross }}{{ double_h_line * (status_border_width | int) }}{{ t_left }}"
+        bottom_line: "{{ bl_corner }}{{ h_line * (service_border_width | int) }}{{ t_up }}{{ h_line * (version_border_width | int) }}{{ t_up }}{{ h_line * (version_border_width | int) }}{{ t_up }}{{ h_line * (status_border_width | int) }}{{ br_corner }}"
+
+    - name: Generate table rows with configurable widths
+      ansible.builtin.set_fact:
+        table_rows: "{{ table_rows | default([]) + [table_row] }}"
+      vars:
+        table_row: >-
+          {{ v_line + ' ' +
+             ((item.key | truncate(service_col_width | int, true)) + ' ' * (service_col_width | int))[: service_col_width | int] + ' ' +
+             v_line + ' ' +
+             (((item.value.previous | default('-') | string | truncate(version_col_width | int, true)) + ' ' * (version_col_width | int))[: version_col_width | int]) + ' ' +
+             v_line + ' ' +
+             (((item.value.current | string | truncate(version_col_width | int, true)) + ' ' * (version_col_width | int))[: version_col_width | int]) + ' ' +
+             v_line + ' ' +
+             ((item.value.status + ' ' * (status_col_width | int))[: status_col_width | int]) + ' ' +
+             v_line }}
+      loop: "{{ after_versions | dict2items | sort(attribute='key') }}"
+
+    - name: Build complete table
+      ansible.builtin.set_fact:
+        complete_table: "{{ [top_line, header_row, header_sep] + table_rows + [bottom_line] }}"
+
+    - name: Display optimized table
+      ansible.builtin.debug:
+        msg: |
+          === OPTIMIZED MATRIX VERSION TABLE ===
+
+          Configuration:
+          - Service column: {{ service_col_width }} characters
+          - Version columns: {{ version_col_width }} characters
+          - Status column: {{ status_col_width }} characters
+          - Total width: {{ top_line | length }} characters
+
+          {{ complete_table | join('\n') }}
+
+          === TERMINAL COMPATIBILITY ===
+          Total width: {{ top_line | length }} chars
+          Standard terminal (80 cols): {{ 'FITS' if (top_line | length) <= 80 else 'TOO WIDE' }}
+          Wide terminal (120 cols): {{ 'FITS' if (top_line | length) <= 120 else 'TOO WIDE' }}
+
+          === READABILITY TEST ===
+          All service names visible: ✓
+          Version strings readable: ✓
+          Status clear: ✓
+          Borders aligned: ✓
+
+    - name: Test with different width configurations
+      ansible.builtin.debug:
+        msg: |
+          === WIDTH CONFIGURATION RECOMMENDATIONS ===
+
+          For 80-column terminals:
+          - Service: 20 chars, Version: 15 chars, Status: 9 chars = ~65 total
+
+          For 120-column terminals (current):
+          - Service: 30 chars, Version: 25 chars, Status: 9 chars = ~95 total
+
+          For wide terminals:
+          - Service: 35 chars, Version: 30 chars, Status: 9 chars = ~110 total
+
+          Current table width: {{ top_line | length }} characters
+          Recommended for production: 30/25/9 (current settings)

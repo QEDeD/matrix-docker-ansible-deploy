@@ -1,0 +1,47 @@
+{#
+SPDX-FileCopyrightText: 2025 MDAD project contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+{%- set service_filter = summary_service_filter | default('') -%}
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ DOCKER SERVICE VERSION HISTORY - CHANGES                                       │
+└─────────────────────────────────────────────────────────────────────────────────┘
+{% for change in version_history.changes | default([]) -%}
+{%- set ns = namespace(services=[]) -%}
+{%- for service_name, change_data in (change.changes | default({})) | dictsort -%}
+{%- if service_filter == '' or service_filter in service_name -%}
+{%- set _ = ns.services.append((service_name, change_data)) -%}
+{%- endif -%}
+{%- endfor -%}
+{%- if ns.services | length > 0 -%}
+{%- set timestamp = change.timestamp | default('Unknown') -%}
+{%- set user = change.user | default('Unknown') -%}
+{%- set event_type = change.event_type | default('update') -%}
+{%- if event_type == 'initial' %}
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ INITIAL STATE RECORDED: {{ (timestamp ~ '                                                                 ')[:65] }}│
+│ RECORDED BY: {{ (user ~ '                                                                 ')[:70] }}│
+├───────────────────────────┬───────────────────────────┬───────────────────────────┤
+│ SERVICE                   │ INITIAL VERSION           │                           │
+├───────────────────────────┼───────────────────────────┼───────────────────────────┤
+{% for service_name, change_data in ns.services %}
+│ {{ (service_name ~ '                         ')[:25] }} │ {{ ((change_data.current | string) ~ '                         ')[:25] }} │                           │
+{% endfor %}
+└───────────────────────────┴───────────────────────────┴───────────────────────────┘
+{% else %}
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ UPDATE RECORDED: {{ (timestamp ~ '                                                                ')[:66] }}│
+│ UPDATED BY: {{ (user ~ '                                                                   ')[:67] }}│
+├───────────────────────────┬───────────────────────────┬───────────────────────────┤
+│ SERVICE                   │ FROM VERSION              │ TO VERSION                │
+├───────────────────────────┼───────────────────────────┼───────────────────────────┤
+{% for service_name, change_data in ns.services %}
+{%- set prev_ver = ((change_data.previous | default('-') | string) ~ '                         ')[:25] -%}
+{%- set curr_ver = ((change_data.current | string) ~ '                         ')[:25] -%}
+│ {{ (service_name ~ '                         ')[:25] }} │ {{ prev_ver }} │ {{ curr_ver }} │
+{% endfor %}
+└───────────────────────────┴───────────────────────────┴───────────────────────────┘
+{% endif %}
+
+{%- endif %}
+{%- endfor -%}

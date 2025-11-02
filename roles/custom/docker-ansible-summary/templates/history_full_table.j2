@@ -1,0 +1,33 @@
+{#
+SPDX-FileCopyrightText: 2025 MDAD project contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+{%- set service_filter = summary_service_filter | default('') -%}
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ MATRIX VERSION HISTORY - FULL SERVICE HISTORY                                   │
+└─────────────────────────────────────────────────────────────────────────────────┘
+{%- for service_name, service_data in version_history.full_history | default({}) | dictsort -%}
+{%- if service_filter == '' or service_filter in service_name -%}
+{%- set current_version = service_data.version | default('Unknown') -%}
+{%- set last_updated = service_data.last_updated | default('Unknown') -%}
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ SERVICE: {{ (service_name ~ '                                                                     ')[:69] }}│
+│ CURRENT VERSION: {{ (current_version ~ '                                                       ')[:59] }}│
+│ LAST UPDATED: {{ (last_updated ~ '                                                           ')[:62] }}│
+{%- set updates = service_data.updates | default([]) -%}
+{%- if updates | length > 0 %}
+├─────────────────────────────┬───────────────────────┬───────────────────────────┤
+│ TIMESTAMP                   │ FROM VERSION          │ TO VERSION                │
+├─────────────────────────────┼───────────────────────┼───────────────────────────┤
+{% for update in updates -%}
+{%- set from_version = ((update.previous | default('-') | string) ~ '                     ')[:21] -%}
+{%- set to_version = ((update.current | string) ~ '                         ')[:25] -%}
+│ {{ ((update.timestamp | default('Unknown')) ~ '                           ')[:27] }} │ {{ from_version }} │ {{ to_version }} │
+{% endfor -%}
+{% else %}
+│ No version changes recorded for this service.                                   │
+{% endif %}
+└─────────────────────────────┴───────────────────────┴───────────────────────────┘
+
+{%- endif %}
+{%- endfor -%}

@@ -1,0 +1,10 @@
+---
+- name: Validate docker-ansible-summary role syntax
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Include docker-ansible-summary tasks
+      ansible.builtin.include_tasks: tasks/main.yml
+      vars:
+        docker_summary_write_facts: false
+        docker_summary_enable_discovery: false

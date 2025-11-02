@@ -17,17 +17,9 @@
   ansible.builtin.set_fact:
     summary_local_facts: "{{ (docker_summary_ansible_local_override if docker_summary_ansible_local_override is not none else ansible_local) | default({}) }}"
 
-- name: Read version history if it exists
+- name: Load version history snapshot
   ansible.builtin.set_fact:
-    version_history: "{{ summary_local_facts[summary_history_fact_key] | default({'changes': [], 'full_history': {}}) }}"
-  when:
-    - summary_local_facts is mapping
-    - summary_history_fact_key in summary_local_facts
-
-- name: Initialize version history if not exists
-  ansible.builtin.set_fact:
-    version_history: {"last_versions": {}, "changes": [], "full_history": {}}
-  when: version_history is not defined
+    version_history: "{{ summary_local_facts | docker_summary_fact(summary_history_fact_key) | docker_summary_ensure_history }}"
 
 # Apply date-based retention cleanup when reading history
 - name: Calculate cutoff date for retention cleanup (Linux)
@@ -91,108 +83,57 @@
     summary_service_filter: "{{ summary_service_filter }}"
 
 # Display Changes History Table
-- name: Display changes history header
-  ansible.builtin.shell: |
-    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
-    echo "│ DOCKER SERVICE VERSION HISTORY - CHANGES                                       │"
-    echo "└─────────────────────────────────────────────────────────────────────────────────┘"
-  changed_when: false
-  when: view_mode == 'changes'
-
 - name: Display no changes message
-  ansible.builtin.shell: |
-    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
-    echo "│ No version changes have been recorded yet.                                      │"
-    echo "│ Run the playbook with container updates to generate history.                    │"
-    echo "└─────────────────────────────────────────────────────────────────────────────────┘"
-  changed_when: false
-  when: view_mode == 'changes' and (version_history.changes | default([]) | length == 0)
+  ansible.builtin.debug:
+    msg:
+      - "┌─────────────────────────────────────────────────────────────────────────────────┐"
+      - "│ DOCKER SERVICE VERSION HISTORY - CHANGES                                       │"
+      - "├─────────────────────────────────────────────────────────────────────────────────┤"
+      - "│ No version changes have been recorded yet.                                      │"
+      - "│ Run the playbook with container updates to generate history.                    │"
+      - "└─────────────────────────────────────────────────────────────────────────────────┘"
+  when:
+    - view_mode == 'changes'
+    - version_history.changes | default([]) | length == 0
 
-- name: Display changes history records
-  ansible.builtin.shell: |
-    set -o pipefail
-    {% for change_record in version_history.changes %}
-    {% set service_filter = summary_service_filter | default('') %}
-    {% if change_record.event_type is defined and change_record.event_type == 'initial' %}
-    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
-    echo "│ INITIAL STATE RECORDED: {{ (change_record.timestamp + (' ' * 48))[:48] }} │"
-    echo "│ RECORDED BY: {{ ((change_record.user | default('Unknown')) + (' ' * 61))[:61] }} │"
-    echo "├───────────────────────────┬───────────────────────────┬───────────────────────────┤"
-    echo "│ SERVICE                   │ INITIAL VERSION           │                           │"
-    echo "├───────────────────────────┼───────────────────────────┼───────────────────────────┤"
-    {% for service_name, change in change_record.changes.items() | sort %}
-    {% if service_filter == '' or service_filter in service_name %}
-    echo "│ {{ (service_name + (' ' * 25))[:25] }} │ {{ ((change.current | string) + (' ' * 25))[:25] }} │                           │"
-    {% endif %}
-    {% endfor %}
-    echo "└───────────────────────────┴───────────────────────────┴───────────────────────────┘"
-    {% else %}
-    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
-    echo "│ UPDATE RECORDED: {{ (change_record.timestamp + (' ' * 53))[:53] }} │"
-    echo "│ UPDATED BY: {{ ((change_record.user | default('Unknown')) + (' ' * 60))[:60] }} │"
-    echo "├───────────────────────────┬───────────────────────────┬───────────────────────────┤"
-    echo "│ SERVICE                   │ FROM VERSION              │ TO VERSION                │"
-    echo "├───────────────────────────┼───────────────────────────┼───────────────────────────┤"
-    {% for service_name, change in change_record.changes.items() | sort %}
-    {% if service_filter == '' or service_filter in service_name %}
-    {% set prev_ver = ((change.previous | default('-') | string) + (' ' * 25))[:25] %}
-    {% set curr_ver = ((change.current | string) + (' ' * 25))[:25] %}
-    echo "│ {{ (service_name + (' ' * 25))[:25] }} │ {{ prev_ver }} │ {{ curr_ver }} │"
-    {% endif %}
-    {% endfor %}
-    echo "└───────────────────────────┴───────────────────────────┴───────────────────────────┘"
-    {% endif %}
-    {% endfor %}
-  args:
-    executable: /bin/bash
-  changed_when: false
-  when: view_mode == 'changes' and (version_history.changes | default([]) | length > 0)
+- name: Prepare changes history table
+  ansible.builtin.set_fact:
+    history_changes_lines: "{{ lookup('template', 'history_changes_table.j2').split('\n') }}"
+  when:
+    - view_mode == 'changes'
+    - version_history.changes | default([]) | length > 0
+
+- name: Display changes history table
+  ansible.builtin.debug:
+    msg: "{{ history_changes_lines }}"
+  when:
+    - view_mode == 'changes'
+    - version_history.changes | default([]) | length > 0
 
 # Display Full History Table
-- name: Display full history header
-  ansible.builtin.shell: |
-    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
-    echo "│ MATRIX VERSION HISTORY - FULL SERVICE HISTORY                                   │"
-    echo "└─────────────────────────────────────────────────────────────────────────────────┘"
-  changed_when: false
-  when: view_mode == 'full'
-
 - name: Display no history message
-  ansible.builtin.shell: |
-    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
-    echo "│ No version history has been recorded yet.                                       │"
-    echo "│ Run the playbook with container updates to generate history.                    │"
-    echo "└─────────────────────────────────────────────────────────────────────────────────┘"
-  changed_when: false
-  when: view_mode == 'full' and (version_history.full_history | default({}) | length == 0)
+  ansible.builtin.debug:
+    msg:
+      - "┌─────────────────────────────────────────────────────────────────────────────────┐"
+      - "│ MATRIX VERSION HISTORY - FULL SERVICE HISTORY                                   │"
+      - "├─────────────────────────────────────────────────────────────────────────────────┤"
+      - "│ No version history has been recorded yet.                                       │"
+      - "│ Run the playbook with container updates to generate history.                    │"
+      - "└─────────────────────────────────────────────────────────────────────────────────┘"
+  when:
+    - view_mode == 'full'
+    - version_history.full_history | default({}) | length == 0
 
-- name: Display full history for each service
-  ansible.builtin.shell: |
-    set -o pipefail
-    {% set service_filter = summary_service_filter | default('') %}
-    {% for service_name, service_data in version_history.full_history.items() | sort %}
-    {% if service_filter == '' or service_filter in service_name %}
-    echo "┌─────────────────────────────────────────────────────────────────────────────────┐"
-    echo "│ SERVICE: {{ (service_name + (' ' * 69))[:69] }} │"
-    echo "│ CURRENT VERSION: {{ ((service_data.version | default('Unknown')) + (' ' * 59))[:59] }} │"
-    echo "│ LAST UPDATED: {{ ((service_data.last_updated | default('Unknown')) + (' ' * 62))[:62] }} │"
-    {% if service_data.updates | default([]) | length > 0 %}
-    echo "├─────────────────────────────┬───────────────────────┬───────────────────────────┤"
-    echo "│ TIMESTAMP                   │ FROM VERSION          │ TO VERSION                │"
-    echo "├─────────────────────────────┼───────────────────────┼───────────────────────────┤"
-    {% for update in service_data.updates | default([]) %}
-    {% set prev_ver = ((update.previous | default('-') | string) + (' ' * 21))[:21] %}
-    {% set curr_ver = ((update.current | string) + (' ' * 25))[:25] %}
-    echo "│ {{ (update.timestamp + (' ' * 27))[:27] }} │ {{ prev_ver }} │ {{ curr_ver }} │"
-    {% endfor %}
-    {% else %}
-    echo "│ No version changes recorded for this service.                                   │"
-    {% endif %}
-    echo "└─────────────────────────────┴───────────────────────┴───────────────────────────┘"
-    echo ""
-    {% endif %}
-    {% endfor %}
-  args:
-    executable: /bin/bash
-  changed_when: false
-  when: view_mode == 'full' and (version_history.full_history | default({}) | length > 0)
+- name: Prepare full history table
+  ansible.builtin.set_fact:
+    history_full_lines: "{{ lookup('template', 'history_full_table.j2').split('\n') }}"
+  when:
+    - view_mode == 'full'
+    - version_history.full_history | default({}) | length > 0
+
+- name: Display full history table
+  ansible.builtin.debug:
+    msg: "{{ history_full_lines }}"
+  when:
+    - view_mode == 'full'
+    - version_history.full_history | default({}) | length > 0

@@ -1,0 +1,15 @@
+---
+- name: Test docker-ansible-summary role without custom ljust
+  hosts: localhost
+  gather_facts: true
+  vars:
+    docker_summary_scope: "test-*"
+    docker_summary_display: true
+    docker_summary_write_facts: false
+    docker_summary_enable_discovery: false
+  tasks:
+    - name: Test role inclusion
+      ansible.builtin.include_role:
+        name: custom/docker-ansible-summary
+      vars:
+        docker_summary_table_service_width: 30

@@ -1,0 +1,98 @@
+---
+- name: Test summary table notes and auto width
+  hosts: localhost
+  gather_facts: true
+  vars:
+    docker_summary_mock_mode: true
+    docker_summary_mode: changes
+    docker_summary_write_facts: false
+    docker_summary_enable_discovery: false
+    docker_summary_table_show_notes: true
+    docker_summary_table_auto_width: true
+    docker_summary_table_notes_include_state: true
+    docker_summary_scope: "app-*"
+    docker_summary_container_overrides:
+      - name: app-api
+        image: "registry.example.com/app-api:v1.96.0"
+        inspect:
+          State:
+            Status: running
+            Running: true
+            RestartCount: 2
+      - name: app-postgres
+        image: "postgres:15.5-alpine"
+        inspect:
+          State:
+            Status: running
+            Running: true
+            RestartCount: 0
+      - name: app-proxy
+        image: "nginx:1.25.3-alpine"
+        inspect:
+          State:
+            Status: running
+            Running: true
+            RestartCount: 0
+      - name: app-cache
+        image: "redis:7.2.4-alpine"
+        inspect:
+          State:
+            Status: running
+            Running: true
+            RestartCount: 1
+      - name: app-turn
+        image: "coturn:4.6.2-r3"
+        inspect:
+          State:
+            Status: stopped
+            Running: false
+            ExitCode: 1
+            RestartCount: 0
+    docker_summary_ansible_local_override:
+      matrix_versions:
+        app-api: "registry.example.com/app-api:v1.95.1"
+        app-postgres: "postgres:15.4-alpine"
+        app-proxy: "nginx:1.25.3-alpine"
+        app-cache: "redis:7.2.3-alpine"
+        app-turn: "coturn:4.6.2-r3"
+      matrix_version_history:
+        last_versions:
+          app-api: "registry.example.com/app-api:v1.95.1"
+          app-postgres: "postgres:15.4-alpine"
+          app-proxy: "nginx:1.25.3-alpine"
+          app-cache: "redis:7.2.3-alpine"
+          app-turn: "coturn:4.6.2-r3"
+        changes: []
+        full_history: {}
+        last_metadata: {}
+  tasks:
+    - name: Load mock data
+      ansible.builtin.include_tasks: tasks/mock_mode.yml
+
+    - name: Render summary table with notes
+      ansible.builtin.include_tasks: tasks/display_summary.yml
+
+    - name: Verify table output captured
+      ansible.builtin.assert:
+        that:
+          - version_summary_table_lines is defined
+          - version_summary_table_lines | length > 0
+        fail_msg: "version_summary_table_lines not populated"
+
+    - name: Consolidate table lines
+      ansible.builtin.set_fact:
+        table_text: "{{ version_summary_table_lines | join('\n') }}"
+        table_text_compact: "{{ version_summary_table_lines | join(' ') | regex_replace('\\s+', ' ') }}"
+
+    - name: Show compact table text (debug)
+      ansible.builtin.debug:
+        var: table_text_compact
+
+    - name: Assert notes column rendered
+      ansible.builtin.assert:
+        that:
+          - "'NOTES' in table_text_compact"
+          - "'Version updated' in table_text_compact"
+          - "'restarts: 2' in table_text_compact"
+        fail_msg: "Notes column or expected note text missing from summary table"
+        success_msg: "Notes column detected with change-type notes"
