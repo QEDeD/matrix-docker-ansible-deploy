@@ -28,12 +28,6 @@ cd /home/ansible-admin/matrix-docker-ansible-deploy/roles/custom/docker-ansible-
 
 If `ansible-lint` warns about PATH alterations, it is safe to ignore so long as the run succeeds.
 
-Before linting for the first time (or after pulling new dependencies) install the required collections:
-
-```bash
-ansible-galaxy collection install -r collections/requirements.yml
-```
-
 Additional lint helpers:
 
 ```bash
