@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 ---
 # Debug version of Docker Ansible Summary Role for Production Troubleshooting
 # This adds extensive debug output to identify exactly where the logic fails

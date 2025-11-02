@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2025 MDAD project contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # Docker Ansible Summary – Development Journal
 
 This journal captures the evolving goals for the Docker Ansible Summary (DAS) role test assets. It replaces the legacy Matrix Version Summary notes and reflects the current helper-driven implementation.
@@ -45,4 +50,4 @@ This journal captures the evolving goals for the Docker Ansible Summary (DAS) ro
 
 - Expand regression tests around restart counts and history filtering once Docker access is available.
 - Consider adding molecule-style integration once the role stabilises to exercise remote hosts end-to-end.
-- Review `TODO.md` regularly to keep follow-up ideas triaged (e.g., template ergonomics, diagnostics). 
+- Review `TODO.md` regularly to keep follow-up ideas triaged (e.g., template ergonomics, diagnostics).

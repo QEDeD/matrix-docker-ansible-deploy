@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # Docker Ansible Summary – Quick Validation
 # Runs a focused subset of linting and regression checks using the project virtualenv.
 

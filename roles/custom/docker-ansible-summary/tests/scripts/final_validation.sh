@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 # Docker Ansible Summary – Final Validation Shortcut
 # Runs the master suite and surfaces the log location.
 

@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2025 MDAD project contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # Docker Ansible Summary – Test Suite Documentation
 
 This directory contains the regression assets for the Docker Ansible Summary (DAS) role. The suite is designed to run entirely from the project virtualenv without Docker access, relying on the role's mock helpers and container overrides.

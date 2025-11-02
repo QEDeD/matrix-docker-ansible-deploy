@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 ---
 - name: Debug Docker Ansible Summary
   hosts: "{{ target_host | default('matrix.thewrt.com') }}"

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 ---
 # Direct test of table display fix
 - name: Direct table display test

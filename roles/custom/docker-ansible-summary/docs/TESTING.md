@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2025 MDAD project contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # Docker Ansible Summary – Testing Guide
 
 This guide describes the supported test workflows for the role, including required tooling, recommended commands, and troubleshooting tips.

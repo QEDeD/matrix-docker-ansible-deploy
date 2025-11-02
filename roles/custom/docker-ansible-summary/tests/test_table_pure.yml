@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 ---
 # Pure Table Format Test - No Docker dependency
 - name: Test pure table formatting

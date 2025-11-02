@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: 2025 MDAD project contributors
 # SPDX-License-Identifier: AGPL-3.0-or-later
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
 - name: Unit test docker_scope_* filters
@@ -7,9 +9,9 @@
   gather_facts: false
   vars:
     sample_containers:
-      - { name: "matrix-app", image: "matrix:1.0" }
-      - { name: "mash-app", image: "mash:1.0" }
-      - { name: "matrix-sidecar", image: "sidecar:1.0" }
+      - {name: "matrix-app", image: "matrix:1.0"}
+      - {name: "mash-app", image: "mash:1.0"}
+      - {name: "matrix-sidecar", image: "sidecar:1.0"}
   tasks:
     - name: Load role to register filter plugins
       ansible.builtin.include_role:

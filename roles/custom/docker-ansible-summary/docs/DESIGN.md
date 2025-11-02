@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2025 MDAD project contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # Docker Ansible Summary – Design Overview
 
 This document captures the current architecture of the role, the rationale behind key decisions, and expectations for future changes. Update it whenever the role’s structure or intent shifts.

@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2025 MDAD project contributors
+SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+
 # Docker Ansible Summary – Worklog
 
 This log tracks the notable maintenance and refactor tasks performed on the role. Keep entries reverse-chronological and include enough detail so future contributors can follow the context.
