@@ -1,3 +1,69 @@
+# 2025-11-09
+
+## matrix-appservice-webhooks has been removed from the playbook
+
+[matrix-appservice-webhooks](./docs/configuring-playbook-bridge-appservice-webhooks.md) has been removed from the playbook, as it has been deprecated since more than several years.
+
+The playbook will let you know if you're using any `matrix_appservice_webhooks_*` variables. You'll need to remove them from `vars.yml` and potentially [uninstall the bridge manually](./docs/configuring-playbook-bridge-appservice-webhooks.md#uninstalling-the-bridge-manually).
+
+## mautrix-facebook and mautrix-instagram have been removed from the playbook
+
+[mautrix-facebook](./docs/configuring-playbook-bridge-mautrix-facebook.md) and [mautrix-instagram](./docs/configuring-playbook-bridge-mautrix-instagram.md) have been removed from the playbook, as they have been deprecated in favor of the [mautrix-meta](https://github.com/mautrix/meta) Messenger/Instagram bridge, integrated to the playbook at [2024-02-19](#2024-02-19).
+
+The playbook will let you know if you're using any variables for those bridges:
+
+- `matrix_mautrix_facebook_*`
+- `matrix_mautrix_instagram_*`
+
+You'll need to remove them from `vars.yml` and potentially uninstall them manually. Consult pages below for details:
+
+- [Instruction for mautrix-facebook](./docs/configuring-playbook-bridge-mautrix-facebook.md#uninstalling-the-bridge-manually)
+- [Instruction for mautrix-instagram](./docs/configuring-playbook-bridge-mautrix-instagram.md#uninstalling-the-bridge-manually)
+
+# 2025-11-08
+
+## MatrixZulipBridge support
+
+Thanks to [Suguru Hirahara](https://github.com/luixxiul), the playbook now supports the [GearKite/MatrixZulipBridge](https://github.com/GearKite/MatrixZulipBridg) bridge for bridging Matrix to [Zulip](https://zulip.com/).
+
+To learn more, see our [Setting up Zulip bridging](docs/configuring-playbook-bridge-zulip.md) documentation page.
+
+# 2025-11-07
+
+## The matrix-chatgpt-bot has been removed from the playbook
+
+The [matrix-bot-chatgpt](./docs/configuring-playbook-bot-chatgpt.md) has been removed from the playbook, as it has been deprecated since September 2024.
+
+The playbook will let you know if you're using any `matrix_bot_chatgpt_*` variables. You'll need to remove them from `vars.yml` and potentially [uninstall the bot manually](./docs/configuring-playbook-bot-chatgpt.md#uninstalling-matrix-chatgpt-bot-manually).
+
+# 2025-11-05
+
+## The MX Puppet bridges for Discord, Instagram, Slack, and Twitter have been removed from the playbook
+
+The MX Puppet bridges for Discord, Instagram, Slack, and Twitter have been removed from the playbook, as they have been unmaintained for more than several years and do not support important features like authenticated media. See [this issue](https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/3867) for the context.
+
+The playbook will let you know if you're using any variables for those bridges:
+
+- `matrix_mx_puppet_discord_*`
+- `matrix_mx_puppet_instagram_*`
+- `matrix_mx_puppet_slack_*`
+- `matrix_mx_puppet_twitter_*`
+
+You'll need to remove them from `vars.yml` and potentially uninstall them manually. Consult pages below for details:
+
+- [Instruction for MX Puppet Discord bridge](./docs/configuring-playbook-bridge-mx-puppet-discord.md#uninstalling-the-bridge-manually)
+- [Instruction for MX Puppet Instagram bridge](./docs/configuring-playbook-bridge-mx-puppet-instagram.md#uninstalling-the-bridge-manually)
+- [Instruction for MX Puppet Slack bridge](./docs/configuring-playbook-bridge-mx-puppet-slack.md#uninstalling-the-bridge-manually)
+- [Instruction for MX Puppet Twitter bridge](./docs/configuring-playbook-bridge-mx-puppet-twitter.md#uninstalling-the-bridge-manually)
+
+# 2025-11-04
+
+## The Go Skype bridge has been removed from the playbook
+
+The [go-skype-bridge](./docs/configuring-playbook-bridge-go-skype-bridge.md) has been removed from the playbook, as Skype has been discontinued since the May 2025.
+
+The playbook will let you know if you're using any `matrix_go_skype_bridge_*` variables. You'll need to remove them from `vars.yml` and potentially [uninstall the bridge manually](./docs/configuring-playbook-bridge-go-skype-bridge.md#uninstalling-the-bridge-manually).
+
 # 2025-10-02
 
 ## Element Admin support
@@ -2825,7 +2891,7 @@ See our [Migrating to Element Web](docs/configuring-playbook-riot-web.md#migrati
 
 ## Steam bridging support via mx-puppet-steam
 
-Thanks to [Hugues Morisset](https://github.com/izissise)'s efforts, the playbook now supports bridging to [Steam](https://steamapp.com/) via the [mx-puppet-steam](https://github.com/icewind1991/mx-puppet-steam) bridge. See our [Setting up MX Puppet Steam bridging](docs/configuring-playbook-bridge-mx-puppet-steam.md) documentation page for getting started.
+Thanks to [Hugues Morisset](https://github.com/izissise)'s efforts, the playbook now supports bridging to [Steam](https://steamapp.com/) via the [mx-puppet-steam](https://codeberg.org/icewind/mx-puppet-steam) bridge. See our [Setting up MX Puppet Steam bridging](docs/configuring-playbook-bridge-mx-puppet-steam.md) documentation page for getting started.
 
 
 # 2020-07-01

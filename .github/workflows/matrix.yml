@@ -25,31 +25,13 @@ jobs:
       - name: Check out
         uses: actions/checkout@v5
 
-<<<<<<< HEAD
-      - name: Install Galaxy roles
-        run: ansible-galaxy install -r requirements.yml
-
-      - name: Install Galaxy collections
-        run: ansible-galaxy collection install -r collections/requirements.yml
-
       - name: Run ansible-lint
-        uses: ansible/ansible-lint@v25.9.2
-=======
-      - name: Set up Python
-        uses: actions/setup-python@v5
->>>>>>> 23a56d14a (Ensure CI installs Galaxy dependencies)
+        uses: ansible/ansible-lint@v25.11.0
         with:
-          python-version: '3.12'
-
-      - name: Install Ansible lint dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible-core ansible-lint
-          ansible-galaxy install -r requirements.yml
-          ansible-galaxy collection install -r collections/requirements.yml
-
-      - name: Run ansible-lint
-        run: ansible-lint roles/custom
+          args: "roles/custom"
+          setup_python: "true"
+          working_directory: ""
+          requirements_file: requirements.yml
   precommit:
     name: Run pre-commit
     runs-on: ubuntu-latest
