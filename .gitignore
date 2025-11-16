@@ -1,4 +1,11 @@
-/inventory
+# Ignore folders that would expose domain
+/inventory/hosts
+/inventory/host_vars/**
+!/inventory/host_vars/domain/
+!/inventory/host_vars/domain/**
+/inventory/host_vars/domain/*.bak
+/inventory/host_vars/domain/**/*.bak
+
 /roles/**/files/scratchpad
 .DS_Store
 .python-version
@@ -33,3 +40,6 @@ IMPLEMENTATION-SUMMARY.md
 # Track Docker Ansible Summary test assets
 !/roles/custom/docker-ansible-summary/tests/
 !/roles/custom/docker-ansible-summary/tests/**
+
+# ignore temp files
+.gitignore.swp
