@@ -566,9 +566,9 @@
 - name: Write current versions to fact file
   ansible.builtin.copy:
     content: "{{ current_versions | to_nice_json }}"
-    dest: "/etc/ansible/facts.d/{{ summary_versions_fact_file }}"
+    dest: "{{ docker_summary_facts_dir | default('/etc/ansible/facts.d') }}/{{ summary_versions_fact_file }}"
     mode: '0644'
-  become: true
+  become: "{{ docker_summary_write_facts_become | default(true) | bool }}"
   when:
     - docker_summary_write_facts | default(true) | bool
     - not is_status_display
@@ -576,9 +576,9 @@
 - name: Write version history to fact file
   ansible.builtin.copy:
     content: "{{ version_history | to_nice_json }}"
-    dest: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
+    dest: "{{ docker_summary_facts_dir | default('/etc/ansible/facts.d') }}/{{ summary_history_fact_file }}"
     mode: '0644'
-  become: true
+  become: "{{ docker_summary_write_facts_become | default(true) | bool }}"
   when:
     - docker_summary_write_facts | default(true) | bool
     - not is_status_display

@@ -17,6 +17,7 @@
     das_matrix_scope_pattern: "das-matrix-*"
     das_mash_scope_pattern: "das-mash-*"
     das_custom_namespace_pattern: "das-mash-netbox-*"
+    das_facts_dir: "{{ ansible_env.HOME }}/.cache/das-facts"
     das_matrix_containers:
       - name: "{{ das_matrix_api_name }}"
         image: "alpine:3.18"
@@ -63,7 +64,19 @@
         - name: Verify alternative fact filenames
           ansible.builtin.include_tasks: tasks/custom_facts.yml
           tags: ["custom-facts"]
+
+        - name: Verify fact persistence to custom directory
+          ansible.builtin.include_tasks: tasks/facts_persistence.yml
+          tags: ["custom-facts"]
       always:
         - name: Tear down Docker fixtures
           ansible.builtin.include_tasks: tasks/fixtures_down.yml
           tags: ["fixtures"]
+
+    - name: Validate Unicode table formatting with notes
+      ansible.builtin.include_tasks: tasks/unicode_notes.yml
+      tags: ["mock"]
+
+    - name: Validate notes output with custom metadata
+      ansible.builtin.include_tasks: tasks/stop_state.yml
+      tags: ["state-notes"]

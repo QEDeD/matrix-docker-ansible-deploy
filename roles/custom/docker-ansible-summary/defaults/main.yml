@@ -18,6 +18,8 @@ docker_summary_ansible_local_override: null  # Optional override for ansible_loc
 # Fact file locations
 docker_summary_versions_fact_file: "matrix_versions.fact"
 docker_summary_history_fact_file: "matrix_version_history.fact"
+docker_summary_facts_dir: "/etc/ansible/facts.d"
+docker_summary_write_facts_become: true
 
 # Table display settings
 docker_summary_table_style_unicode: false   # Set to false for ASCII-only tables (recommended for consistent display)

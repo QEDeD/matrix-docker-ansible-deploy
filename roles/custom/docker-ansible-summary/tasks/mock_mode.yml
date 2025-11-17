@@ -21,6 +21,48 @@
       app-turn: "coturn:4.6.2-r3"
   when: docker_summary_mock_mode | default(false) | bool
 
+- name: Prepare mock metadata map
+  ansible.builtin.set_fact:
+    mock_metadata_map: "{{ docker_summary_mock_metadata | default(default_mock_metadata) }}"
+  vars:
+    default_mock_metadata:
+      app-api:
+        image: "example/app-api:latest"
+        state:
+          status: "running"
+          running: true
+          restart_count: 0
+          exit_code: 0
+      app-postgres:
+        image: "example/postgres:latest"
+        state:
+          status: "running"
+          running: true
+          restart_count: 1
+          exit_code: 0
+      app-proxy:
+        image: "example/nginx:latest"
+        state:
+          status: "running"
+          running: true
+          restart_count: 0
+          exit_code: 0
+      app-cache:
+        image: "example/redis:latest"
+        state:
+          status: "running"
+          running: true
+          restart_count: 2
+          exit_code: 0
+      app-turn:
+        image: "example/coturn:latest"
+        state:
+          status: "running"
+          running: true
+          restart_count: 0
+          exit_code: 0
+  when: docker_summary_mock_mode | default(false) | bool
+
 - name: Generate mock after versions (same as current for status mode)
   vars:
     mock_status_after_versions: >-
@@ -74,4 +116,17 @@
       Generated {{ current_versions | length }} mock containers
       Mode: {{ docker_summary_mode | default('status') }}
       This allows testing table display without Docker
+  when: docker_summary_mock_mode | default(false) | bool
+
+- name: Attach mock metadata to summary entries
+  ansible.builtin.set_fact:
+    after_versions: "{{ after_versions | combine({item.key: item.value | combine({'metadata': {'current': mock_metadata_map.get(item.key, {}), 'previous': mock_metadata_map.get(item.key, {})}})}, recursive=True) }}"
+  loop: "{{ after_versions | default({}) | dict2items }}"
+  when:
+    - docker_summary_mock_mode | default(false) | bool
+    - after_versions is defined
+
+- name: Record mock metadata map
+  ansible.builtin.set_fact:
+    current_metadata_map: "{{ mock_metadata_map }}"
   when: docker_summary_mock_mode | default(false) | bool

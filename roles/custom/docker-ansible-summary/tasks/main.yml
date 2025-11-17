@@ -6,10 +6,10 @@
 
 - name: Ensure facts directory exists
   ansible.builtin.file:
-    path: "/etc/ansible/facts.d"
+    path: "{{ docker_summary_facts_dir | default('/etc/ansible/facts.d') }}"
     state: directory
     mode: '0755'
-  become: true
+  become: "{{ docker_summary_write_facts_become | default(true) | bool }}"
   tags: ["docker-ansible-summary", "setup"]
   when:
     - docker_summary_enabled | default(true) | bool

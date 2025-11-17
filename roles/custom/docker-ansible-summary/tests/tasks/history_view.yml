@@ -32,3 +32,24 @@
       - history_changes_lines is defined
       - history_changes_lines | length > 0
     fail_msg: "History view should produce a formatted table"
+
+- name: Render full history table
+  ansible.builtin.include_role:
+    name: custom/docker-ansible-summary
+  vars:
+    docker_summary_display: false
+    docker_summary_show_history: true
+    docker_summary_view_mode: full
+    docker_summary_enable_discovery: false
+    docker_summary_table_style_unicode: false
+    docker_summary_write_facts: false
+    docker_summary_ansible_local_override:
+      matrix_versions: "{{ das_matrix_versions_updated }}"
+      matrix_version_history: "{{ das_matrix_history_updated }}"
+
+- name: Assert full history output exists
+  ansible.builtin.assert:
+    that:
+      - history_full_lines is defined
+      - history_full_lines | length > 0
+    fail_msg: "Full history view should display per-service history"
