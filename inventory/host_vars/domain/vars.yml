@@ -1,6 +1,5 @@
 # SPDX-FileCopyrightText: 2025 MDAD project contributors
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# Test
 ---
 
 ########################################################################
@@ -53,6 +52,120 @@ matrix_static_files_file_matrix_support_property_m_contacts:
 ########################################################################
 #                                                                      #
 # /Matrix                                                              #
+#                                                                      #
+########################################################################
+
+########################################################################
+#                                                                      #
+# Synapse & Element                                                    #
+#                                                                      #
+########################################################################
+
+# Workers
+
+matrix_synapse_workers_preset: one-of-each
+
+# Element
+
+# matrix_client_element_enabled: false
+
+# Serve base domain
+
+matrix_static_files_container_labels_base_domain_enabled: true
+
+# Synapse Admin
+
+matrix_synapse_admin_enabled: true
+
+matrix_synapse_ext_password_provider_shared_secret_auth_enabled: true
+matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{ matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret }}"
+
+# Synapse Stats
+matrix_synapse_usage_exporter_enabled: true
+
+# (Optional) Expose endpoint if you want to collect statistics from outside (from other homeservers).
+# If enabled, synapse-usage-exporter will be exposed publicly at `matrix.DOMAIN/report-usage-stats/push`.
+# When collecting usage statistics for Synapse running on the same host, you don't need to enable this.
+# You can adjust the hostname and path via `matrix_synapse_usage_exporter_hostname` and `matrix_synapse_usage_exporter_path_prefix`.
+# matrix_synapse_usage_exporter_proxying_enabled: true
+
+# Element Call
+matrix_element_call_enabled: false
+matrix_rtc_enabled: true
+
+########################################################################
+#                                                                      #
+# /Synapse & Element                                                   #
+#                                                                      #
+########################################################################
+
+########################################################################
+#                                                                      #
+# Coturn                                                               #
+#                                                                      #
+########################################################################
+
+matrix_coturn_enabled: true
+
+matrix_coturn_container_network: "matrix-coturn"
+
+# matrix_coturn_container_network: host
+# 09/03/2023 - added, 04/02/2024 - commented out
+
+matrix_coturn_turn_external_ip_address: ""
+
+matrix_coturn_denied_peer_ips:
+  - 0.0.0.0-0.255.255.255
+  # - 10.0.0.0-10.255.255.255
+  - 100.64.0.0-100.127.255.255
+  - 127.0.0.0-127.255.255.255
+  - 169.254.0.0-169.254.255.255
+  - 172.16.0.0-172.31.255.255
+  - 192.0.0.0-192.0.0.255
+  - 192.0.2.0-192.0.2.255
+  - 192.88.99.0-192.88.99.255
+  - 192.168.0.0-192.168.255.255
+  - 198.18.0.0-198.19.255.255
+  - 198.51.100.0-198.51.100.255
+  - 203.0.113.0-203.0.113.255
+  - 240.0.0.0-255.255.255.255
+  - ::1
+  - 64:ff9b::-64:ff9b::ffff:ffff
+  - ::ffff:0.0.0.0-::ffff:255.255.255.255
+  - 100::-100::ffff:ffff:ffff:ffff
+  - 2001::-2001:1ff:ffff:ffff:ffff:ffff:ffff:ffff
+  - 2002::-2002:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+  - fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+  - fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+
+########################################################################
+#                                                                      #
+# /Coturn                                                              #
+#                                                                      #
+########################################################################
+
+########################################################################
+#                                                                      #
+# Bridges                                                              #
+#                                                                      #
+########################################################################
+
+matrix_bridges_encryption_enabled: true
+matrix_bridges_encryption_default: true
+matrix_appservice_double_puppet_enabled: true
+
+# Signal bridge
+matrix_mautrix_signal_enabled: true
+
+# WhatsApp bridge
+matrix_mautrix_whatsapp_enabled: true
+
+# Meta Messenger bridge
+matrix_mautrix_meta_messenger_enabled: false
+
+########################################################################
+#                                                                      #
+# /Bridges                                                             #
 #                                                                      #
 ########################################################################
 
@@ -218,6 +331,13 @@ grafana_enabled: true
 
 grafana_anonymous_access: false
 
+# This has no relation to your Matrix user id. It can be any username you'd like.
+# Changing the username subsequently won't work.
+grafana_default_admin_user: "{{ admin_user_email }}"
+
+# Changing the password subsequently won't work.
+grafana_default_admin_password: "{{ grafana_default_admin_password }}"
+
 ########################################################################
 #                                                                      #
 # /Prometheus & Grafana                                                #
@@ -255,123 +375,5 @@ exim_relay_relay_auth_password: "{{ vault_exim_relay_relay_auth_password }}"
 ########################################################################
 #                                                                      #
 # /exim                                                                #
-#                                                                      #
-########################################################################
-
-########################################################################
-#                                                                      #
-# Coturn                                                               #
-#                                                                      #
-########################################################################
-
-matrix_coturn_enabled: true
-
-matrix_coturn_container_network: "matrix-coturn"
-
-# matrix_coturn_container_network: host
-# 09/03/2023 - added, 04/02/2024 - commented out
-
-matrix_coturn_turn_external_ip_address: ""
-
-matrix_coturn_denied_peer_ips:
-  - 0.0.0.0-0.255.255.255
-  # - 10.0.0.0-10.255.255.255
-  - 100.64.0.0-100.127.255.255
-  - 127.0.0.0-127.255.255.255
-  - 169.254.0.0-169.254.255.255
-  - 172.16.0.0-172.31.255.255
-  - 192.0.0.0-192.0.0.255
-  - 192.0.2.0-192.0.2.255
-  - 192.88.99.0-192.88.99.255
-  - 192.168.0.0-192.168.255.255
-  - 198.18.0.0-198.19.255.255
-  - 198.51.100.0-198.51.100.255
-  - 203.0.113.0-203.0.113.255
-  - 240.0.0.0-255.255.255.255
-  - ::1
-  - 64:ff9b::-64:ff9b::ffff:ffff
-  - ::ffff:0.0.0.0-::ffff:255.255.255.255
-  - 100::-100::ffff:ffff:ffff:ffff
-  - 2001::-2001:1ff:ffff:ffff:ffff:ffff:ffff:ffff
-  - 2002::-2002:ffff:ffff:ffff:ffff:ffff:ffff:ffff
-  - fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
-  - fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
-
-########################################################################
-#                                                                      #
-# /Coturn                                                              #
-#                                                                      #
-########################################################################
-
-# This has no relation to your Matrix user id. It can be any username you'd like.
-# Changing the username subsequently won't work.
-grafana_default_admin_user: "{{ admin_user_email }}"
-
-# Changing the password subsequently won't work.
-grafana_default_admin_password: "{{ grafana_default_admin_password }}"
-
-# Workers
-
-matrix_synapse_workers_preset: one-of-each
-
-# Added 13-06-2023 after workers started causing issues
-# Commented out again 22-10-2023
-
-# postgres_process_extra_arguments: [
-#   "-c 'max_connections=200'"
-# ]
-
-# Element
-
-# matrix_client_element_enabled: false
-
-# Serve base domain
-
-matrix_static_files_container_labels_base_domain_enabled: true
-
-# Synapse Admin
-
-matrix_synapse_admin_enabled: true
-
-matrix_synapse_ext_password_provider_shared_secret_auth_enabled: true
-matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{ matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret }}"
-
-# Element Call
-matrix_element_call_enabled: false
-matrix_rtc_enabled: true
-
-# Synapse Stats
-matrix_synapse_usage_exporter_enabled: true
-
-
-# (Optional) Expose endpoint if you want to collect statistics from outside (from other homeservers).
-# If enabled, synapse-usage-exporter will be exposed publicly at `matrix.DOMAIN/report-usage-stats/push`.
-# When collecting usage statistics for Synapse running on the same host, you don't need to enable this.
-# You can adjust the hostname and path via `matrix_synapse_usage_exporter_hostname` and `matrix_synapse_usage_exporter_path_prefix`.
-# matrix_synapse_usage_exporter_proxying_enabled: true
-
-
-########################################################################
-#                                                                      #
-# Bridges                                                              #
-#                                                                      #
-########################################################################
-
-matrix_bridges_encryption_enabled: true
-matrix_bridges_encryption_default: true
-matrix_appservice_double_puppet_enabled: true
-
-# Signal bridge
-matrix_mautrix_signal_enabled: true
-
-# WhatsApp bridge
-matrix_mautrix_whatsapp_enabled: true
-
-# Meta Messenger bridge
-matrix_mautrix_meta_messenger_enabled: false
-
-########################################################################
-#                                                                      #
-# /Bridges                                                             #
 #                                                                      #
 ########################################################################
