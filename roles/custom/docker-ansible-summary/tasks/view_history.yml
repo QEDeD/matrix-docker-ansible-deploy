@@ -69,7 +69,9 @@
       {{ version_history | combine({'full_history': version_history.full_history | default({}) |
          combine({item.key: item.value | combine({'updates': item.value.updates | default([]) |
          rejectattr('timestamp', 'lt', retention_cutoff_date) | list})}, recursive=true)}) }}
-  with_dict: "{{ version_history.full_history | default({}) }}"
+  loop: "{{ version_history.full_history | default({}) | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
   when:
     - retention_cutoff_date is defined
     - retention_cutoff_date != 'null'

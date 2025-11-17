@@ -35,7 +35,7 @@
     - docker_summary_display | default(true) | bool
 
 - name: View version history
-  ansible.builtin.import_tasks: view_history.yml
+  ansible.builtin.include_tasks: view_history.yml
   tags: ["docker-ansible-summary", "version_history"]
   when:
     - docker_summary_enabled | default(true) | bool

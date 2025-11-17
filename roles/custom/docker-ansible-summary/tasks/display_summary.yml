@@ -554,16 +554,16 @@
 
 # Display table using debug for visible output
 - name: Display formatted table
-  ansible.builtin.debug:
-    msg: "{{ version_summary_table_text }}"
+  docker_summary_display:
+    text: "{{ version_summary_table_text }}"
   when:
     - current_versions | length > 0
     - after_versions | length > 0
 
 # Display empty message if no containers found
 - name: Display empty table message
-  ansible.builtin.debug:
-    msg: "Docker Ansible Summary: no containers matched scope {{ (summary_scope_patterns_clean | length > 0) | ternary(summary_scope_patterns_clean | join(', '), 'all') }}."
+  docker_summary_display:
+    text: "Docker Ansible Summary: no containers matched scope {{ (summary_scope_patterns_clean | length > 0) | ternary(summary_scope_patterns_clean | join(', '), 'all') }}."
   when: current_versions | length == 0 or after_versions | length == 0
 
 # Write facts to filesystem
