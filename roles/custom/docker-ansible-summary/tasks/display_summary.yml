@@ -38,18 +38,25 @@
   ansible.builtin.set_fact:
     status_check_mode: >-
       {{
-        ansible_run_tags is defined and
-        (ansible_run_tags | length == 1) and
-        ((ansible_run_tags | first) == 'docker-ansible-summary')
+        (
+          ansible_run_tags is defined and
+          (ansible_run_tags | length == 1) and
+          ((ansible_run_tags | first) == 'docker-ansible-summary')
+        )
+        or
+        (docker_summary_mode | default('changes')) == 'status'
       }}
+    status_mode_requested: "{{ (docker_summary_mode | default('changes')) == 'status' }}"
 
 - name: Debug execution context
   ansible.builtin.debug:
     msg: |
       ansible_run_tags: {{ ansible_run_tags | default('undefined') }}
       status_check_mode: {{ status_check_mode }}
+      status_mode_requested: {{ status_mode_requested | default(false) }}
       current_versions length: {{ current_versions | default({}) | length }}
       after_versions length: {{ after_versions | default({}) | length }}
+    verbosity: 1
 
 - name: Skip version summary display if feature disabled
   ansible.builtin.meta: end_play
@@ -142,8 +149,8 @@
 # Initialize data structures
 - name: Process current versions
   ansible.builtin.set_fact:
-    current_versions: {}
-    after_versions: {}
+    current_versions: "{{ current_versions | default({}) }}"
+    after_versions: "{{ after_versions | default({}) }}"
 
 - name: Resolve cached local facts
   ansible.builtin.set_fact:
@@ -223,6 +230,7 @@
 - name: Debug after_versions after status mode building
   ansible.builtin.debug:
     msg: "after_versions after status mode: {{ after_versions | length }} items"
+    verbosity: 1
   when:
     - current_versions | length > 0
     - status_check_mode | default(false) | bool
@@ -475,6 +483,7 @@
       {% else %}
       Warning: Could not calculate retention cutoff date. Using all history entries.
       {% endif %}
+    verbosity: 1
   when:
     - summary_retention_days | int > 0
     - not is_status_display
@@ -528,15 +537,17 @@
   when: after_versions | length > 0
 
 - name: Render summary table
+  vars:
+    rendered_table_text: "{{ lookup('template', 'summary_table.j2') | trim }}"
   ansible.builtin.set_fact:
-    version_summary_table_lines: "{{ lookup('template', 'summary_table.j2').split('
-') }}"
+    version_summary_table_text: "{{ rendered_table_text }}"
+    version_summary_table_lines: "{{ rendered_table_text.split('\n') }}"
   when: after_versions | length > 0
 
 # Display table using debug for visible output
 - name: Display formatted table
   ansible.builtin.debug:
-    msg: "{{ version_summary_table_lines }}"
+    msg: "{{ version_summary_table_text }}"
   when:
     - current_versions | length > 0
     - after_versions | length > 0
@@ -544,13 +555,11 @@
 # Display empty message if no containers found
 - name: Display empty table message
   ansible.builtin.debug:
-    msg: >-
-      {{ ['DOCKER SERVICE VERSION CHANGES - ' + ansible_date_time.iso8601, '',
-         'No containers matched docker_summary_scope (' +
-         ((summary_scope_patterns_clean | length > 0)
-            | ternary(summary_scope_patterns_clean | join(', '), 'all')) + '). ' +
-         ('In status check mode - showing current state only.' if is_status_display
-          else 'Adjust the scope or start services to see version information.')] }}
+    msg: |-
+      DOCKER SERVICE VERSION CHANGES - {{ ansible_date_time.iso8601 }}
+
+      No containers matched docker_summary_scope ({{ (summary_scope_patterns_clean | length > 0) | ternary(summary_scope_patterns_clean | join(', '), 'all') }}).
+      {{ 'In status check mode - showing current state only.' if is_status_display else 'Adjust the scope or start services to see version information.' }}
   when: current_versions | length == 0 or after_versions | length == 0
 
 # Write facts to filesystem

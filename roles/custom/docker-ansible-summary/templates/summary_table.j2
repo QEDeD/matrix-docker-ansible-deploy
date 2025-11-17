@@ -89,10 +89,10 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   {% set data_defaults = data_defaults + [''] %}
 {% endif %}
 
-{{- 'DOCKER SERVICE VERSION CHANGES - ' ~ ansible_date_time.iso8601 }}
-{{- render_border(chars.tl, chars.t_down, chars.tr, column_widths, chars.h) }}
-{{- render_row(header_values, column_widths, chars, None, ellipsis_token) }}
-{{- render_border(chars.t_right, chars.double_cross, chars.t_left, column_widths, chars.double_h) }}
+{{- 'DOCKER SERVICE VERSION CHANGES - ' ~ ansible_date_time.iso8601 ~ '\n' -}}
+{{- render_border(chars.tl, chars.t_down, chars.tr, column_widths, chars.h) ~ '\n' -}}
+{{- render_row(header_values, column_widths, chars, None, ellipsis_token) ~ '\n' -}}
+{{- render_border(chars.t_right, chars.double_cross, chars.t_left, column_widths, chars.double_h) ~ '\n' -}}
 {% for key, entry in after_versions | dictsort -%}
   {% set row_values = [
     key,
@@ -103,16 +103,16 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   {% if show_notes %}
     {% set row_values = row_values + [entry.notes | default('', true)] %}
   {% endif %}
-  {{- render_row(row_values, column_widths, chars, data_defaults, ellipsis_token) }}
+  {{- render_row(row_values, column_widths, chars, data_defaults, ellipsis_token) ~ '\n' -}}
 {% endfor -%}
-{{- render_border(chars.bl, chars.t_up, chars.br, column_widths, chars.h) }}
-{{- 'Total services listed: ' ~ (after_versions | length) ~ ' (active: ' ~ (filtered_containers | length) ~ ')' }}
+{{- render_border(chars.bl, chars.t_up, chars.br, column_widths, chars.h) ~ '\n' -}}
+{{- 'Total services listed: ' ~ (after_versions | length) ~ ' (active: ' ~ (filtered_containers | length) ~ ')' ~ '\n' -}}
 {% if is_status_display -%}
-[CURRENT STATUS DISPLAY - NO CHANGES RECORDED]
+{{- '[CURRENT STATUS DISPLAY - NO CHANGES RECORDED]' }}
 {% elif has_changes -%}
-[NEW VERSION CHANGES RECORDED]
+{{- '[NEW VERSION CHANGES RECORDED]' }}
 {% elif first_run -%}
-[INITIAL STATE RECORDED]
+{{- '[INITIAL STATE RECORDED]' }}
 {% else -%}
-[NO CHANGES DETECTED]
+{{- '[NO CHANGES DETECTED]' }}
 {% endif -%}

@@ -1,0 +1,26 @@
+---
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- name: Override DAS scope for matrix containers (custom facts)
+  ansible.builtin.set_fact:
+    docker_summary_scope: "{{ das_matrix_scope_pattern }}"
+
+- name: Run DAS with alternative fact filenames
+  ansible.builtin.include_role:
+    name: custom/docker-ansible-summary
+  vars:
+    docker_summary_scope:
+      - "{{ das_matrix_scope_pattern }}"
+    docker_summary_versions_fact_file: custom_versions.fact
+    docker_summary_history_fact_file: custom_history.fact
+    docker_summary_write_facts: false
+    docker_summary_enable_discovery: true
+    docker_summary_ansible_local_override: {}
+
+- name: Assert custom fact keys are derived correctly
+  ansible.builtin.assert:
+    that:
+      - summary_versions_fact_key == 'custom_versions'
+      - summary_history_fact_key == 'custom_history'
+    fail_msg: "Custom fact filenames should map to predictable keys"

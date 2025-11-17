@@ -22,13 +22,15 @@
   when: docker_summary_mock_mode | default(false) | bool
 
 - name: Generate mock after versions (same as current for status mode)
-  ansible.builtin.set_fact:
-    after_versions: >-
+  vars:
+    mock_status_after_versions: >-
       {% set versions = {} %}
       {% for item in current_versions.items() %}
       {%   set _ = versions.update({item[0]: {'current': item[1], 'previous': item[1], 'status': 'CURRENT'}}) %}
       {% endfor %}
-      {{ versions }}
+      {{ versions | to_json }}
+  ansible.builtin.set_fact:
+    after_versions: "{{ mock_status_after_versions | from_json }}"
   when:
     - docker_summary_mock_mode | default(false) | bool
     - docker_summary_mode | default('status') == 'status'

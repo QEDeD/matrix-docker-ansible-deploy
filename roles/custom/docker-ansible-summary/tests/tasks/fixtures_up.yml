@@ -1,0 +1,34 @@
+---
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- name: Create DAS test network
+  community.docker.docker_network:
+    name: "{{ das_test_network }}"
+  tags: ["fixtures"]
+
+- name: Launch Matrix fixtures
+  community.docker.docker_container:
+    name: "{{ item.name }}"
+    image: "{{ item.image }}"
+    command: "sleep 3600"
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ das_test_network }}"
+    pull: true
+  loop: "{{ das_matrix_containers }}"
+  tags: ["fixtures"]
+
+- name: Launch MASH fixtures
+  community.docker.docker_container:
+    name: "{{ item.name }}"
+    image: "{{ item.image }}"
+    command: "sleep 3600"
+    state: started
+    restart_policy: unless-stopped
+    networks:
+      - name: "{{ das_test_network }}"
+    pull: true
+  loop: "{{ das_mash_containers }}"
+  tags: ["fixtures"]

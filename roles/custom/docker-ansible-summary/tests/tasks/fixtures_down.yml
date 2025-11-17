@@ -1,0 +1,28 @@
+---
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- name: Remove Matrix fixtures
+  community.docker.docker_container:
+    name: "{{ item.name }}"
+    state: absent
+    force_kill: true
+  loop: "{{ das_matrix_containers }}"
+  failed_when: false
+  tags: ["fixtures"]
+
+- name: Remove MASH fixtures
+  community.docker.docker_container:
+    name: "{{ item.name }}"
+    state: absent
+    force_kill: true
+  loop: "{{ das_mash_containers }}"
+  failed_when: false
+  tags: ["fixtures"]
+
+- name: Remove DAS test network
+  community.docker.docker_network:
+    name: "{{ das_test_network }}"
+    state: absent
+  failed_when: false
+  tags: ["fixtures"]

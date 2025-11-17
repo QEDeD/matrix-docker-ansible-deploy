@@ -1,0 +1,24 @@
+---
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- name: Run docker-ansible-summary in mock mode
+  ansible.builtin.include_role:
+    name: custom/docker-ansible-summary
+  vars:
+    docker_summary_mock_mode: true
+    docker_summary_display: true
+    docker_summary_write_facts: false
+    docker_summary_enable_discovery: false
+
+- name: Assert mock mode produced a table
+  ansible.builtin.assert:
+    that:
+      - current_versions | length == 5
+      - "'app-api' in current_versions"
+    fail_msg: "Mock mode should seed synthetic containers without Docker"
+
+- name: Clear mock facts for subsequent scenarios
+  ansible.builtin.set_fact:
+    current_versions: {}
+    after_versions: {}

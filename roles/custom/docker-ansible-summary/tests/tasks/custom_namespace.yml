@@ -1,0 +1,23 @@
+---
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- name: Build sample dataset for scope filtering
+  ansible.builtin.set_fact:
+    das_sample_versions:
+      das-matrix-api: {}
+      das-matrix-worker: {}
+      das-mash-netbox-app: {}
+      das-mash-vikunja: {}
+      das-mash-gitea: {}
+
+- name: Filter dataset using custom namespace pattern
+  ansible.builtin.set_fact:
+    das_filtered_namespace: "{{ das_sample_versions | docker_scope_filter_dict(das_custom_namespace_pattern) }}"
+
+- name: Assert filter isolates custom namespace
+  ansible.builtin.assert:
+    that:
+      - das_filtered_namespace | length == 1
+      - das_filtered_namespace.keys() | first == das_mash_netbox_name
+    fail_msg: "docker_scope_filter_dict should isolate custom namespace entries"

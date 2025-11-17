@@ -1,0 +1,69 @@
+---
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- name: Docker Ansible Summary local suite
+  hosts: localhost
+  connection: local
+  gather_facts: true
+  vars:
+    ansible_python_interpreter: "{{ ansible_playbook_python }}"
+    das_test_network: das-summary-tests
+    das_matrix_api_name: "das-matrix-api"
+    das_matrix_worker_name: "das-matrix-worker"
+    das_mash_gitea_name: "das-mash-gitea"
+    das_mash_vikunja_name: "das-mash-vikunja"
+    das_mash_netbox_name: "das-mash-netbox-app"
+    das_matrix_scope_pattern: "das-matrix-*"
+    das_mash_scope_pattern: "das-mash-*"
+    das_custom_namespace_pattern: "das-mash-netbox-*"
+    das_matrix_containers:
+      - name: "{{ das_matrix_api_name }}"
+        image: "alpine:3.18"
+      - name: "{{ das_matrix_worker_name }}"
+        image: "alpine:3.19"
+    das_mash_containers:
+      - name: "{{ das_mash_gitea_name }}"
+        image: "alpine:3.19"
+      - name: "{{ das_mash_vikunja_name }}"
+        image: "alpine:3.19"
+      - name: "{{ das_mash_netbox_name }}"
+        image: "alpine:3.19"
+  tasks:
+    - name: Run DAS mock smoke test
+      ansible.builtin.include_tasks: tasks/mock.yml
+      tags: ["mock"]
+
+    - name: Exercise DAS against live Docker containers
+      block:
+        - name: Provision Docker fixtures
+          ansible.builtin.include_tasks: tasks/fixtures_up.yml
+          tags: ["fixtures"]
+
+        - name: Validate Matrix-only baseline/update detection
+          ansible.builtin.include_tasks: tasks/matrix_sequence.yml
+          tags: ["matrix-scope"]
+
+        - name: Validate combined Matrix + MASH scope
+          ansible.builtin.include_tasks: tasks/matrix_mash_scope.yml
+          tags: ["matrix-mash-scope"]
+
+        - name: Validate custom namespace handling
+          ansible.builtin.include_tasks: tasks/custom_namespace.yml
+          tags: ["custom-namespace"]
+
+        - name: Validate status-only mode
+          ansible.builtin.include_tasks: tasks/status_mode.yml
+          tags: ["status-mode"]
+
+        - name: Render history tables from cached facts
+          ansible.builtin.include_tasks: tasks/history_view.yml
+          tags: ["history-view"]
+
+        - name: Verify alternative fact filenames
+          ansible.builtin.include_tasks: tasks/custom_facts.yml
+          tags: ["custom-facts"]
+      always:
+        - name: Tear down Docker fixtures
+          ansible.builtin.include_tasks: tasks/fixtures_down.yml
+          tags: ["fixtures"]
