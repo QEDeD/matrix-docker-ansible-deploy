@@ -94,6 +94,17 @@ docker_summary_quiet_tasks: false
 
 The summary table is unaffected and will always be shown unless you explicitly disable `docker_summary_display`.
 
+#### Output Expectations
+
+The role intentionally limits user-facing chatter:
+
+1. **Table always prints** – even if nothing changed, the summary appears so operators can confirm that the stack was checked (`[NO CHANGES DETECTED]` / `[INITIAL STATE RECORDED]` footers explain the result).
+2. **Pre-table silence** – with the default `docker_summary_quiet_tasks: true`, intermediary tasks keep `no_log` enabled so you only see the start/end task banners, not the underlying dictionaries. Only true errors (failed discovery, fact writes) break this silence.
+3. **History stays opt-in** – `docker_summary_show_history` defaults to `false`. Unless you turn it on, the history tasks are not even parsed, preventing the long “skipping…” loops you may have seen previously.
+4. **Readable stdout under every callback** – the final table is rendered via a dedicated action plugin (`docker_summary_display`) so newline escaping never corrupts the grid, whether you run with `result_format=yaml`, `json`, or the legacy default callback.
+
+These principles match how the broader MDAD/MASH playbooks behave: short banners during the run, and a single block of actionable information at the end. When diagnosing issues, toggle `docker_summary_quiet_tasks` (and optionally `docker_summary_show_history`) in host/group vars or via `-e`.
+
 When `docker_summary_table_auto_width` is enabled the role expands each column to fit the widest content while respecting the min/max guard rails:
 
 - `docker_summary_table_service_width_min` / `docker_summary_table_service_width_max`

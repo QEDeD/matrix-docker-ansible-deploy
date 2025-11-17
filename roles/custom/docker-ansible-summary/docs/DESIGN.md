@@ -61,6 +61,14 @@ Previously, `display_summary.yml` and `view_history.yml` contained long `set_fac
 ### 4. Template-Based Output
 Both the summary table and history views use Jinja templates rather than shell commands. The templates now support adaptive column sizing (bounded by min/max settings), optional change-notes output, and automatic truncation with ASCII/Unicode ellipses. Keeping this logic in Jinja ensures consistent formatting and simplifies future layout tweaks without returning to shell one-liners.
 
+### 5. Operator-Facing Output Contract
+- The main summary table must always print, even when no changes were detected, so operators can confirm the check ran.
+- All intermediary tasks (`set_fact`, retention calculations, history bookkeeping) respect `docker_summary_quiet_tasks` by default to avoid log spam.
+- History rendering is opt-in (`docker_summary_show_history`) so production runs only display the single summary block unless explicitly requested.
+- A dedicated action plugin writes the table directly to stdout to avoid JSON-escaped `\n` artifacts in the default callback.
+
+Together these rules mirror the playbook’s broader UX goal: a long run may stream many task headers, but only the final table should contain substantive content unless a real error occurs.
+
 ### 5. Fact Storage Contract
 The role reads and writes JSON facts under `/etc/ansible/facts.d/` (`docker_summary_versions_fact_file`, `docker_summary_history_fact_file`). Filenames remain customisable, but the JSON schema is:
 ```json
