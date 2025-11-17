@@ -52,7 +52,7 @@ scenarios via tags:
 | `matrix-mash-scope` | Combined scope covering both Matrix and MASH prefixes. |
 | `custom-namespace` | Ensures arbitrary prefixes (e.g. `mash-netbox-*`) are supported. |
 | `status-mode` | Exercises the tag-only/status output branch. |
-| `history-view` | Renders the history tables (changes/full) using cached facts. |
+| `history-view` | Renders the history tables (changes/full) and retention logic using cached facts. |
 | `state-notes` | Validates NOTES output for stopped/crashed containers. |
 | `custom-facts` | Confirms alternative fact filenames and custom fact directories work. |
 

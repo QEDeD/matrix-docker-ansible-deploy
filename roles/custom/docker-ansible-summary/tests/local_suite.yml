@@ -61,6 +61,10 @@
           ansible.builtin.include_tasks: tasks/history_view.yml
           tags: ["history-view"]
 
+        - name: Validate retention trimming
+          ansible.builtin.include_tasks: tasks/retention.yml
+          tags: ["history-view"]
+
         - name: Verify alternative fact filenames
           ansible.builtin.include_tasks: tasks/custom_facts.yml
           tags: ["custom-facts"]
