@@ -56,7 +56,7 @@
       status_mode_requested: {{ status_mode_requested | default(false) }}
       current_versions length: {{ current_versions | default({}) | length }}
       after_versions length: {{ after_versions | default({}) | length }}
-    verbosity: 1
+  when: not (docker_summary_quiet_tasks | default(true) | bool)
 
 - name: Skip version summary display if feature disabled
   ansible.builtin.meta: end_play
@@ -70,11 +70,13 @@
     container_inspect_map: {}
     current_metadata_map: {}
     summary_discovery_available: "{{ docker_summary_container_overrides | length > 0 }}"
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 - name: Seed container catalogue from provided overrides
   ansible.builtin.set_fact:
     all_containers: "{{ docker_summary_container_overrides | map('combine', {}) | list }}"
   when: docker_summary_container_overrides | length > 0
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 - name: Seed inspect data from overrides
   ansible.builtin.set_fact:
@@ -83,6 +85,7 @@
   when:
     - docker_summary_container_overrides | length > 0
     - item.inspect is defined
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 - name: Discover Docker containers via community.docker
   when:
@@ -113,11 +116,13 @@
   ansible.builtin.set_fact:
     summary_scope_patterns_clean: "{{ summary_scope_value | docker_scope_patterns }}"
     summary_scope_all: "{{ summary_scope_value | docker_scope_all }}"
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 - name: Apply container scope
   ansible.builtin.set_fact:
     filtered_containers: "{{ all_containers | docker_scope_filter(summary_scope_value) }}"
   when: summary_discovery_available | default(false) | bool
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 - name: Determine containers missing inspect metadata
   ansible.builtin.set_fact:
@@ -125,6 +130,7 @@
   when:
     - summary_discovery_available | default(false) | bool
     - filtered_containers | length > 0
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 - name: Gather container inspect data for missing services
   community.docker.docker_container_info:
@@ -230,10 +236,10 @@
 - name: Debug after_versions after status mode building
   ansible.builtin.debug:
     msg: "after_versions after status mode: {{ after_versions | length }} items"
-    verbosity: 1
   when:
     - current_versions | length > 0
     - status_check_mode | default(false) | bool
+    - not (docker_summary_quiet_tasks | default(true) | bool)
 
 - name: Add removed services to summary (normal mode)
   ansible.builtin.set_fact:
@@ -283,16 +289,8 @@
          list | length > 0 }}
     first_run: "{{ summary_first_run | default(false) }}"
     is_status_display: "{{ status_check_mode | default(false) | bool }}"
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
-- name: Determine whether to show summary table
-  ansible.builtin.set_fact:
-    summary_show_table: >-
-      {{
-        (docker_summary_table_always_show | default(false) | bool)
-        or (is_status_display | bool)
-        or (has_changes | bool)
-        or (first_run | bool)
-      }}
 
 # Only handle history recording when not in status check mode
 - name: Record changes to history when changes exist
@@ -493,10 +491,10 @@
       {% else %}
       Warning: Could not calculate retention cutoff date. Using all history entries.
       {% endif %}
-    verbosity: 1
   when:
     - summary_retention_days | int > 0
     - not is_status_display
+    - not (docker_summary_quiet_tasks | default(true) | bool)
 
 # Apply retention policy with fixed date handling
 - name: Apply retention policy to changes history
@@ -561,15 +559,6 @@
   when:
     - current_versions | length > 0
     - after_versions | length > 0
-    - summary_show_table | default(false) | bool
-
-- name: Display summary suppression notice
-  ansible.builtin.debug:
-    msg: "Docker Ansible Summary: no changes detected for scope {{ (summary_scope_patterns_clean | length > 0) | ternary(summary_scope_patterns_clean | join(', '), 'all') }}."
-  when:
-    - current_versions | length > 0
-    - after_versions | length > 0
-    - not (summary_show_table | default(false) | bool)
 
 # Display empty message if no containers found
 - name: Display empty table message
