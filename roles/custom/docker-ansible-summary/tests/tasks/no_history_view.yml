@@ -1,0 +1,22 @@
+---
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- name: Run summary without history view to ensure quiet defaults
+  ansible.builtin.include_role:
+    name: custom/docker-ansible-summary
+  vars:
+    docker_summary_scope: "{{ das_matrix_scope_pattern }}"
+    docker_summary_container_overrides: "{{ das_matrix_containers }}"
+    docker_summary_display: true
+    docker_summary_show_history: false
+    docker_summary_write_facts: false
+    docker_summary_enable_discovery: false
+    docker_summary_facts_dir: "{{ das_facts_dir }}"
+
+- name: Assert history view artifacts remain undefined
+  ansible.builtin.assert:
+    that:
+      - history_changes_lines is not defined
+      - history_full_lines is not defined
+    fail_msg: "History tables should not be built when docker_summary_show_history=false"

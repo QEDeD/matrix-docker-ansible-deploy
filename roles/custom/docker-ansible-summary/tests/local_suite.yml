@@ -57,6 +57,10 @@
           ansible.builtin.include_tasks: tasks/status_mode.yml
           tags: ["status-mode"]
 
+        - name: Ensure history view stays disabled by default
+          ansible.builtin.include_tasks: tasks/no_history_view.yml
+          tags: ["matrix-scope"]
+
         - name: Render history tables from cached facts
           ansible.builtin.include_tasks: tasks/history_view.yml
           tags: ["history-view"]

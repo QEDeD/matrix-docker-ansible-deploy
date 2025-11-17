@@ -22,3 +22,29 @@ if [[ "${1:-}" == "--cleanup" ]]; then
 fi
 
 "${ANSIBLE_PLAYBOOK_BIN}" "${PLAYBOOK}" "$@"
+
+# Verify the stdout rendering path using the default callback so regressions show up early.
+OUTPUT_PLAYBOOK="${REPO_ROOT}/roles/custom/docker-ansible-summary/tests/output_snapshot.yml"
+OUTPUT_LOG="$(mktemp -t das-output-XXXX.log)"
+if ! ANSIBLE_FORCE_COLOR=0 ANSIBLE_STDOUT_CALLBACK=default "${ANSIBLE_PLAYBOOK_BIN}" "${OUTPUT_PLAYBOOK}" >"${OUTPUT_LOG}"
+then
+  echo "[das-tests] output snapshot playbook failed (log: ${OUTPUT_LOG})" >&2
+  exit 1
+fi
+
+if ! rg -q "DOCKER SERVICE VERSION CHANGES" "${OUTPUT_LOG}"; then
+  echo "[das-tests] summary header missing from stdout snapshot (log: ${OUTPUT_LOG})" >&2
+  exit 1
+fi
+
+if rg -q '"DOCKER SERVICE VERSION CHANGES' "${OUTPUT_LOG}"; then
+  echo "[das-tests] summary header appears quoted, expected raw lines (log: ${OUTPUT_LOG})" >&2
+  exit 1
+fi
+
+if ! rg -q "\|         app-api" "${OUTPUT_LOG}"; then
+  echo "[das-tests] summary rows missing from stdout snapshot (log: ${OUTPUT_LOG})" >&2
+  exit 1
+fi
+
+rm -f "${OUTPUT_LOG}"
