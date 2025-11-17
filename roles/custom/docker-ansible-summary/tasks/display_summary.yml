@@ -284,6 +284,16 @@
     first_run: "{{ summary_first_run | default(false) }}"
     is_status_display: "{{ status_check_mode | default(false) | bool }}"
 
+- name: Determine whether to show summary table
+  ansible.builtin.set_fact:
+    summary_show_table: >-
+      {{
+        (docker_summary_table_always_show | default(false) | bool)
+        or (is_status_display | bool)
+        or (has_changes | bool)
+        or (first_run | bool)
+      }}
+
 # Only handle history recording when not in status check mode
 - name: Record changes to history when changes exist
   ansible.builtin.set_fact:
@@ -551,15 +561,20 @@
   when:
     - current_versions | length > 0
     - after_versions | length > 0
+    - summary_show_table | default(false) | bool
+
+- name: Display summary suppression notice
+  ansible.builtin.debug:
+    msg: "Docker Ansible Summary: no changes detected for scope {{ (summary_scope_patterns_clean | length > 0) | ternary(summary_scope_patterns_clean | join(', '), 'all') }}."
+  when:
+    - current_versions | length > 0
+    - after_versions | length > 0
+    - not (summary_show_table | default(false) | bool)
 
 # Display empty message if no containers found
 - name: Display empty table message
   ansible.builtin.debug:
-    msg: |-
-      DOCKER SERVICE VERSION CHANGES - {{ ansible_date_time.iso8601 }}
-
-      No containers matched docker_summary_scope ({{ (summary_scope_patterns_clean | length > 0) | ternary(summary_scope_patterns_clean | join(', '), 'all') }}).
-      {{ 'In status check mode - showing current state only.' if is_status_display else 'Adjust the scope or start services to see version information.' }}
+    msg: "Docker Ansible Summary: no containers matched scope {{ (summary_scope_patterns_clean | length > 0) | ternary(summary_scope_patterns_clean | join(', '), 'all') }}."
   when: current_versions | length == 0 or after_versions | length == 0
 
 # Write facts to filesystem

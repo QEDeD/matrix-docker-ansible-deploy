@@ -76,6 +76,7 @@ All tunables are exposed via the `docker_summary_*` namespace:
 | `docker_summary_table_notes_width_min` | `16` | Minimum width when auto sizing the notes column |
 | `docker_summary_table_notes_width_max` | `48` | Maximum width when auto sizing the notes column |
 | `docker_summary_table_notes_include_state` | `true` | Append container state (running, restarts, exit codes) to the NOTES column |
+| `docker_summary_table_always_show` | `false` | When `false`, suppress the summary table unless changes occur (status runs always show it) |
 | `docker_summary_version_extract_smart` | `true` | Extract `image:tag` from the full image reference when enabled |
 | `docker_summary_mock_mode` | `false` | Enable mock data generation for testing |
 | `docker_summary_show_history` | `false` | Include history display tasks during the main role run |

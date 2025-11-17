@@ -38,6 +38,7 @@ docker_summary_table_notes_width: 24
 docker_summary_table_notes_width_min: 16
 docker_summary_table_notes_width_max: 48
 docker_summary_table_notes_include_state: true  # Append container state (running/exited, restart counts) to notes
+docker_summary_table_always_show: false        # When false, suppress table output unless changes occur
 
 # Version extraction settings
 docker_summary_version_extract_smart: true  # Extract clean version tags (e.g., "synapse:v1.96.1" from full image name)
