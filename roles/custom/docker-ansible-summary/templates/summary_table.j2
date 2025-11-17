@@ -23,12 +23,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 {%- endmacro %}
 
 {% macro render_row(values, widths, chars, defaults, ellipsis_token) -%}
-{{ chars.v }}{% for value in values %}
- {% set default_value = '' %}
- {% if defaults is not none and defaults|length > loop.index0 %}
-   {% set default_value = defaults[loop.index0] %}
- {% endif %}
- {{ cell(value, widths[loop.index0], default_value, ellipsis_token) }} {{ chars.v }}{% endfor %}
+{{- chars.v }}{% for value in values -%}{% set default_value = '' -%}{% if defaults is not none and defaults|length > loop.index0 -%}{% set default_value = defaults[loop.index0] -%}{% endif -%} {{ cell(value, widths[loop.index0], default_value, ellipsis_token) }} {{ chars.v }}{% endfor %}
 {%- endmacro %}
 
 {% set chars = summary_table_chars %}
@@ -91,19 +86,19 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 {{- 'DOCKER SERVICE VERSION CHANGES - ' ~ ansible_date_time.iso8601 ~ '\n' -}}
 {{- render_border(chars.tl, chars.t_down, chars.tr, column_widths, chars.h) ~ '\n' -}}
-{{- render_row(header_values, column_widths, chars, None, ellipsis_token) ~ '\n' -}}
+{{- render_row(header_values, column_widths, chars, None, ellipsis_token) | regex_replace('^\\s+', '') ~ '\n' -}}
 {{- render_border(chars.t_right, chars.double_cross, chars.t_left, column_widths, chars.double_h) ~ '\n' -}}
 {% for key, entry in after_versions | dictsort -%}
-  {% set row_values = [
-    key,
-    entry.previous | default('-', true),
-    entry.current,
-    entry.status_label
-  ] %}
-  {% if show_notes %}
-    {% set row_values = row_values + [entry.notes | default('', true)] %}
-  {% endif %}
-  {{- render_row(row_values, column_widths, chars, data_defaults, ellipsis_token) ~ '\n' -}}
+{% set row_values = [
+  key,
+  entry.previous | default('-', true),
+  entry.current,
+  entry.status_label
+] -%}
+{% if show_notes -%}
+{% set row_values = row_values + [entry.notes | default('', true)] -%}
+{% endif -%}
+{{- render_row(row_values, column_widths, chars, data_defaults, ellipsis_token) | regex_replace('^\\s+', '') ~ '\n' -}}
 {% endfor -%}
 {{- render_border(chars.bl, chars.t_up, chars.br, column_widths, chars.h) ~ '\n' -}}
 {{- 'Total services listed: ' ~ (after_versions | length) ~ ' (active: ' ~ (filtered_containers | length) ~ ')' ~ '\n' -}}

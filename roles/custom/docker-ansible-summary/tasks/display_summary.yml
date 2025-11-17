@@ -310,6 +310,7 @@
       }) }}
   loop: "{{ after_versions | dict2items }}"
   when: has_changes and item.value.change_type not in ['unchanged', 'status'] and not is_status_display
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 - name: Get current timestamp
   ansible.builtin.set_fact:
@@ -340,6 +341,7 @@
     initial_map: "{{ {item.key: initial_entry} }}"
   loop: "{{ after_versions | dict2items }}"
   when: first_run and not is_status_display
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 - name: Add initial state to changes history (unlimited entries)
   ansible.builtin.set_fact:
@@ -381,6 +383,7 @@
       change_type: "{{ item.value.change_type }}"
   loop: "{{ after_versions | dict2items }}"
   when: (has_changes or first_run) and item.value.change_type not in ['unchanged', 'status'] and not is_status_display
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 - name: Update full history for each service (build service record)
   ansible.builtin.set_fact:
@@ -401,12 +404,14 @@
         }}
   loop: "{{ after_versions | dict2items }}"
   when: (has_changes or first_run) and item.value.change_type not in ['unchanged', 'status'] and current_service_updates is defined and not is_status_display
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 - name: Update full history for each service (commit to version history)
   ansible.builtin.set_fact:
     version_history: "{{ version_history | combine({'full_history': version_history.full_history | default({}) | combine({item.key: service_record})}) }}"
   loop: "{{ after_versions | dict2items }}"
   when: (has_changes or first_run) and item.value.change_type not in ['unchanged', 'status'] and service_record is defined and not is_status_display
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 # Record incremental changes only when not first run and changes exist
 - name: Record incremental changes (unlimited entries)
@@ -546,7 +551,12 @@
 
 - name: Render summary table
   vars:
-    rendered_table_text: "{{ lookup('template', 'summary_table.j2') | trim }}"
+    rendered_table_text: >-
+      {{
+        lookup('template', 'summary_table.j2')
+        | trim
+        | regex_replace('\\n\\s+([|│])', '\n\\1')
+      }}
   ansible.builtin.set_fact:
     version_summary_table_text: "{{ rendered_table_text }}"
     version_summary_table_lines: "{{ rendered_table_text.split('\n') }}"

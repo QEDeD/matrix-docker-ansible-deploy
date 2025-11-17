@@ -42,8 +42,18 @@ if rg -q '"DOCKER SERVICE VERSION CHANGES' "${OUTPUT_LOG}"; then
   exit 1
 fi
 
-if ! rg -q "\|         app-api" "${OUTPUT_LOG}"; then
+if ! rg -q "\|\s+app-api" "${OUTPUT_LOG}"; then
   echo "[das-tests] summary rows missing from stdout snapshot (log: ${OUTPUT_LOG})" >&2
+  exit 1
+fi
+
+if ! rg -q "^\|" "${OUTPUT_LOG}"; then
+  echo "[das-tests] table rows should start at column 1 (log: ${OUTPUT_LOG})" >&2
+  exit 1
+fi
+
+if rg -q "^  \|" "${OUTPUT_LOG}"; then
+  echo "[das-tests] detected indented table rows, expected flush-left '|' (log: ${OUTPUT_LOG})" >&2
   exit 1
 fi
 
