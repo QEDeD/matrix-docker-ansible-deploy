@@ -86,8 +86,8 @@
 
 # Display Changes History Table
 - name: Display no changes message
-  ansible.builtin.debug:
-    msg:
+  docker_summary_display:
+    lines:
       - "┌─────────────────────────────────────────────────────────────────────────────────┐"
       - "│ DOCKER SERVICE VERSION HISTORY - CHANGES                                       │"
       - "├─────────────────────────────────────────────────────────────────────────────────┤"
@@ -106,16 +106,16 @@
     - version_history.changes | default([]) | length > 0
 
 - name: Display changes history table
-  ansible.builtin.debug:
-    msg: "{{ history_changes_lines }}"
+  docker_summary_display:
+    lines: "{{ history_changes_lines }}"
   when:
     - view_mode == 'changes'
     - version_history.changes | default([]) | length > 0
 
 # Display Full History Table
 - name: Display no history message
-  ansible.builtin.debug:
-    msg:
+  docker_summary_display:
+    lines:
       - "┌─────────────────────────────────────────────────────────────────────────────────┐"
       - "│ MATRIX VERSION HISTORY - FULL SERVICE HISTORY                                   │"
       - "├─────────────────────────────────────────────────────────────────────────────────┤"
@@ -134,8 +134,8 @@
     - version_history.full_history | default({}) | length > 0
 
 - name: Display full history table
-  ansible.builtin.debug:
-    msg: "{{ history_full_lines }}"
+  docker_summary_display:
+    lines: "{{ history_full_lines }}"
   when:
     - view_mode == 'full'
     - version_history.full_history | default({}) | length > 0
