@@ -8,17 +8,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 {% macro cell(text, width, default, ellipsis_token) -%}
 {% set raw = (text if text not in [none, ''] else default)|string %}
-{% if raw|length > width %}
-  {% set ell_len = ellipsis_token|length %}
-  {% if width > ell_len and ell_len > 0 %}
-    {% set truncate_to = width - ell_len %}
-    {% set display = raw[:truncate_to] ~ ellipsis_token %}
-  {% else %}
-    {% set display = raw[:width] %}
-  {% endif %}
-{% else %}
-  {% set display = raw %}
-{% endif %}
+{% set display = raw | docker_summary_truncate(width, ellipsis_token) %}
 {{ "%-*s" | format(width, display) }}
 {%- endmacro %}
 

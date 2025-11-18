@@ -244,10 +244,23 @@ def docker_summary_notes(entry: Mapping[str, Any], include_state: bool = True) -
         elif running:
             _append_note(notes, "running")
 
-        if isinstance(restart_count, int) and restart_count > 0:
-            _append_note(notes, f"restarts: {restart_count}")
+    if isinstance(restart_count, int) and restart_count > 0:
+        _append_note(notes, f"restarts: {restart_count}")
 
     return " | ".join(dict.fromkeys(notes))  # preserve order, deduplicate
+
+
+def docker_summary_truncate(value: Any, width: int, ellipsis: str = "...") -> str:
+    """Return a string truncated to `width` characters with optional ellipsis."""
+    if width <= 0:
+        return ""
+    raw = "" if value is None else str(value)
+    if len(raw) <= width:
+        return raw
+    ell_len = len(ellipsis)
+    if width > ell_len and ell_len > 0:
+        return raw[: width - ell_len] + ellipsis
+    return raw[:width]
 
 
 class FilterModule(object):
@@ -267,4 +280,5 @@ class FilterModule(object):
             "docker_summary_status_label": docker_summary_status_label,
             "docker_summary_history_metadata": docker_summary_history_metadata,
             "docker_summary_notes": docker_summary_notes,
+            "docker_summary_truncate": docker_summary_truncate,
         }
