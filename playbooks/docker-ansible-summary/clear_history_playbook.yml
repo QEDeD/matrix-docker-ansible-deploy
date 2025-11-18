@@ -23,7 +23,7 @@
     - name: Create backup of history file
       ansible.builtin.copy:
         src: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
-        dest: "/etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_date_time.epoch }}"
+        dest: "/etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_facts.date_time.epoch }}"
         mode: '0644'
         remote_src: true
       become: true
@@ -40,7 +40,7 @@
       ansible.builtin.debug:
         msg: |
           Docker service version history has been cleared successfully.
-          Backup saved to: /etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_date_time.epoch }}
+          Backup saved to: /etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_facts.date_time.epoch }}
       when: clear_result.changed and history_file.stat.exists
 
     - name: Display no history message

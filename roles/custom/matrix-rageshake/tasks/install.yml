@@ -11,7 +11,7 @@
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: directory
-    mode: 0750
+    mode: '0750'
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
   with_items:
@@ -29,13 +29,13 @@
     dest: "{{ matrix_rageshake_config_path }}/config.yaml"
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
-    mode: 0640
+    mode: '0640'
 
 - name: Ensure rageshake labels installed
   ansible.builtin.template:
     src: "{{ role_path }}/templates/labels.j2"
     dest: "{{ matrix_rageshake_base_path }}/labels"
-    mode: 0640
+    mode: '0640'
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
 
@@ -83,4 +83,4 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-rageshake.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-rageshake.service"
-    mode: 0644
+    mode: '0644'

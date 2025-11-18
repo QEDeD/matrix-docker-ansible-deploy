@@ -139,7 +139,7 @@
     - name: Create backup of original history before trimming
       ansible.builtin.copy:
         src: "/etc/ansible/facts.d/{{ summary_history_fact_file }}"
-        dest: "/etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_date_time.epoch }}"
+        dest: "/etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_facts.date_time.epoch }}"
         mode: '0644'
         remote_src: true
       become: true
@@ -200,7 +200,7 @@
 
           {{ 'History file updated successfully' if write_result is defined and write_result.changed else 'No changes needed - history already within limits' }}
 
-          Backup saved to: /etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_date_time.epoch }}
+          Backup saved to: /etc/ansible/facts.d/{{ summary_history_fact_file }}.backup.{{ ansible_facts.date_time.epoch }}
       when: version_history.changes | default([]) | length > 0
 
     - name: Display no history message

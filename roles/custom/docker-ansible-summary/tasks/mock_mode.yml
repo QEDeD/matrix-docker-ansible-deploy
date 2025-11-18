@@ -106,7 +106,7 @@
 
 - name: Generate mock timestamp
   ansible.builtin.set_fact:
-    summary_timestamp: "{{ ansible_date_time.iso8601 }}"
+    summary_timestamp: "{{ ansible_facts.date_time.iso8601 }}"
   when: docker_summary_mock_mode | default(false) | bool
 
 - name: Display mock mode notice

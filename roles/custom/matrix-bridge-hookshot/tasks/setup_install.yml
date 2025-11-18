@@ -20,7 +20,7 @@
   ansible.builtin.file:
     path: "{{ item.path }}"
     state: directory
-    mode: 0750
+    mode: '0750'
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
   with_items:
@@ -80,7 +80,7 @@
   ansible.builtin.copy:
     content: "{{ matrix_hookshot_configuration | to_nice_yaml(indent=2, width=999999) }}"
     dest: "{{ matrix_hookshot_base_path }}/config.yml"
-    mode: 0644
+    mode: '0644'
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
 
@@ -106,7 +106,7 @@
   ansible.builtin.copy:
     content: "{{ matrix_hookshot_registration | to_nice_yaml(indent=2, width=999999) }}"
     dest: "{{ matrix_hookshot_base_path }}/registration.yml"
-    mode: 0644
+    mode: '0644'
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
 
@@ -114,7 +114,7 @@
   ansible.builtin.copy:
     content: "{{ matrix_hookshot_github_private_key }}"
     dest: "{{ matrix_hookshot_base_path }}/{{ matrix_hookshot_github_private_key_file }}"
-    mode: 0400
+    mode: '0400'
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
   when: matrix_hookshot_github_enabled | bool and matrix_hookshot_github_private_key|length > 0
@@ -130,7 +130,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/{{ item }}.j2"
     dest: "{{ matrix_hookshot_base_path }}/{{ item }}"
-    mode: 0640
+    mode: '0640'
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
   with_items:
@@ -140,4 +140,4 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-hookshot.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-hookshot.service"
-    mode: 0644
+    mode: '0644'

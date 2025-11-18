@@ -74,7 +74,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
   {% set data_defaults = data_defaults + [''] %}
 {% endif %}
 
-{{- 'DOCKER SERVICE VERSION CHANGES - ' ~ ansible_date_time.iso8601 ~ '\n' -}}
+{{- 'DOCKER SERVICE VERSION CHANGES - ' ~ ansible_facts.date_time.iso8601 ~ '\n' -}}
 {{- render_border(chars.tl, chars.t_down, chars.tr, column_widths, chars.h) ~ '\n' -}}
 {{- render_row(header_values, column_widths, chars, None, ellipsis_token) | regex_replace('^\\s+', '') ~ '\n' -}}
 {{- render_border(chars.t_right, chars.double_cross, chars.t_left, column_widths, chars.double_h) ~ '\n' -}}
