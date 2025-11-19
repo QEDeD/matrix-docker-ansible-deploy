@@ -160,7 +160,7 @@
 
 - name: Resolve cached local facts
   ansible.builtin.set_fact:
-    summary_local_facts: "{{ (docker_summary_ansible_local_override if docker_summary_ansible_local_override is not none else ansible_local) | default({}) }}"
+    summary_local_facts: "{{ (docker_summary_ansible_local_override if docker_summary_ansible_local_override is not none else ansible_facts.get('ansible_local', {})) | default({}) }}"
 
 - name: Load previous snapshots
   ansible.builtin.set_fact:
@@ -321,7 +321,7 @@
 
 - name: Get current username
   ansible.builtin.set_fact:
-    current_user: "{{ ansible_user_id | default(lookup('env', 'USER') | default(lookup('env', 'USERNAME') | default('unknown'))) }}"
+    current_user: "{{ ansible_facts.get('user_id') | default(lookup('env', 'USER') | default(lookup('env', 'USERNAME') | default('unknown'))) }}"
   when: (has_changes or first_run) and not is_status_display
 
 # Record initial state on first run
@@ -462,7 +462,7 @@
   when:
     - summary_retention_days | int > 0
     - not is_status_display
-    - ansible_system == "Linux"
+    - ansible_facts.system | default('') == "Linux"
 
 - name: Calculate cutoff date for retention cleanup (BSD/macOS)
   ansible.builtin.command: date -u -v-{{ summary_retention_days }}d +"%Y-%m-%d %H:%M:%S"
@@ -472,14 +472,14 @@
   when:
     - summary_retention_days | int > 0
     - not is_status_display
-    - ansible_system != "Linux"
+    - ansible_facts.system | default('') != "Linux"
 
 - name: Set cutoff date based on detected OS
   ansible.builtin.set_fact:
     retention_cutoff_date: >-
-      {% if ansible_system == "Linux" and linux_cutoff_date.rc is defined and linux_cutoff_date.rc == 0 %}
+      {% if ansible_facts.system | default('') == "Linux" and linux_cutoff_date.rc is defined and linux_cutoff_date.rc == 0 %}
       {{ linux_cutoff_date.stdout }}
-      {% elif ansible_system != "Linux" and bsd_cutoff_date.rc is defined and bsd_cutoff_date.rc == 0 %}
+      {% elif ansible_facts.system | default('') != "Linux" and bsd_cutoff_date.rc is defined and bsd_cutoff_date.rc == 0 %}
       {{ bsd_cutoff_date.stdout }}
       {% else %}
       null
@@ -583,6 +583,7 @@
     dest: "{{ docker_summary_facts_dir | default('/etc/ansible/facts.d') }}/{{ summary_versions_fact_file }}"
     mode: '0644'
   become: "{{ docker_summary_write_facts_become | default(true) | bool }}"
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
   when:
     - docker_summary_write_facts | default(true) | bool
     - not is_status_display
@@ -593,6 +594,7 @@
     dest: "{{ docker_summary_facts_dir | default('/etc/ansible/facts.d') }}/{{ summary_history_fact_file }}"
     mode: '0644'
   become: "{{ docker_summary_write_facts_become | default(true) | bool }}"
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
   when:
     - docker_summary_write_facts | default(true) | bool
     - not is_status_display

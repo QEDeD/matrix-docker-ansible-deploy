@@ -15,7 +15,7 @@
 
 - name: Resolve cached local facts
   ansible.builtin.set_fact:
-    summary_local_facts: "{{ (docker_summary_ansible_local_override if docker_summary_ansible_local_override is not none else ansible_local) | default({}) }}"
+    summary_local_facts: "{{ (docker_summary_ansible_local_override if docker_summary_ansible_local_override is not none else ansible_facts.get('ansible_local', {})) | default({}) }}"
 
 - name: Load version history snapshot
   ansible.builtin.set_fact:
@@ -29,7 +29,7 @@
   failed_when: false
   when:
     - summary_retention_days | int > 0
-    - ansible_system == "Linux"
+    - ansible_facts.system | default('') == "Linux"
 
 - name: Calculate cutoff date for retention cleanup (BSD/macOS)
   ansible.builtin.command: date -u -v-{{ summary_retention_days }}d +"%Y-%m-%d %H:%M:%S"
@@ -38,14 +38,14 @@
   failed_when: false
   when:
     - summary_retention_days | int > 0
-    - ansible_system != "Linux"
+    - ansible_facts.system | default('') != "Linux"
 
 - name: Set cutoff date for retention
   ansible.builtin.set_fact:
     retention_cutoff_date: >-
-      {% if ansible_system == "Linux" and linux_history_cutoff.rc is defined and linux_history_cutoff.rc == 0 %}
+      {% if ansible_facts.system | default('') == "Linux" and linux_history_cutoff.rc is defined and linux_history_cutoff.rc == 0 %}
       {{ linux_history_cutoff.stdout }}
-      {% elif ansible_system != "Linux" and bsd_history_cutoff.rc is defined and bsd_history_cutoff.rc == 0 %}
+      {% elif ansible_facts.system | default('') != "Linux" and bsd_history_cutoff.rc is defined and bsd_history_cutoff.rc == 0 %}
       {{ bsd_history_cutoff.stdout }}
       {% else %}
       null
