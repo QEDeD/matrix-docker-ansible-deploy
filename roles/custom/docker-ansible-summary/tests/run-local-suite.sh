@@ -42,7 +42,7 @@ if rg -q '"DOCKER SERVICE VERSION CHANGES' "${OUTPUT_LOG}"; then
   exit 1
 fi
 
-if ! rg -q "\|\s+app-api" "${OUTPUT_LOG}"; then
+if ! rg -q '\|\s*app-api\b' "${OUTPUT_LOG}"; then
   echo "[das-tests] summary rows missing from stdout snapshot (log: ${OUTPUT_LOG})" >&2
   exit 1
 fi
@@ -54,6 +54,12 @@ fi
 
 if rg -q "^  \|" "${OUTPUT_LOG}"; then
   echo "[das-tests] detected indented table rows, expected flush-left '|' (log: ${OUTPUT_LOG})" >&2
+  exit 1
+fi
+
+# Verify column alignment across all table rows.
+if ! python3 "${REPO_ROOT}/roles/custom/docker-ansible-summary/tests/check_table_alignment.py" "${OUTPUT_LOG}"; then
+  echo "[das-tests] table alignment check failed (log: ${OUTPUT_LOG})" >&2
   exit 1
 fi
 

@@ -13,7 +13,16 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 {%- endmacro %}
 
 {% macro render_row(values, widths, chars, defaults, ellipsis_token) -%}
-{{- chars.v }}{% for value in values -%}{% set default_value = '' -%}{% if defaults is not none and defaults|length > loop.index0 -%}{% set default_value = defaults[loop.index0] -%}{% endif -%} {{ cell(value, widths[loop.index0], default_value, ellipsis_token) }} {{ chars.v }}{% endfor %}
+{% set ns = namespace(segments=[]) %}
+{% for value in values -%}
+{% set default_value = '' -%}
+{% if defaults is not none and defaults|length > loop.index0 -%}
+{% set default_value = defaults[loop.index0] -%}
+{% endif -%}
+{% set seg = ' ' ~ (cell(value, widths[loop.index0], default_value, ellipsis_token)) ~ ' ' %}
+{% set ns.segments = ns.segments + [seg] %}
+{% endfor %}
+{{- chars.v }}{{ ns.segments | join(chars.v) }}{{ chars.v }}
 {%- endmacro %}
 
 {% set chars = summary_table_chars %}
