@@ -194,6 +194,7 @@
   loop: "{{ filtered_containers }}"
   when:
     - filtered_containers | length > 0
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
 
 # Build version changes dict with change tracking metadata
 - name: Build version changes dict
@@ -214,6 +215,9 @@
   when:
     - current_versions | length > 0
     - not (status_check_mode | default(false) | bool)
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
+  loop_control:
+    label: "{{ item }}"
 
 # In status check mode, create a status display dict without change detection
 - name: Build status display dict for tag-only execution
@@ -232,6 +236,9 @@
   when:
     - current_versions | length > 0
     - status_check_mode | default(false) | bool
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
+  loop_control:
+    label: "{{ item }}"
 
 - name: Debug after_versions after status mode building
   ansible.builtin.debug:
@@ -258,6 +265,9 @@
     - not (status_check_mode | default(false) | bool)
     - before_versions | length > 0
     - item not in current_versions
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
+  loop_control:
+    label: "{{ item }}"
 
 - name: Build status labels for output
   ansible.builtin.set_fact:
@@ -268,6 +278,9 @@
   vars:
     status_label: "{{ item.value | docker_summary_status_label }}"
   loop: "{{ after_versions | dict2items }}"
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
+  loop_control:
+    label: "{{ item.key }}"
 
 - name: Build notes for output
   ansible.builtin.set_fact:
@@ -279,6 +292,9 @@
     note_value: "{{ item.value | docker_summary_notes(summary_table_notes_include_state) }}"
   loop: "{{ after_versions | dict2items }}"
   when: summary_table_show_notes | bool
+  no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
+  loop_control:
+    label: "{{ item.key }}"
 
 # Set display and change tracking variables
 - name: Set display and change tracking variables
