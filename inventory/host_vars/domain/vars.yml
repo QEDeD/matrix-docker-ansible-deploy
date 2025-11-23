@@ -49,6 +49,8 @@ matrix_static_files_file_matrix_support_property_m_contacts:
 # Your organization's support page on the base (or another) domain, if any
 # matrix_static_files_file_matrix_support_property_m_support_page: "https://example.com/support"
 
+matrix_matrixto_enabled: true
+
 ########################################################################
 #                                                                      #
 # /Matrix                                                              #
