@@ -28,7 +28,7 @@
   version: v10655-0
   name: jitsi
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-livekit-server.git
-  version: v1.9.6-0
+  version: v1.9.8-0
   name: livekit_server
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-ntfy.git
   version: v2.15.0-0
@@ -67,11 +67,11 @@
   version: v1.1.0-1
   name: timesync
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-traefik.git
-  version: v3.6.2-0
+  version: v3.6.4-1
   name: traefik
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-traefik-certs-dumper.git
-  version: v2.10.0-2
+  version: v2.10.0-3
   name: traefik_certs_dumper
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-valkey.git
-  version: v9-0
+  version: v9.0.1-0
   name: valkey

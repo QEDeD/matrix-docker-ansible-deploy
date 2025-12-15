@@ -2242,8 +2242,8 @@ matrix_postmoogle_container_image_self_build: "{{ matrix_architecture not in ['a
 matrix_postmoogle_ssl_path: |-
   {{
     {
-      'playbook-managed-traefik': (traefik_certs_dumper_dumped_certificates_dir_path if traefik_certs_dumper_enabled else ''),
-      'other-traefik-container': (traefik_certs_dumper_dumped_certificates_dir_path if traefik_certs_dumper_enabled else ''),
+      'playbook-managed-traefik': (traefik_certs_dumper_dumped_certificates_path if traefik_certs_dumper_enabled else ''),
+      'other-traefik-container': (traefik_certs_dumper_dumped_certificates_path if traefik_certs_dumper_enabled else ''),
       'none': '',
     }[matrix_playbook_reverse_proxy_type]
   }}
@@ -3088,6 +3088,8 @@ matrix_corporal_matrix_registration_shared_secret: "{{ matrix_synapse_registrati
 # We don't enable matrixto by default.
 matrix_matrixto_enabled: false
 
+matrix_matrixto_base_path: "{{ matrix_base_data_path }}/matrixto"
+
 # The container image is not provided at https://github.com/matrix-org/matrix.to
 matrix_matrixto_container_image_self_build: true
 
@@ -3189,12 +3191,12 @@ matrix_coturn_container_additional_volumes: |
     (
       [
        {
-         'src': (traefik_certs_dumper_dumped_certificates_dir_path +  '/' + matrix_server_fqn_matrix + '/certificate.crt'),
+         'src': (traefik_certs_dumper_dumped_certificates_path +  '/' + matrix_server_fqn_matrix + '/certificate.crt'),
          'dst': '/certificate.crt',
          'options': 'ro',
        },
        {
-         'src': (traefik_certs_dumper_dumped_certificates_dir_path +  '/' + matrix_server_fqn_matrix + '/privatekey.key'),
+         'src': (traefik_certs_dumper_dumped_certificates_path +  '/' + matrix_server_fqn_matrix + '/privatekey.key'),
          'dst': '/privatekey.key',
          'options': 'ro',
        },
@@ -5834,6 +5836,20 @@ traefik_gid: "{{ matrix_user_gid }}"
 # This override (for the `web` entrypoint) also cascades to overriding the `web-secure` entrypoint and the `matrix-federation` entrypoint.
 traefik_config_entrypoint_web_transport_respondingTimeouts_readTimeout: 300s
 
+# Traefik v3.6.3+ blocks encoded characters in request paths by default for security.
+# Matrix API endpoints require encoded slashes (e.g., in room keys URLs) and encoded hashes (e.g., in room directory URLs).
+# Ref:
+# - https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/4798
+# - https://doc.traefik.io/traefik/migrate/v3/#v364
+traefik_config_entrypoint_web_secure_http_encodedCharacters_enabled: true
+traefik_config_entrypoint_web_secure_http_encodedCharacters_allowEncodedSlash: true
+traefik_config_entrypoint_web_secure_http_encodedCharacters_allowEncodedHash: true
+# Doing the same for the `web` entrypoint, for people who disable SSL for the playbook
+# and actually go through this entrypoint.
+traefik_config_entrypoint_web_http_encodedCharacters_enabled: "{{ not matrix_playbook_ssl_enabled }}"
+traefik_config_entrypoint_web_http_encodedCharacters_allowEncodedSlash: "{{ not matrix_playbook_ssl_enabled }}"
+traefik_config_entrypoint_web_http_encodedCharacters_allowEncodedHash: "{{ not matrix_playbook_ssl_enabled }}"
+
 traefik_additional_entrypoints_auto: |
   {{
     ([matrix_playbook_public_matrix_federation_api_traefik_entrypoint_definition] if matrix_playbook_public_matrix_federation_api_traefik_entrypoint_enabled else [])
@@ -5879,7 +5895,7 @@ traefik_certs_dumper_base_path: "{{ matrix_base_data_path }}/traefik-certs-dumpe
 traefik_certs_dumper_uid: "{{ matrix_user_uid }}"
 traefik_certs_dumper_gid: "{{ matrix_user_gid }}"
 
-traefik_certs_dumper_ssl_dir_path: "{{ traefik_ssl_dir_path if traefik_enabled else '' }}"
+traefik_certs_dumper_ssl_path: "{{ traefik_ssl_dir_path if traefik_enabled else '' }}"
 
 traefik_certs_dumper_container_image_registry_prefix_upstream: "{{ matrix_container_global_registry_prefix_override if matrix_container_global_registry_prefix_override else traefik_certs_dumper_container_image_registry_prefix_upstream_default }}"
 
@@ -5988,12 +6004,12 @@ livekit_server_container_additional_volumes_auto: |
     (
       [
        {
-         'src': (traefik_certs_dumper_dumped_certificates_dir_path +  '/' + livekit_server_config_turn_domain + '/certificate.crt'),
+         'src': (traefik_certs_dumper_dumped_certificates_path +  '/' + livekit_server_config_turn_domain + '/certificate.crt'),
          'dst': livekit_server_config_turn_cert_file,
          'options': 'ro',
        },
        {
-         'src': (traefik_certs_dumper_dumped_certificates_dir_path +  '/' + livekit_server_config_turn_domain + '/privatekey.key'),
+         'src': (traefik_certs_dumper_dumped_certificates_path +  '/' + livekit_server_config_turn_domain + '/privatekey.key'),
          'dst': livekit_server_config_turn_key_file,
          'options': 'ro',
        },
