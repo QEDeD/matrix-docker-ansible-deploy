@@ -105,6 +105,7 @@
         summary_discovery_available: true
       loop: "{{ docker_discovery.containers | default([]) }}"
       when: (item | docker_summary_container_name) | length > 0
+      no_log: "{{ docker_summary_quiet_tasks | default(true) | bool }}"
   rescue:
     - name: Abort when Docker host inspection fails
       ansible.builtin.fail:
