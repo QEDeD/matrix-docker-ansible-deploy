@@ -85,6 +85,11 @@ matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{ matri
 # Synapse Stats
 matrix_synapse_usage_exporter_enabled: true
 
+# Enable MSC3030 (jump to date / timestamp_to_event).
+matrix_synapse_configuration_extension_yaml: |
+  experimental_features:
+    msc3030_enabled: true
+
 # (Optional) Expose endpoint if you want to collect statistics from outside (from other homeservers).
 # If enabled, synapse-usage-exporter will be exposed publicly at `matrix.DOMAIN/report-usage-stats/push`.
 # When collecting usage statistics for Synapse running on the same host, you don't need to enable this.
