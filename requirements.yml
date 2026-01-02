@@ -4,7 +4,7 @@
   version: v1.0.0-5
   name: auxiliary
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg.git
-  version: v1.4.2-2.0.12-0
+  version: v1.4.3-2.0.13-0
   name: backup_borg
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-container-socket-proxy.git
   version: v0.4.2-0
@@ -16,7 +16,7 @@
   version: 542a2d68db4e9a8e9bb4b508052760b900c7dce6
   name: docker_sdk_for_python
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-etherpad.git
-  version: v2.5.2-2
+  version: v2.6.0-0
   name: etherpad
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-exim-relay.git
   version: v4.98.1-r0-2-2
@@ -28,7 +28,7 @@
   version: v10655-0
   name: jitsi
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-livekit-server.git
-  version: v1.9.9-0
+  version: v1.9.10-0
   name: livekit_server
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-ntfy.git
   version: v2.15.0-0
@@ -67,7 +67,7 @@
   version: v1.1.0-1
   name: timesync
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-traefik.git
-  version: v3.6.5-0
+  version: v3.6.6-0
   name: traefik
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-traefik-certs-dumper.git
   version: v2.10.0-3
