@@ -28,7 +28,7 @@ matrix_homeserver_implementation: synapse
 
 matrix_homeserver_generic_secret_key: "{{ matrix_homeserver_generic_secret_key }}"
 
-matrix_sliding_sync_enabled: true
+matrix_sliding_sync_enabled: false
 
 matrix_synapse_max_upload_size_mb: 150
 
@@ -113,6 +113,8 @@ matrix_rtc_enabled: true
 ########################################################################
 
 matrix_coturn_enabled: true
+
+matrix_coturn_authentication_method: lt-cred-mech
 
 matrix_coturn_container_network: "matrix-coturn"
 
