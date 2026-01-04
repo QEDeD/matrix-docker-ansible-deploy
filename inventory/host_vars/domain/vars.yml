@@ -32,6 +32,16 @@ matrix_synapse_max_upload_size_mb: 150
 #
 # Example value: someone@example.com
 
+# A secret used to protect access keys issued by the server.
+# You can put any string here, but generating a strong one is preferred (e.g. `pwgen -s 64 1`).
+matrix_synapse_macaroon_secret_key: "{{matrix_synapse_macaroon_secret_key}}"
+
+# A Postgres password to use for the superuser Postgres user (called `matrix` by default).
+#
+# The playbook creates additional Postgres users and databases (one for each enabled service)
+# using this superuser account.
+postgres_connection_password: "{{postgres_connection_password}}"
+
 ########################################################################
 #                                                                      #
 # Traefik                                                              #
@@ -58,21 +68,6 @@ traefik_additional_domains_to_obtain_certificates_for: "ha.int.{{domain}}"
 # /Traefik                                                             #
 #                                                                      #
 ########################################################################
-
-# A shared secret (between Coturn and Synapse) used for authentication.
-# You can put any string here, but generating a strong one is preferred (e.g. `pwgen -s 64 1`).
-# matrix_coturn_turn_static_auth_secret: 'IJFoEWlHchURaCPjxWgDCHOJwpM5QeYStIPy1g4zCLmd0o3nt9uCy8IAtZKVUpIq'
-# disabled 19/03/2023
-
-# A secret used to protect access keys issued by the server.
-# You can put any string here, but generating a strong one is preferred (e.g. `pwgen -s 64 1`).
-matrix_synapse_macaroon_secret_key: "{{matrix_synapse_macaroon_secret_key}}"
-
-# A Postgres password to use for the superuser Postgres user (called `matrix` by default).
-#
-# The playbook creates additional Postgres users and databases (one for each enabled service)
-# using this superuser account.
-postgres_connection_password: "{{postgres_connection_password}}"
 
 ## added things ##
 
@@ -139,6 +134,8 @@ matrix_playbook_docker_installation_daemon_options_custom:
 # Coturn                                                               #
 #                                                                      #
 ########################################################################
+
+matrix_coturn_authentication_method: lt-cred-mech
 
 matrix_coturn_container_network: "matrix-coturn"
 
