@@ -19,7 +19,7 @@ matrix_homeserver_implementation: synapse
 
 matrix_homeserver_generic_secret_key: "{{matrix_homeserver_generic_secret_key}}"
 
-matrix_sliding_sync_enabled: true
+matrix_sliding_sync_enabled: false
 
 matrix_synapse_max_upload_size_mb: 150
 
