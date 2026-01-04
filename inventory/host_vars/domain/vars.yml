@@ -20,10 +20,8 @@ matrix_homeserver_implementation: synapse
 matrix_homeserver_generic_secret_key: "{{matrix_homeserver_generic_secret_key}}"
 
 matrix_sliding_sync_enabled: true
-# 12/07/2023 - added
 
 matrix_synapse_max_upload_size_mb: 150
-# 12/07/2023 - added
 
 # This is something which is provided to Let's Encrypt when retrieving SSL certificates for domains.
 #
@@ -143,14 +141,8 @@ matrix_playbook_docker_installation_daemon_options_custom:
 ########################################################################
 
 matrix_coturn_container_network: "matrix-coturn"
-# 04/02/2024 - added
-
-# matrix_coturn_container_network: host
-# 09/03/2023 - added, #04/02/2024 - commented out
 
 matrix_coturn_turn_external_ip_address: ""
-
-# 28/06/2023 - added, #04/02/2024 - updated
 
 matrix_coturn_denied_peer_ips:
   - 0.0.0.0-0.255.255.255
@@ -192,13 +184,6 @@ grafana_default_admin_password: "{{grafana_default_admin_password}}"
 # Workers #
 matrix_synapse_workers_preset: one-of-each
 
-# added 13-06-2023 after workers started causing issues
-# commented out again again 22-10-2023:
-
-# postgres_process_extra_arguments: [
-#  "-c 'max_connections=200'"
-# ]
-
 # Element #
 # matrix_client_element_enabled: false
 
@@ -233,6 +218,3 @@ matrix_mx_puppet_discord_enabled: true
 
 ## Whatsapp ##
 matrix_mautrix_whatsapp_enabled: true
-# extra synapse #
-# matrix_synapse_container_federation_api_plain_host_bind_port: '8048'
-# matrix_synapse_container_client_api_host_bind_port: '8008'
