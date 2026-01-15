@@ -3648,6 +3648,8 @@ matrix_media_repo_container_additional_networks: |
       ([postgres_container_network] if (postgres_enabled and matrix_media_repo_database_hostname == postgres_connection_hostname and postgres_container_network != matrix_media_repo_container_network) else [])
       +
       ([matrix_playbook_reverse_proxyable_services_additional_network] if (matrix_playbook_reverse_proxyable_services_additional_network and matrix_media_repo_container_labels_traefik_enabled) else [])
+      +
+      ([valkey_container_network] if valkey_enabled and matrix_media_repo_redis_enabled else [])
     ) | unique
   }}
 
@@ -3712,6 +3714,21 @@ matrix_media_repo_homeservers_auto:
     signingKeyPath: "{{ '/config/' + matrix_media_repo_identifier + '.signing.key' if matrix_media_repo_generate_signing_key else '' }}"
 
 matrix_media_repo_homeserver_federation_enabled: "{{ matrix_homeserver_federation_enabled }}"
+
+matrix_media_repo_redis_enabled: "{{ valkey_enabled }}"
+
+# Use next redis index since Synapse is on 0. You can chose between index 0 and 15.
+matrix_media_repo_redis_database_number: 1
+
+matrix_media_repo_redis_shards: |
+  {{
+    ([{
+          'name': 'valkey',
+          'addr': (valkey_identifier + ':' + valkey_container_http_port | string),
+    }])
+    if valkey_enabled and matrix_media_repo_redis_enabled
+    else []
+  }}
 
 ######################################################################
 #
@@ -5837,20 +5854,6 @@ traefik_gid: "{{ matrix_user_gid }}"
 # It's common for setups to deal with large file uploads which may take longer than the default readTimeout (60s).
 # This override (for the `web` entrypoint) also cascades to overriding the `web-secure` entrypoint and the `matrix-federation` entrypoint.
 traefik_config_entrypoint_web_transport_respondingTimeouts_readTimeout: 300s
-
-# Traefik v3.6.3+ blocks encoded characters in request paths by default for security.
-# Matrix API endpoints require encoded slashes (e.g., in room keys URLs) and encoded hashes (e.g., in room directory URLs).
-# Ref:
-# - https://github.com/spantaleev/matrix-docker-ansible-deploy/issues/4798
-# - https://doc.traefik.io/traefik/migrate/v3/#v364
-traefik_config_entrypoint_web_secure_http_encodedCharacters_enabled: true
-traefik_config_entrypoint_web_secure_http_encodedCharacters_allowEncodedSlash: true
-traefik_config_entrypoint_web_secure_http_encodedCharacters_allowEncodedHash: true
-# Doing the same for the `web` entrypoint, for people who disable SSL for the playbook
-# and actually go through this entrypoint.
-traefik_config_entrypoint_web_http_encodedCharacters_enabled: "{{ not matrix_playbook_ssl_enabled }}"
-traefik_config_entrypoint_web_http_encodedCharacters_allowEncodedSlash: "{{ not matrix_playbook_ssl_enabled }}"
-traefik_config_entrypoint_web_http_encodedCharacters_allowEncodedHash: "{{ not matrix_playbook_ssl_enabled }}"
 
 traefik_additional_entrypoints_auto: |
   {{
