@@ -236,6 +236,19 @@ traefik_configuration_extension_yaml: |
       watch: true
       filename: ""
 
+traefik_config_http_middlewares_custom:
+  authentik-forwardauth:
+    forwardAuth:
+      address: "http://mash-authentik-server:9000/outpost.goauthentik.io/auth/traefik"
+      trustForwardHeader: true
+      authResponseHeaders:
+        - X-authentik-username
+        - X-authentik-groups
+        - X-authentik-email
+        - X-authentik-name
+        - X-authentik-uid
+        - X-authentik-jwt
+
 aux_file_definitions:
   # This file triggers wildcard certificate acquisition for *.{{ domain }}
   - dest: "{{ traefik_config_dir_path }}/provider_wildcard.yml"
@@ -267,6 +280,22 @@ aux_file_definitions:
             loadBalancer:
               servers:
                 - url: "http://10.1.154.4:8123"
+  - dest: "{{ traefik_config_dir_path }}/provider_authentik_outpost.yml"
+    content: |
+      http:
+        routers:
+          authentik-outpost:
+            rule: "HostRegexp(`{subdomain:[a-z0-9-]+}.{{ domain }}`) && PathPrefix(`/outpost.goauthentik.io/`)"
+            entryPoints: ["web-secure"]
+            priority: 10000
+            service: authentik-embedded
+            tls:
+              certResolver: "{{ traefik_certResolver_primary }}"
+        services:
+          authentik-embedded:
+            loadBalancer:
+              servers:
+                - url: "http://mash-authentik-server:9000"
 
 # ──────────────────────────────────────────────────────────────
 # TRAEFIK ACME / DNS‑01 SETTINGS
