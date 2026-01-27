@@ -119,13 +119,17 @@ matrix_coturn_authentication_method: lt-cred-mech
 matrix_coturn_container_network: "matrix-coturn"
 
 # matrix_coturn_container_network: host
-# 09/03/2023 - added, 04/02/2024 - commented out
 
 matrix_coturn_turn_external_ip_address: ""
 
+matrix_coturn_allowed_peer_ips:
+  - 10.0.0.0-10.255.255.255
+  - 172.16.0.0-172.16.255.255
+  - 192.168.2.0-192.168.127.255
+
 matrix_coturn_denied_peer_ips:
   - 0.0.0.0-0.255.255.255
-  # - 10.0.0.0-10.255.255.255
+  - 10.0.0.0-10.255.255.255
   - 100.64.0.0-100.127.255.255
   - 127.0.0.0-127.255.255.255
   - 169.254.0.0-169.254.255.255
@@ -137,6 +141,7 @@ matrix_coturn_denied_peer_ips:
   - 198.18.0.0-198.19.255.255
   - 198.51.100.0-198.51.100.255
   - 203.0.113.0-203.0.113.255
+  - 224.0.0.0-239.255.255.255
   - 240.0.0.0-255.255.255.255
   - ::1
   - 64:ff9b::-64:ff9b::ffff:ffff
@@ -146,6 +151,7 @@ matrix_coturn_denied_peer_ips:
   - 2002::-2002:ffff:ffff:ffff:ffff:ffff:ffff:ffff
   - fc00::-fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
   - fe80::-febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff
+  - ff00::-ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff
 
 ########################################################################
 #                                                                      #
