@@ -53,7 +53,20 @@ if [[ ! -d "${venv_path}" ]]; then
   log "virtualenv missing, creating a new one..."
   "${python_cmd}" -m venv "${venv_path}"
 else
-  log "virtualenv already exists, reusing current installation."
+  venv_python=""
+  if [[ -x "${venv_path}/bin/python" ]]; then
+    venv_python="${venv_path}/bin/python"
+  elif [[ -x "${venv_path}/bin/python3" ]]; then
+    venv_python="${venv_path}/bin/python3"
+  fi
+
+  if [[ -z "${venv_python}" ]]; then
+    log "virtualenv appears broken (missing python), recreating..."
+    rm -rf "${venv_path}"
+    "${python_cmd}" -m venv "${venv_path}"
+  else
+    log "virtualenv already exists, reusing current installation."
+  fi
 fi
 
 # shellcheck disable=SC1090,SC1091
