@@ -522,7 +522,7 @@ matrix_synapse_http_listener_resource_names: ["client"]
 
 # Resources served on Synapse's federation port.
 # When disabling federation, we may wish to serve the `openid` resource here,
-# so that services like Dimension and ma1sd can work.
+# so that services like Dimension can work.
 matrix_synapse_federation_listener_resource_names: "{{ ['federation'] if matrix_synapse_federation_enabled else (['openid'] if matrix_synapse_federation_port_openid_resource_required else []) }}"
 
 # Enable this to allow Synapse to report utilization statistics about your server to matrix.org
@@ -721,7 +721,7 @@ matrix_synapse_federation_enabled: true
 matrix_synapse_federation_port_enabled: "{{ matrix_synapse_federation_enabled or matrix_synapse_federation_port_openid_resource_required }}"
 
 # Controls whether an `openid` listener is to be enabled. Useful when disabling federation,
-# but needing the `openid` APIs for Dimension or an identity server like ma1sd.
+# but needing the `openid` APIs for Dimension.
 matrix_synapse_federation_port_openid_resource_required: false
 
 # A list of domain names that are allowed to federate with the given Synapse server.
@@ -1242,6 +1242,8 @@ matrix_synapse_email_smtp_pass: ""
 matrix_synapse_email_smtp_require_transport_security: false
 matrix_synapse_email_notif_from: "Matrix <matrix@{{ matrix_domain }}>"
 matrix_synapse_email_app_name: Matrix
+matrix_synapse_email_enable_notifs: true
+matrix_synapse_email_notif_for_new_users: true
 matrix_synapse_email_client_base_url: "{{ 'https' if matrix_playbook_ssl_enabled else 'http' }}://{{ matrix_server_fqn_element }}"
 matrix_synapse_email_invite_client_location: "https://app.element.io"
 

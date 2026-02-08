@@ -109,7 +109,7 @@ matrix_server_fqn_element: "element.{{ matrix_domain }}"
 # This is where you access the Hydrogen web client from (if enabled via matrix_client_hydrogen_enabled; disabled by default).
 matrix_server_fqn_hydrogen: "hydrogen.{{ matrix_domain }}"
 
-# This is where you access the Cinny web client from (if enabled via matrix_client_cinny_enabled; disabled by default).
+# This is where you access the Cinny web client from (if enabled via cinny_enabled; disabled by default).
 matrix_server_fqn_cinny: "cinny.{{ matrix_domain }}"
 
 # This is where you access the SchildiChat Web from (if enabled via matrix_client_schildichat_enabled; disabled by default).
@@ -233,12 +233,6 @@ matrix_homeserver_container_federation_url: "http://{{ matrix_homeserver_contain
 # Where this is depends on whether there's a reverse-proxy in front of the homeserver, which homeserver it is, etc.
 # This likely gets overridden elsewhere.
 matrix_homeserver_container_federation_api_endpoint: ""
-
-# Specifies the public url of the Sync v3 (sliding-sync) API.
-# This will be used to set the `org.matrix.msc3575.proxy` property in `/.well-known/matrix/client`.
-# Once the API is stabilized, this will no longer be required.
-# See MSC3575: https://github.com/matrix-org/matrix-spec-proposals/blob/kegan/sync-v3/proposals/3575-sync.md
-matrix_homeserver_sliding_sync_url: ""
 
 matrix_identity_server_url: ~
 
@@ -374,7 +368,7 @@ matrix_playbook_public_matrix_federation_api_traefik_entrypoint_definition:
 # This entrypoint provides local addons (e.g. bridges, bots, etc.) with the ability to easily & quickly communicate with the homeserver and/or related software.
 # Such services can reach the homeserver over the public internet (e.g. https://matrix.example.com), but this is slow due to networking and SSL-termination.
 # Talking directly to the homeserver (e.g. `http://matrix-synapse:8008`) is another option, but does not allow other homeserver-related software
-# (e.g. identity servers like ma1sd, media repository servers like matrix-media-repo, firewalls like matrix-corporal)
+# (e.g. media repository servers like matrix-media-repo, firewalls like matrix-corporal)
 # to register itself for certain homeserver routes.
 #
 # For example: when matrix-media-repo is enabled, it wishes to handle `/_matrix/media` both publicly and internally.

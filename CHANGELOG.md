@@ -1,3 +1,73 @@
+# 2026-02-08
+
+## ma1sd has been removed from the playbook
+
+[ma1sd](./docs/configuring-playbook-ma1sd.md) has been removed from the playbook, as it has been unmaintained for a long time.
+
+The playbook will let you know if you're using any `matrix_ma1sd_*` variables. You'll need to remove them from `vars.yml` and potentially [uninstall the component manually](./docs/configuring-playbook-ma1sd.md#uninstalling-the-component-manually).
+
+Please note that some of the functions can be achieved with other components. For example, if you wish to implement LDAP integration, you might as well check out [the LDAP provider module for Synapse](./docs/configuring-playbook-ldap-auth.md) instead.
+
+# 2026-02-07
+
+## (BC Break) Cinny role has been relocated and variable names need adjustments
+
+The role for Cinny has been relocated to the [mother-of-all-self-hosting](https://github.com/mother-of-all-self-hosting) organization.
+
+Along with the relocation, the `matrix_client_cinny_` prefix was dropped from its variable names, so you need to adjust your `vars.yml` configuration.
+
+You need to do the following replacement:
+
+- `matrix_client_cinny_` -> `cinny_`
+
+As always, the playbook would let you know about this and point out any variables you may have missed.
+
+## The Sliding Sync proxy has been removed from the playbook
+
+The [Sliding Sync proxy](./docs/configuring-playbook-sliding-sync-proxy.md) has been removed from the playbook, as it's been replaced with a different method (called Simplified Sliding Sync) integrated to newer homeservers by default (**Conduit** homeserver from version `0.6.0` or **Synapse** from version `1.114`).
+
+The playbook will let you know if you're using any `matrix_sliding_sync_*` variables. You'll need to remove them from `vars.yml` and potentially [uninstall the proxy manually](./docs/configuring-playbook-sliding-sync-proxy.md#uninstalling-the-proxy-manually).
+
+# 2026-02-04
+
+## baibot now supports OpenAI's built-in tools (Web Search and Code Interpreter)
+
+**TLDR**: if you're using the [OpenAI provider](https://github.com/etkecc/baibot/blob/main/docs/providers.md#openai) with [baibot](docs/configuring-playbook-bot-baibot.md), you can now enable [built-in tools](https://github.com/etkecc/baibot/blob/61d18b2/docs/features.md#%EF%B8%8F-built-in-tools-openai-only) (`web_search` and `code_interpreter`) to extend the model's capabilities.
+
+These tools are **disabled by default** and can be enabled via Ansible variables for static agent configurations:
+
+```yaml
+matrix_bot_baibot_config_agents_static_definitions_openai_config_text_generation_tools_web_search: true
+matrix_bot_baibot_config_agents_static_definitions_openai_config_text_generation_tools_code_interpreter: true
+```
+
+Users who define agents dynamically at runtime will need to [update their agents](https://github.com/etkecc/baibot/blob/61d18b2/docs/agents.md#updating-agents) to enable these tools. See the [baibot v1.14.0 changelog](https://github.com/etkecc/baibot/blob/61d18b2/CHANGELOG.md) for details.
+
+## Whoami-based sync worker routing for improved sticky sessions for Synapse
+
+Deployments using [Synapse workers](./docs/configuring-playbook-synapse.md#load-balancing-with-workers) now benefit from improved sync worker routing via a new whoami-based mechanism (making use of the [whoami Matrix Client-Server API](https://spec.matrix.org/v1.17/client-server-api/#get_matrixclientv3accountwhoami)).
+
+Previously, sticky routing for sync workers relied on parsing usernames from access tokens, which only worked with native Synapse tokens (`syt_<base64 username>_...`). This approach failed for [Matrix Authentication Service](docs/configuring-playbook-matrix-authentication-service.md) (MAS) deployments, where tokens are opaque and don't contain username information. This resulted in device-level stickiness (same token → same worker) rather than user-level stickiness (same user → same worker regardless of device), leading to suboptimal cache utilization on sync workers.
+
+The new implementation calls Synapse's `/whoami` endpoint to resolve access tokens to usernames, enabling proper user-level sticky routing regardless of the authentication system in use (native Synapse auth, MAS, etc.). Results are cached to minimize overhead.
+
+This change:
+- **Automatically enables** when sync workers are configured (no action required)
+- **Works universally** with any authentication system
+- **Replaces the old implementation** entirely to keep the codebase simple
+- **Adds minimal overhead** (one cached internal subrequest per sync request) for non-MAS deployments
+
+For debugging, you can enable verbose logging and/or response headers showing routing decisions:
+
+```yaml
+# Logs cache hits/misses and routing decisions to the container's stderr
+matrix_synapse_reverse_proxy_companion_whoami_sync_worker_router_logging_enabled: true
+
+# Adds X-Sync-Worker-Router-User-Identifier and X-Sync-Worker-Router-Upstream headers to sync responses
+matrix_synapse_reverse_proxy_companion_whoami_sync_worker_router_debug_headers_enabled: true
+```
+
+
 # 2025-12-09
 
 ## Traefik Cert Dumper upgrade

@@ -4,8 +4,11 @@
   version: v1.0.0-6
   name: auxiliary
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg.git
-  version: v1.4.3-2.0.13-0
+  version: v1.4.3-2.1.1-0
   name: backup_borg
+- src: git+https://github.com/mother-of-all-self-hosting/ansible-role-cinny.git
+  version: v4.10.2-1
+  name: cinny
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-container-socket-proxy.git
   version: v0.4.2-1
   name: container_socket_proxy
@@ -25,13 +28,13 @@
   version: v11.6.5-6
   name: grafana
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-jitsi.git
-  version: v10710-0
+  version: v10741-0
   name: jitsi
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-livekit-server.git
   version: v1.9.11-0
   name: livekit_server
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-ntfy.git
-  version: v2.16.0-0
+  version: v2.16.0-1
   name: ntfy
 - src: git+https://github.com/devture/com.devture.ansible.role.playbook_help.git
   version: 8630e4f1749bcb659c412820f754473f09055052
@@ -55,13 +58,13 @@
   version: v1.9.1-13
   name: prometheus_node_exporter
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus-postgres-exporter.git
-  version: v0.18.1-2
+  version: v0.19.0-0
   name: prometheus_postgres_exporter
 - src: git+https://github.com/devture/com.devture.ansible.role.systemd_docker_base.git
   version: v1.4.1-0
   name: systemd_docker_base
 - src: git+https://github.com/devture/com.devture.ansible.role.systemd_service_manager.git
-  version: v1.0.0-4
+  version: v1.1.0-0
   name: systemd_service_manager
 - src: git+https://github.com/devture/com.devture.ansible.role.timesync.git
   version: v1.1.0-1
@@ -73,5 +76,5 @@
   version: v2.10.0-4
   name: traefik_certs_dumper
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-valkey.git
-  version: v9.0.1-0
+  version: v9.0.2-0
   name: valkey
