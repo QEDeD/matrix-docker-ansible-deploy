@@ -335,9 +335,9 @@ traefik_environment_variables: |
 #                                                                      #
 ########################################################################
 
-matrix_dynamic_dns_enabled: true
+ddclient_enabled: true
 
-matrix_dynamic_dns_domain_configurations:
+ddclient_domain_configurations:
   - protocol: cloudflare
     zone: "{{ domain }}"
     ttl: 1
