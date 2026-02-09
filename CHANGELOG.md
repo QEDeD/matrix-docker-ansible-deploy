@@ -1,4 +1,55 @@
+# 2026-02-09
+
+## (BC Break) matrix-media-repo datastore IDs are now required in `vars.yml`
+
+**Affects**: users with [matrix-media-repo](docs/configuring-playbook-matrix-media-repo.md) enabled (`matrix_media_repo_enabled: true`)
+
+The `matrix_media_repo_datastore_file_id` and `matrix_media_repo_datastore_s3_id` variables are no longer auto-configured with values. They must now be explicitly defined in your `vars.yml` file. The playbook will fail with a helpful error if they are not set (when needed).
+
+These were never meant to be auto-configured. They were derived from `matrix_homeserver_generic_secret_key`, which is intended for secrets that are OK to change subsequently (and Ansible would assist in propagating these changes). matrix-media-repo datastore IDs are not secrets — they are static identifiers linking media to storage backends, and **must not change** after first use.
+
+**For existing installations**, retrieve your current values from the server:
+
+```sh
+grep 'id:' /matrix/media-repo/config/media-repo.yaml
+```
+
+Then add to your `vars.yml`:
+
+```yaml
+matrix_media_repo_datastore_file_id: "YOUR_FILE_DATASTORE_ID_HERE"
+
+# Only if you use S3 storage:
+# matrix_media_repo_datastore_s3_id: "YOUR_S3_DATASTORE_ID_HERE"
+```
+
+**Why do this?**: This change allows us to **remove the [passlib](https://passlib.readthedocs.io/en/stable/index.html) Python library** from the [prerequisites](docs/prerequisites.md), as it was the last component that depended on it.
+
 # 2026-02-08
+
+## Zulip bridge has been removed from the playbook
+
+Zulip bridge has been removed from the playbook, as it doesn't work, and the maintainer seems to have abandoned it. See [this issue](https://github.com/GearKite/MatrixZulipBridge/issues/23) for more context.
+
+## Switched to faster secret derivation for service passwords
+
+We've switched the method used for deriving service passwords (database passwords, appservice tokens, etc.) from the `matrix_homeserver_generic_secret_key` variable.
+
+The old method used `password_hash('sha512', rounds=655555)` (655,555 rounds of SHA-512 hashing), which was designed for protecting low-entropy human passwords against brute-force attacks. For deriving secrets from an already high-entropy secret key, this many rounds provide no additional security - the secret key's entropy is what protects the derived passwords, not the computational cost of hashing.
+
+The new method uses a single-round `hash('sha512')` with a unique salt per service. This is equally secure for this use case (SHA-512 remains preimage-resistant; brute-forcing a high-entropy key is infeasible regardless of rounds), while being dramatically faster.
+
+On a fast mini PC, evaluating `postgres_managed_databases` (which references multiple database passwords) dropped from **~10.7 seconds to ~0.6 seconds**. The Postgres role evaluates this variable multiple times during a run, so the cumulative savings are significant. All other roles that reference derived passwords also benefit.
+
+**What this means for users**: all derived service passwords (database passwords, appservice tokens, etc.) will change on the next playbook run. The main/superuser database password (`postgres_connection_password`) is not affected, as it is hardcoded in inventory variables rather than derived via hashing. All services will receive their new passwords as part of the same run, so this should be a seamless, non-user-impacting change.
+
+## (BC Break) Dynamic DNS role has been relocated and variable names need adjustments
+
+The role for Dynamic DNS has been relocated to the [mother-of-all-self-hosting](https://github.com/mother-of-all-self-hosting) organization.
+
+Along with the relocation, the `matrix_dynamic_dns_` prefix on its variable names has been renamed to `ddclient_`, so you need to adjust your `vars.yml` configuration.
+
+As always, the playbook would let you know about this and point out any variables you may have missed.
 
 ## ma1sd has been removed from the playbook
 
