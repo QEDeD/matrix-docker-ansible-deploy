@@ -77,6 +77,20 @@
 - To include markdown files explicitly, pass them via `EXTRA_LINT_PATHS`.
 - Example: `EXTRA_LINT_PATHS="docs/ai/agent_workflows.md" bash ./bin/lint-playbook.sh`
 
+## External Role Lint Policy
+
+- Treat lint findings in external/vendor role trees as informational by default
+  (for example, `roles/galaxy/**`).
+- Do not block local operator-owned changes on unrelated external-role lint
+  issues.
+- Default validation scope should be:
+- changed files
+- operator-owned local paths
+- service-specific syntax/lint checks relevant to the task
+- Only fix external-role lint when explicitly in contribution mode:
+- intentionally patching/forking that role
+- preparing a dedicated upstream PR for the role/playbook
+
 ## Pre-Flight and Finalization
 
 - Before suggesting remote-impact execution, run local pre-flight checks:
