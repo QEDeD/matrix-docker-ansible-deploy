@@ -110,22 +110,22 @@ matrix_rtc_enabled: true
 #                                                                      #
 ########################################################################
 
-matrix_coturn_enabled: true
+coturn_enabled: true
 
-matrix_coturn_authentication_method: lt-cred-mech
+coturn_authentication_method: lt-cred-mech
 
-matrix_coturn_container_network: "matrix-coturn"
+coturn_container_network: "matrix-coturn"
 
-# matrix_coturn_container_network: host
+# coturn_container_network: host
 
-matrix_coturn_turn_external_ip_address: ""
+coturn_turn_external_ip_address: ""
 
-matrix_coturn_allowed_peer_ips:
+coturn_allowed_peer_ips:
   - 10.0.0.0-10.255.255.255
   - 172.16.0.0-172.16.255.255
   - 192.168.2.0-192.168.127.255
 
-matrix_coturn_denied_peer_ips:
+coturn_denied_peer_ips:
   - 0.0.0.0-0.255.255.255
   - 10.0.0.0-10.255.255.255
   - 100.64.0.0-100.127.255.255
