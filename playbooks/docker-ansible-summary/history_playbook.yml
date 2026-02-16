@@ -4,11 +4,11 @@
 ---
 # Docker Service Version History viewing playbook
 - name: View Docker Service Version History
-  hosts: "{{ target_host | default(docker_summary_target_host | default('matrix_servers')) }}"
+  hosts: "{{ target_host | default(docker_ansible_summary_target_host | default('matrix_servers')) }}"
   gather_facts: true
   vars:
-    summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
-    summary_table_style_unicode: "{{ docker_summary_table_style_unicode | default(true) }}"
+    summary_history_fact_file: "{{ docker_ansible_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    summary_table_style_unicode: "{{ docker_ansible_summary_table_style_unicode | default(true) }}"
   tasks:
     - name: Validate view mode
       ansible.builtin.fail:
@@ -26,4 +26,4 @@
       when: not history_file.stat.exists
 
     - name: Include version history display task
-      ansible.builtin.include_tasks: ../../roles/custom/docker-ansible-summary/tasks/view_history.yml
+      ansible.builtin.include_tasks: ../../roles/docker_ansible_summary/tasks/view_history.yml

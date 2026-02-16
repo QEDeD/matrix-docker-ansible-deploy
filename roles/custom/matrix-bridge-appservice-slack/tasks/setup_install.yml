@@ -118,7 +118,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-appservice-slack.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-appservice-slack.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_appservice_slack_systemd_service_result
 
 - name: Determine whether matrix-appservice-slack needs a restart

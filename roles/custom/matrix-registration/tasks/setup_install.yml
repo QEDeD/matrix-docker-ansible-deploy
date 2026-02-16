@@ -130,7 +130,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-registration.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-registration.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_registration_systemd_service_result
 
 - name: Determine whether matrix-registration needs a restart

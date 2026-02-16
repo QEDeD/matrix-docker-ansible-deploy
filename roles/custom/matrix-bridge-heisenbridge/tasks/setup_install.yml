@@ -62,7 +62,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-heisenbridge.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-heisenbridge.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_heisenbridge_systemd_service_result
 
 - name: Determine whether matrix-heisenbridge needs a restart

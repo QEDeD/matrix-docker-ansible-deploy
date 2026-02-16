@@ -1,0 +1,22 @@
+---
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Verify Unicode rendering and NOTES column
+- name: Run mock summary with unicode table and notes
+  ansible.builtin.include_role:
+    name: docker_ansible_summary
+  vars:
+    docker_ansible_summary_mock_mode: true
+    docker_ansible_summary_mode: changes
+    docker_ansible_summary_table_style_unicode: true
+    docker_ansible_summary_table_show_notes: true
+    docker_ansible_summary_table_notes_include_state: true
+    docker_ansible_summary_write_facts: false
+    docker_ansible_summary_enable_discovery: false
+
+- name: Assert unicode table contains notes header
+  ansible.builtin.assert:
+    that:
+      - version_summary_table_text is search('┌')
+      - version_summary_table_text is search('NOTES')
+    fail_msg: "Unicode table should use box-drawing characters and expose NOTES column"

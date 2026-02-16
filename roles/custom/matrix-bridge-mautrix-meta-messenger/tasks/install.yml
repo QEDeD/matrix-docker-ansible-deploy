@@ -121,7 +121,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-mautrix-meta.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ matrix_mautrix_meta_messenger_identifier }}.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_mautrix_meta_messenger_systemd_service_result
 
 - name: Determine whether mautrix-meta-messenger needs a restart

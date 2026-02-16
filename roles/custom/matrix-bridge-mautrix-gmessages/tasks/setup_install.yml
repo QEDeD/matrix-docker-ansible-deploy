@@ -139,7 +139,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-mautrix-gmessages.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-mautrix-gmessages.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_mautrix_gmessages_systemd_service_result
 
 - name: Ensure mautrix-gmessages support files installed

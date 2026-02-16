@@ -34,7 +34,7 @@
     dest: "{{ matrix_bot_baibot_config_path }}/env"
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
-    mode: 0640
+    mode: '0640'
   register: matrix_bot_baibot_env_result
 
 - name: Ensure baibot container image is pulled
@@ -83,7 +83,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-bot-baibot.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-bot-baibot.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_bot_baibot_systemd_service_result
 
 - name: Determine whether baibot needs a restart

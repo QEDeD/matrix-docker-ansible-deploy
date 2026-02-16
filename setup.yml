@@ -156,7 +156,7 @@
 
     - role: galaxy/playbook_runtime_messages
 
-    - role: custom/docker-ansible-summary
+    - role: docker_ansible_summary
       tags:
         - always
         - docker-ansible-summary

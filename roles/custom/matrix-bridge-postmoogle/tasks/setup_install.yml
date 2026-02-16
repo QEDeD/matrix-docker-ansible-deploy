@@ -75,7 +75,7 @@
     dest: "{{ matrix_postmoogle_config_path }}/env"
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
-    mode: 0640
+    mode: '0640'
   register: matrix_postmoogle_env_result
 
 - name: Ensure postmoogle image is pulled

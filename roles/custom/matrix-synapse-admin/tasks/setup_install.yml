@@ -30,7 +30,7 @@
     dest: "{{ matrix_synapse_admin_base_path }}/labels"
     owner: "{{ matrix_user_name }}"
     group: "{{ matrix_group_name }}"
-    mode: 0640
+    mode: '0640'
   register: matrix_synapse_admin_support_files_result
 
 - name: Ensure matrix-synapse-admin configuration installed
@@ -88,7 +88,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-synapse-admin.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-synapse-admin.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_synapse_admin_systemd_service_result
 
 - name: Determine whether Synapse Admin needs a restart

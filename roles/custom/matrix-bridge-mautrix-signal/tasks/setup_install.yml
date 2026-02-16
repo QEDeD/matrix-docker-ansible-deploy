@@ -162,7 +162,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-mautrix-signal.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-mautrix-signal.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_mautrix_signal_systemd_service_result
 
 - name: Determine whether matrix-mautrix-signal needs a restart

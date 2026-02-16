@@ -4,13 +4,13 @@
 ---
 # Docker Service Version History trimming playbook
 - name: Trim Docker Service Version History
-  hosts: "{{ target_host | default(docker_summary_target_host | default('matrix_servers')) }}"
+  hosts: "{{ target_host | default(docker_ansible_summary_target_host | default('matrix_servers')) }}"
   gather_facts: true
   vars:
     confirm_trim: "{{ confirm_trim | default('no') }}"
-    summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
-    summary_history_max_entries: "{{ docker_summary_history_max_entries | default(100) | int }}"
-    summary_retention_days: "{{ docker_summary_retention_days | default(365) | int }}"
+    summary_history_fact_file: "{{ docker_ansible_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    summary_history_max_entries: "{{ docker_ansible_summary_history_max_entries | default(100) | int }}"
+    summary_retention_days: "{{ docker_ansible_summary_retention_days | default(365) | int }}"
   tasks:
     - name: Confirm history trimming
       ansible.builtin.fail:

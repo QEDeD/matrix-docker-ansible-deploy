@@ -106,7 +106,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-static-files.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ matrix_static_files_identifier }}.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_static_files_systemd_service_result
 
 - name: Determine whether matrix-static-files needs a restart

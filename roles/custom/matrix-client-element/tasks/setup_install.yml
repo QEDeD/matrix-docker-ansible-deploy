@@ -128,7 +128,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-client-element.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-client-element.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_client_element_systemd_service_result
 
 - name: Determine whether Element Web needs a restart

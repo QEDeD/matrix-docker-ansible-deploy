@@ -106,7 +106,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-authentication-service.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-authentication-service.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_authentication_service_systemd_service_result
 
 - name: Determine whether Matrix Authentication Service needs a restart

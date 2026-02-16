@@ -179,7 +179,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-mautrix-telegram.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-mautrix-telegram.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_mautrix_telegram_systemd_service_result
 
 - name: Determine whether matrix-mautrix-telegram needs a restart

@@ -73,9 +73,27 @@
 ## Markdown Linting
 
 - Markdown files should be linted locally after edits.
-- Use the repository lint script: `bash ./bin/lint-playbook.sh`
+- Use the repository lint script in scoped mode (default):
+- `bash ./bin/lint-playbook.sh`
 - To include markdown files explicitly, pass them via `EXTRA_LINT_PATHS`.
 - Example: `EXTRA_LINT_PATHS="docs/ai/agent_workflows.md" bash ./bin/lint-playbook.sh`
+
+## Lint Scope Modes
+
+- `bin/lint-playbook.sh` supports `LINT_PLAYBOOK_SCOPE=scoped|full`.
+- Default is `scoped`.
+- Scoped mode:
+- lints the repository's target inventory/group vars list
+- does not auto-lint `roles/custom` or Jitsi playbooks
+- use `LINT_PLAYBOOK_ROLE_PATHS` to include specific local role trees
+- Example (target DAS role): `LINT_PLAYBOOK_ROLE_PATHS="roles/docker_ansible_summary" bash ./bin/lint-playbook.sh`
+- Full mode:
+- restores broad diagnostics for upstream debt discovery
+- includes repository-wide role lint target paths and matrix Jitsi targets
+- Example: `LINT_PLAYBOOK_SCOPE=full bash ./bin/lint-playbook.sh`
+- Treat full-mode output as diagnostic by default:
+- classify findings into local actionable changes, upstream baseline debt, and external/vendor findings
+- only broaden fixes when explicitly doing upstream contribution work
 
 ## External Role Lint Policy
 
@@ -95,6 +113,7 @@
 
 - Before suggesting remote-impact execution, run local pre-flight checks:
 - `bash ./bin/lint-playbook.sh`
+- `LINT_PLAYBOOK_ROLE_PATHS="roles/docker_ansible_summary" bash ./bin/lint-playbook.sh` (when DAS/local-role changes are in scope)
 - `ansible-playbook -i inventory/hosts setup.yml --syntax-check`
 - Run `ansible-playbook -i inventory/hosts setup.yml --list-tags` as a sanity check after optimization/template regeneration and verify expected service tags are present.
 - For commit hygiene:

@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+# Main entry point for the docker-ansible-summary role
+
+- name: Collect legacy docker_summary_* variable names
+  ansible.builtin.set_fact:
+    docker_ansible_summary_legacy_vars: "{{ query('ansible.builtin.varnames', '^docker_summary_') | sort }}"
+  tags: ["docker-ansible-summary", "setup"]
+
+- name: Fail when legacy docker_summary_* variables are provided
+  ansible.builtin.assert:
+    that:
+      - docker_ansible_summary_legacy_vars | length == 0
+    fail_msg: >-
+      Legacy Docker Ansible Summary variables were detected:
+      {{ docker_ansible_summary_legacy_vars | join(', ') }}.
+      Rename them to docker_ansible_summary_* equivalents.
+  tags: ["docker-ansible-summary", "setup"]
+
+- name: Ensure facts directory exists
+  ansible.builtin.file:
+    path: "{{ docker_ansible_summary_facts_dir | default('/etc/ansible/facts.d') }}"
+    state: directory
+    mode: '0755'
+  become: "{{ docker_ansible_summary_write_facts_become | default(true) | bool }}"
+  tags: ["docker-ansible-summary", "setup"]
+  when:
+    - docker_ansible_summary_enabled | default(true) | bool
+    - docker_ansible_summary_write_facts | default(true) | bool
+
+- name: Skip docker ansible summary when disabled
+  ansible.builtin.meta: end_play
+  when: not (docker_ansible_summary_enabled | default(true) | bool)
+
+# Enable mock mode for testing without Docker
+- name: Execute mock mode
+  ansible.builtin.import_tasks: mock_mode.yml
+  tags: ["docker-ansible-summary", "mock"]
+  when:
+    - docker_ansible_summary_enabled | default(true) | bool
+    - docker_ansible_summary_mock_mode | default(false) | bool
+
+- name: Display current version summary
+  ansible.builtin.import_tasks: display_summary.yml
+  tags: ["docker-ansible-summary", "version_summary"]
+  when:
+    - docker_ansible_summary_enabled | default(true) | bool
+    - docker_ansible_summary_display | default(true) | bool
+
+- name: View version history
+  ansible.builtin.include_tasks: view_history.yml
+  tags: ["docker-ansible-summary", "version_history"]
+  when:
+    - docker_ansible_summary_enabled | default(true) | bool
+    - docker_ansible_summary_show_history | default(false) | bool

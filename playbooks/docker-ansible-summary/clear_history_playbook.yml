@@ -4,11 +4,11 @@
 ---
 # Docker Service Version History management playbook
 - name: Clear Docker Service Version History
-  hosts: "{{ target_host | default(docker_summary_target_host | default('matrix_servers')) }}"
+  hosts: "{{ target_host | default(docker_ansible_summary_target_host | default('matrix_servers')) }}"
   gather_facts: true
   vars:
     confirm_clear: "{{ confirm_clear | default('no') }}"
-    summary_history_fact_file: "{{ docker_summary_history_fact_file | default('matrix_version_history.fact') }}"
+    summary_history_fact_file: "{{ docker_ansible_summary_history_fact_file | default('matrix_version_history.fact') }}"
   tasks:
     - name: Confirm history clearing
       ansible.builtin.fail:

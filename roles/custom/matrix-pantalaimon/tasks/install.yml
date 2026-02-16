@@ -72,7 +72,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-pantalaimon.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-pantalaimon.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_pantalaimon_systemd_service_result
 
 - name: Determine whether Pantalaimon needs a restart

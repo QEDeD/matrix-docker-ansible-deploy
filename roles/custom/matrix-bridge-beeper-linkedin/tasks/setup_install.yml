@@ -106,7 +106,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-beeper-linkedin.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-beeper-linkedin.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_beeper_linkedin_systemd_service_result
 
 - name: Determine whether matrix-beeper-linkedin needs a restart

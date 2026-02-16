@@ -1,0 +1,90 @@
+---
+# SPDX-FileCopyrightText: 2025 MDAD project contributors
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- name: Override DAS scope for matrix containers (recovery visibility)
+  ansible.builtin.set_fact:
+    docker_ansible_summary_scope: "{{ das_matrix_scope_pattern }}"
+
+- name: Bootstrap from collected baseline when display state is missing
+  ansible.builtin.include_role:
+    name: docker_ansible_summary
+  vars:
+    docker_ansible_summary_scope:
+      - "{{ das_matrix_scope_pattern }}"
+    docker_ansible_summary_write_facts: false
+    docker_ansible_summary_enable_discovery: true
+    docker_ansible_summary_table_style_unicode: false
+    docker_ansible_summary_ansible_local_override:
+      matrix_versions: "{{ {(das_matrix_api_name): 'alpine:3.20', (das_matrix_worker_name): 'alpine:3.19'} }}"
+      matrix_version_history:
+        last_metadata: {}
+        changes: []
+        full_history: {}
+
+- name: Assert missing display state bootstraps from collected versions
+  ansible.builtin.assert:
+    that:
+      - not (summary_display_state_exists | bool)
+      - not (summary_recovery_mode | bool)
+      - not (first_run | bool)
+      - after_versions[das_matrix_api_name].change_type == 'unchanged'
+    fail_msg: "When display-state facts are missing, DAS should bootstrap from collected versions without recovery mode."
+
+- name: Detect unseen changes when collected state is ahead of displayed state
+  ansible.builtin.include_role:
+    name: docker_ansible_summary
+  vars:
+    docker_ansible_summary_scope:
+      - "{{ das_matrix_scope_pattern }}"
+    docker_ansible_summary_write_facts: false
+    docker_ansible_summary_enable_discovery: true
+    docker_ansible_summary_table_style_unicode: false
+    docker_ansible_summary_ansible_local_override:
+      matrix_versions: "{{ {(das_matrix_api_name): 'alpine:3.20', (das_matrix_worker_name): 'alpine:3.19'} }}"
+      matrix_version_history:
+        last_metadata: {}
+        changes: []
+        full_history: {}
+      matrix_display_state:
+        versions: "{{ {(das_matrix_api_name): 'alpine:3.18', (das_matrix_worker_name): 'alpine:3.19'} }}"
+        metadata: {}
+        displayed_at: "2026-01-01T00:00:00Z"
+
+- name: Assert recovery mode surfaces unseen change and footer note
+  ansible.builtin.assert:
+    that:
+      - summary_display_state_exists | bool
+      - summary_recovery_mode | bool
+      - after_versions[das_matrix_api_name].change_type == 'updated'
+      - version_summary_table_text is search('\\[RECOVERY NOTICE\\]')
+    fail_msg: "DAS should diff from last displayed state and show a recovery notice when prior unseen changes exist."
+
+- name: Clear recovery mode after display-state baseline catches up
+  ansible.builtin.include_role:
+    name: docker_ansible_summary
+  vars:
+    docker_ansible_summary_scope:
+      - "{{ das_matrix_scope_pattern }}"
+    docker_ansible_summary_write_facts: false
+    docker_ansible_summary_enable_discovery: true
+    docker_ansible_summary_table_style_unicode: false
+    docker_ansible_summary_ansible_local_override:
+      matrix_versions: "{{ {(das_matrix_api_name): 'alpine:3.20', (das_matrix_worker_name): 'alpine:3.19'} }}"
+      matrix_version_history:
+        last_metadata: {}
+        changes: []
+        full_history: {}
+      matrix_display_state:
+        versions: "{{ {(das_matrix_api_name): 'alpine:3.20', (das_matrix_worker_name): 'alpine:3.19'} }}"
+        metadata: {}
+        displayed_at: "2026-01-02T00:00:00Z"
+
+- name: Assert aligned baseline removes recovery notice
+  ansible.builtin.assert:
+    that:
+      - summary_display_state_exists | bool
+      - not (summary_recovery_mode | bool)
+      - after_versions[das_matrix_api_name].change_type == 'unchanged'
+      - version_summary_table_text is not search('\\[RECOVERY NOTICE\\]')
+    fail_msg: "Once display state matches collected state, DAS should stop showing recovery mode and return to unchanged output."

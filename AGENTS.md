@@ -262,15 +262,8 @@ For secret-bearing files:
   from repository root).
 - If unavailable, use the most specific feasible fallback (`just lint` or
   `ansible-playbook ... --syntax-check`).
-- External role policy:
-- treat lint findings in external/vendor roles as non-actionable by default
-  (for example, `roles/galaxy/**` and other third-party sourced role trees)
-- do not broaden local changes to satisfy external-role lint unless explicitly
-  requested
-- if external-role remediation is required, do it intentionally via a dedicated
-  fork/patch branch and prepare an upstream contribution
-- For local work, prefer targeted lint on changed files and operator-owned paths
-  before running broad repository lint.
+- Detailed scoped/full lint policy and external-role handling lives in
+  `docs/ai/agent_workflows.md`.
 - If validation cannot be run, say so explicitly.
 
 ## Audit trail and commits

@@ -95,7 +95,7 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/matrix-steam-bridge.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-steam-bridge.service"
-    mode: 0644
+    mode: '0644'
   register: matrix_steam_bridge_systemd_service_result
 
 - name: Determine whether matrix-steam-bridge needs a restart

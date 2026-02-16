@@ -69,6 +69,16 @@ matrix_synapse_workers_preset: one-of-each
 
 # matrix_client_element_enabled: false
 
+# Element location sharing (maps)
+matrix_client_element_location_sharing_enabled: true
+matrix_client_element_location_sharing_map_style_content_sources_localsource_tiles:
+  - "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+matrix_client_element_location_sharing_map_style_content_sources_localsource_attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors"
+
+# Compatibility for clients fetching map_style.json cross-origin
+matrix_client_element_container_labels_traefik_additional_response_headers_custom:
+  Access-Control-Allow-Origin: "*"
+
 # Serve base domain
 
 matrix_static_files_container_labels_base_domain_enabled: true
@@ -188,13 +198,13 @@ matrix_mautrix_meta_messenger_enabled: false
 #                                                                      #
 ########################################################################
 
-docker_summary_enabled: true
-docker_summary_scope:
+docker_ansible_summary_enabled: true
+docker_ansible_summary_scope:
   - "matrix-*"
   - "mash-*"
-# docker_summary_history_max_entries: 100
-# docker_summary_retention_days: 365
-# docker_summary_table_style_unicode: false
+# docker_ansible_summary_history_max_entries: 100
+# docker_ansible_summary_retention_days: 365
+# docker_ansible_summary_table_style_unicode: false
 
 ########################################################################
 #                                                                      #
