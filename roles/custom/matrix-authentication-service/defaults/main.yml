@@ -22,7 +22,7 @@ matrix_authentication_service_container_repo_version: "{{ 'main' if matrix_authe
 matrix_authentication_service_container_src_files_path: "{{ matrix_base_data_path }}/matrix-authentication-service/container-src"
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/matrix-authentication-service
-matrix_authentication_service_version: 1.10.0
+matrix_authentication_service_version: 1.11.0
 matrix_authentication_service_container_image_registry_prefix: "{{ 'localhost/' if matrix_authentication_service_container_image_self_build else matrix_authentication_service_container_image_registry_prefix_upstream }}"
 matrix_authentication_service_container_image_registry_prefix_upstream: "{{ matrix_authentication_service_container_image_registry_prefix_upstream_default }}"
 matrix_authentication_service_container_image_registry_prefix_upstream_default: "ghcr.io/"
@@ -653,6 +653,16 @@ matrix_authentication_service_migration_in_progress: false
 # Controls whether the admin API is enabled.
 # Ref: https://element-hq.github.io/matrix-authentication-service/topics/admin-api.html#enabling-the-api
 matrix_authentication_service_admin_api_enabled: false
+
+# matrix_authentication_service_restart_necessary controls whether the service
+# will be restarted (when true) or merely started (when false) by the
+# systemd service manager role (when conditional restart is enabled).
+#
+# This value is automatically computed during installation based on whether
+# any configuration files, the systemd service file, or the container image changed.
+# The default of `false` means "no restart needed" — appropriate when the role's
+# installation tasks haven't run (e.g., due to --tags skipping them).
+matrix_authentication_service_restart_necessary: false
 
 ########################################################################################
 #                                                                                      #

@@ -80,10 +80,20 @@
     - {'old': 'cinny_docker_image_registry_prefix_upstream', 'new': 'cinny_container_image_registry_prefix_upstream'}
     - {'old': 'cinny_docker_image_registry_prefix_upstream_default', 'new': 'cinny_container_image_registry_prefix_upstream_default'}
 
+    - {'old': 'coturn_docker_image', 'new': 'coturn_container_image'}
+    - {'old': 'coturn_docker_image_registry_prefix', 'new': 'coturn_container_image_registry_prefix'}
+    - {'old': 'coturn_docker_image_registry_prefix_upstream', 'new': 'coturn_container_image_registry_prefix_upstream'}
+    - {'old': 'coturn_docker_image_registry_prefix_upstream_default', 'new': 'coturn_container_image_registry_prefix_upstream_default'}
+
     - {'old': 'ddclient_docker_image', 'new': 'ddclient_container_image'}
     - {'old': 'ddclient_docker_image_registry_prefix', 'new': 'ddclient_container_image_registry_prefix'}
     - {'old': 'ddclient_docker_image_registry_prefix_upstream', 'new': 'ddclient_container_image_registry_prefix_upstream'}
     - {'old': 'ddclient_docker_image_registry_prefix_upstream_default', 'new': 'ddclient_container_image_registry_prefix_upstream_default'}
+
+    - {'old': 'hydrogen_docker_image', 'new': 'hydrogen_container_image'}
+    - {'old': 'hydrogen_docker_image_registry_prefix', 'new': 'hydrogen_container_image_registry_prefix'}
+    - {'old': 'hydrogen_docker_image_registry_prefix_upstream', 'new': 'hydrogen_container_image_registry_prefix_upstream'}
+    - {'old': 'hydrogen_docker_image_registry_prefix_upstream_default', 'new': 'hydrogen_container_image_registry_prefix_upstream_default'}
 
 - name: (Deprecation) Catch and report matrix_postgres variables
   ansible.builtin.fail:
@@ -595,6 +605,44 @@
       The following variables in your configuration need to be renamed: {{ lookup('ansible.builtin.varnames', '^matrix_client_cinny_.+', wantlist=True) | join(', ') }}
   when: "lookup('ansible.builtin.varnames', '^matrix_client_cinny_.+', wantlist=True) | length > 0"
 
+- name: (Deprecation) Catch and report matrix-client-hydrogen variables
+  ansible.builtin.fail:
+    msg: |-
+      The matrix-client-hydrogen role in the playbook now lives under the MASH organization (https://github.com/mother-of-all-self-hosting/ansible-role-hydrogen).
+      The new role is pretty much the same, but uses differently named variables.
+
+      Please rename all `matrix_client_hydrogen_`-prefixed variables (`matrix_client_hydrogen_*` -> `hydrogen_*`) on your configuration file (vars.yml).
+
+      After renaming them, please do not forget to fetch the Ansible role. See docs/maintenance-upgrading-services.md for details about how to do so.
+
+      The following variables in your configuration need to be renamed: {{ lookup('ansible.builtin.varnames', '^matrix_client_hydrogen_.+', wantlist=True) | join(', ') }}
+  when: "lookup('ansible.builtin.varnames', '^matrix_client_hydrogen_.+', wantlist=True) | length > 0"
+
+- name: (Deprecation) Catch and report matrix-coturn variables
+  ansible.builtin.fail:
+    msg: |-
+      The matrix-coturn role in the playbook now lives under the MASH organization (https://github.com/mother-of-all-self-hosting/ansible-role-coturn).
+      The new role is pretty much the same, but uses differently named variables.
+
+      Please rename all `matrix_coturn_`-prefixed variables (`matrix_coturn_*` -> `coturn_*`) on your configuration file (vars.yml).
+
+      After renaming them, please do not forget to fetch the Ansible role. See docs/maintenance-upgrading-services.md for details about how to do so.
+
+      The following variables in your configuration need to be renamed: {{ lookup('ansible.builtin.varnames', '^matrix_coturn_.+', wantlist=True) | join(', ') }}
+  when: "lookup('ansible.builtin.varnames', '^matrix_coturn_.+', wantlist=True) | length > 0"
+
+- name: (Deprecation) Catch and report matrix-conduwuit variables
+  ansible.builtin.fail:
+    msg: |-
+      matrix-conduwuit was completely removed from the playbook in February 2026.
+
+      Please remove all `matrix_conduwuit*` variables from your configuration file (vars.yml).
+
+      You may wish to migrate to Continuwuity, a drop-in replacement for conduwuit. See `docs/configuring-playbook-continuwuity.md` for more information.
+
+      The following variables in your configuration need to be removed: {{ lookup('ansible.builtin.varnames', '^matrix_conduwuit.+', wantlist=True) | join(', ') }}
+  when: "lookup('ansible.builtin.varnames', '^matrix_conduwuit.+', wantlist=True) | length > 0"
+
 - name: (Deprecation) Catch and report matrix-dynamic-dns variables
   ansible.builtin.fail:
     msg: |-
@@ -692,6 +740,18 @@
 
       The following variables in your configuration need to be removed: {{ lookup('ansible.builtin.varnames', '^matrix_mx_puppet_twitter_.+', wantlist=True) | join(', ') }}
   when: "lookup('ansible.builtin.varnames', '^matrix_mx_puppet_twitter_.+', wantlist=True) | length > 0"
+
+- name: (Deprecation) Catch and report the Dimension integration manager variables
+  ansible.builtin.fail:
+    msg: |-
+      The Dimension integration manager was completely removed from the playbook in February 2026.
+
+      Please remove all `matrix_dimension_*` variables from your configuration file (vars.yml).
+
+      You may also wish to uninstall the component manually. See `docs/configuring-playbook-dimension.md` for more information.
+
+      The following variables in your configuration need to be removed: {{ lookup('ansible.builtin.varnames', '^matrix_dimension_.+', wantlist=True) | join(', ') }}
+  when: "lookup('ansible.builtin.varnames', '^matrix_dimension_.+', wantlist=True) | length > 0"
 
 - name: (Deprecation) Catch and report Email2Matrix variables
   ansible.builtin.fail:

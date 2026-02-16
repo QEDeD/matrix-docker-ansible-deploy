@@ -16,7 +16,7 @@ matrix_synapse_enabled: true
 matrix_synapse_github_org_and_repo: element-hq/synapse
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/synapse
-matrix_synapse_version: v1.146.0
+matrix_synapse_version: v1.147.1
 
 matrix_synapse_username: ''
 matrix_synapse_uid: ''
@@ -322,6 +322,22 @@ matrix_synapse_container_labels_public_metrics_middleware_basic_auth_users: ''
 #   another.label="here"
 matrix_synapse_container_labels_additional_labels: ''
 
+# Specifies how often the container health check will run.
+#
+# The Synapse container image ships with a default HEALTHCHECK (curl to /health)
+# with an interval of 15s, timeout of 5s, and start period of 5s.
+#
+# For Traefik-based setups, it's important that the interval is short,
+# because the interval value also specifies the "initial wait time".
+# This is a Docker (moby) bug: https://github.com/moby/moby/issues/33410
+# Without a successful healthcheck, Traefik will not register the service for reverse-proxying.
+# A shorter interval also lets our systemd ExecStartPost health check
+# (see matrix_synapse_systemd_healthcheck_enabled) detect readiness faster at startup.
+#
+# For non-Traefik setups, we use the default healthcheck interval (15s) to decrease overhead.
+matrix_synapse_container_health_interval_seconds: "{{ 5 if matrix_synapse_container_labels_traefik_enabled else 15 }}"
+matrix_synapse_container_health_interval: "{{ matrix_synapse_container_health_interval_seconds }}s"
+
 # A list of extra arguments to pass to the container
 # Also see `matrix_synapse_container_arguments`
 matrix_synapse_container_extra_arguments: []
@@ -358,14 +374,37 @@ matrix_synapse_goofys_systemd_required_services_list_default: "{{ [devture_syste
 matrix_synapse_goofys_systemd_required_services_list_auto: []
 matrix_synapse_goofys_systemd_required_services_list_custom: []
 
-# Controls how long to sleep for after starting the matrix-synapse container.
-#
-# Delaying, so that the homeserver can manage to fully start and various services
-# that depend on it (`matrix_synapse_systemd_required_services_list` and `matrix_synapse_systemd_wanted_services_list`)
-# may only start after the homeserver is up and running.
-#
-# This can be set to 0 to remove the delay.
-matrix_synapse_systemd_service_post_start_delay_seconds: 10
+# Controls the post-start health check in the systemd service.
+# When enabled, ExecStartPost polls Docker's container health status via `docker inspect`,
+# keeping the service in "activating (start-post)" state until Synapse is ready.
+# Services with After=matrix-synapse.service will properly wait.
+# This relies on the container image's built-in HEALTHCHECK (curl to /health),
+# with the interval controlled by matrix_synapse_container_health_interval.
+matrix_synapse_systemd_healthcheck_enabled: true
+matrix_synapse_systemd_healthcheck_max_retries: 60
+matrix_synapse_systemd_healthcheck_interval_seconds: 1
+
+# The command used for the health check in ExecStartPost.
+# Polls `docker inspect` for the container's health status until it reports "healthy".
+matrix_synapse_systemd_healthcheck_command: >-
+  {{ devture_systemd_docker_base_host_command_sh }} -c
+  'for i in $(seq 1 {{ matrix_synapse_systemd_healthcheck_max_retries }}); do
+  echo "[Attempt $i/{{ matrix_synapse_systemd_healthcheck_max_retries }}] Synapse systemd health check: checking container health status..";
+  status=$( {{ devture_systemd_docker_base_host_command_docker }} inspect --format={{ '"{{' }}.State.Health.Status{{ '}}"' }} matrix-synapse 2>/dev/null);
+  if [ "$status" = "healthy" ]; then echo "[Attempt $i/{{ matrix_synapse_systemd_healthcheck_max_retries }}] Synapse systemd health check: passed" && exit 0; fi;
+  echo "[Attempt $i/{{ matrix_synapse_systemd_healthcheck_max_retries }}] Synapse systemd health check: not ready yet (status: $status), retrying in {{ matrix_synapse_systemd_healthcheck_interval_seconds }}s..";
+  sleep {{ matrix_synapse_systemd_healthcheck_interval_seconds }};
+  done; echo "[Attempt $i/{{ matrix_synapse_systemd_healthcheck_max_retries }}] Synapse systemd health check: failed after {{ matrix_synapse_systemd_healthcheck_max_retries }} attempts"; exit 1'
+
+# Controls how long to sleep for after the systemd health check passes.
+# Even after Synapse is healthy, the reverse proxy (e.g. Traefik) needs time to discover
+# the container and register its routes. Traefik waits `providers.providersThrottleDuration`
+# (see https://doc.traefik.io/traefik/v3.3/providers/overview/#providersprovidersthrottleduration)
+# before applying new configuration from Docker events.
+# Without this delay, services depending on Synapse may encounter 404 errors
+# when connecting through the reverse proxy.
+# This value is meant to be wired to the Traefik throttle duration by the playbook's group vars.
+matrix_synapse_systemd_service_post_start_delay_seconds: 0
 
 matrix_synapse_in_container_python_packages_path: "/usr/local/lib/python3.13/site-packages"
 
@@ -522,7 +561,7 @@ matrix_synapse_http_listener_resource_names: ["client"]
 
 # Resources served on Synapse's federation port.
 # When disabling federation, we may wish to serve the `openid` resource here,
-# so that services like Dimension can work.
+# so that services like Matrix User Verification Service can work.
 matrix_synapse_federation_listener_resource_names: "{{ ['federation'] if matrix_synapse_federation_enabled else (['openid'] if matrix_synapse_federation_port_openid_resource_required else []) }}"
 
 # Enable this to allow Synapse to report utilization statistics about your server to matrix.org
@@ -1502,6 +1541,14 @@ matrix_synapse_ext_synapse_s3_storage_provider_update_db_day_count: 0
 # Specifies how often periodic migration (`matrix-synapse-s3-storage-provider-migrate.timer`) will run.
 # This is a systemd timer OnCalendar definition. Learn more here: https://man.archlinux.org/man/systemd.time.7#CALENDAR_EVENTS
 matrix_synapse_ext_synapse_s3_storage_provider_periodic_migration_schedule: '*-*-* 05:00:00'
+
+# List of systemd services that matrix-synapse-s3-storage-provider-migrate.service requires.
+# We only depend on matrix-synapse.service here, because its own dependencies (Postgres, Docker, etc.)
+# are transitively resolved by systemd.
+matrix_synapse_ext_synapse_s3_storage_provider_migrate_systemd_required_services_list: ['matrix-synapse.service']
+
+# List of systemd services that matrix-synapse-s3-storage-provider-migrate.service wants
+matrix_synapse_ext_synapse_s3_storage_provider_migrate_systemd_wanted_services_list: []
 
 # Synapse module to automatically accept room invites.
 #
