@@ -55,7 +55,6 @@
     - custom/matrix-appservice-double-puppet
     - custom/matrix-alertmanager-receiver
     - custom/matrix-bridge-appservice-discord
-    - custom/matrix-bridge-appservice-slack
     - custom/matrix-bridge-appservice-irc
     - custom/matrix-bridge-appservice-kakaotalk
     - custom/matrix-bridge-beeper-linkedin
@@ -97,7 +96,6 @@
     - custom/matrix-synapse-reverse-proxy-companion
     - custom/matrix-dendrite
     - custom/matrix-conduit
-    - custom/matrix-conduwuit
     - custom/matrix-continuwuity
     - custom/matrix-synapse-admin
     - custom/matrix-synapse-usage-exporter
@@ -109,19 +107,18 @@
     - custom/matrix-prometheus-services-connect
     - custom/matrix-registration
     - custom/matrix-client-element
-    - custom/matrix-client-hydrogen
+    - galaxy/hydrogen
     - galaxy/cinny
     - custom/matrix-client-schildichat
     - custom/matrix-client-fluffychat
     - galaxy/jitsi
     - custom/matrix-user-verification-service
     - custom/matrix-ldap-registration-proxy
-    - custom/matrix-dimension
     - galaxy/etherpad
     - custom/matrix-sygnal
     - galaxy/ntfy
     - custom/matrix-static-files
-    - custom/matrix-coturn
+    - galaxy/coturn
     - custom/matrix-media-repo
     - custom/matrix-pantalaimon
 

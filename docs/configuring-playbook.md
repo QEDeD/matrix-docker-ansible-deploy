@@ -51,8 +51,6 @@ For a more custom setup, see the [Other configuration options](#other-configurat
 
   - [Configuring Conduit](configuring-playbook-conduit.md), if you've switched to the [Conduit](https://conduit.rs) homeserver implementation
 
-  - [Configuring conduwuit](configuring-playbook-conduwuit.md), if you've switched to the [conduwuit](https://conduwuit.puppyirl.gay/) homeserver implementation
-
   - [Configuring continuwuity](configuring-playbook-continuwuity.md), if you've switched to the [continuwuity](https://continuwuity.org) homeserver implementation
 
   - [Configuring Dendrite](configuring-playbook-dendrite.md), if you've switched to the [Dendrite](https://matrix-org.github.io/dendrite) homeserver implementation
@@ -164,8 +162,6 @@ Bridges can be used to connect your Matrix installation with third-party communi
 
 - [Setting up Appservice Discord bridging](configuring-playbook-bridge-appservice-discord.md)
 
-- [Setting up Appservice Slack bridging](configuring-playbook-bridge-appservice-slack.md)
-
 - [Setting up Appservice Kakaotalk bridging](configuring-playbook-bridge-appservice-kakaotalk.md)
 
 - [Setting up Beeper LinkedIn bridging](configuring-playbook-bridge-beeper-linkedin.md)
@@ -261,7 +257,11 @@ Various services that don't fit any other categories.
 
 **Note**: since a deprecated or unmaintained service will not be updated, its bug or vulnerability will be unlikely to get patched. It is recommended to migrate from the service to an alternative if any, and make sure to do your own research before you decide to keep it running nonetheless.
 
+- [Configuring conduwuit](configuring-playbook-conduwuit.md) (removed; this component has been abandoned and unmaintained)
+
 - [Setting up the Sliding Sync proxy](configuring-playbook-sliding-sync-proxy.md) for clients which require Sliding Sync support (like old Element X versions, before it got switched to Simplified Sliding Sync)
+
+- [Setting up Appservice Slack bridging](configuring-playbook-bridge-appservice-slack.md) (removed; this component has been discontinued)
 
 - [Setting up Appservice Webhooks bridging](configuring-playbook-bridge-appservice-webhooks.md) (deprecated; the bridge's author suggests taking a look at [matrix-hookshot](https://github.com/matrix-org/matrix-hookshot) as a replacement, which can also be [installed using this playbook](configuring-playbook-bridge-hookshot.md))
 
