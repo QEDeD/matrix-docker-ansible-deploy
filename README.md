@@ -74,7 +74,7 @@ Services that run on the server to make the various parts of your installation w
 | Name | Default? | Description | Documentation |
 | ---- | -------- | ----------- | ------------- |
 | [PostgreSQL](https://www.postgresql.org/)| ✅ | Database for Synapse. [Using an external PostgreSQL server](docs/configuring-playbook-external-postgres.md) is also possible. | [Link](docs/configuring-playbook-external-postgres.md) |
-| [coturn](https://github.com/coturn/coturn) | ✅ | STUN/TURN server for WebRTC audio/video calls | [Link](docs/configuring-playbook-turn.md) |
+| [coturn](https://github.com/coturn/coturn) | ❌ | STUN/TURN server for WebRTC audio/video calls | [Link](docs/configuring-playbook-turn.md) |
 | [Traefik](https://doc.traefik.io/traefik/) | ✅ | Web server, listening on ports 80, 443 and 8448 - standing in front of all the other services. [Using your own webserver](docs/configuring-playbook-own-webserver.md) is also possible. | [Link](docs/configuring-playbook-traefik.md) |
 | [Let's Encrypt](https://letsencrypt.org/) | ✅ | Free SSL certificate, which secures the connection to all components | [Link](docs/configuring-playbook-ssl-certificates.md) |
 | [Exim](https://www.exim.org/) | ✅ | Mail server, through which all Matrix services send outgoing email (can be configured to relay through another SMTP server) | [Link](docs/configuring-playbook-email.md) |
@@ -171,7 +171,6 @@ Various services that don't fit any other categories.
 
 | Name | Default? | Description | Documentation |
 | ---- | -------- | ----------- | ------------- |
-| [synapse_auto_accept_invite](https://github.com/matrix-org/synapse-auto-accept-invite) | ❌ | Synapse module to automatically accept invites | [Link](docs/configuring-playbook-synapse-auto-accept-invite.md) |
 | [synapse_auto_compressor](https://github.com/matrix-org/rust-synapse-compress-state/#automated-tool-synapse_auto_compressor) | ❌ | Cli tool that automatically compresses `state_groups` database table in background | [Link](docs/configuring-playbook-synapse-auto-compressor.md) |
 | [Matrix Corporal](https://github.com/devture/matrix-corporal) (advanced) | ❌ | Reconciliator and gateway for a managed Matrix server | [Link](docs/configuring-playbook-matrix-corporal.md) |
 | [Matrix.to](https://github.com/matrix-org/matrix.to) | ❌ | Simple URL redirection service for the Matrix ecosystem | [Link](docs/configuring-playbook-matrixto.md) |

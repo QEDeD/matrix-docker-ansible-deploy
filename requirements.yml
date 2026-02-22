@@ -4,7 +4,7 @@
   version: v1.0.0-6
   name: auxiliary
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-backup_borg.git
-  version: v1.4.3-2.1.1-0
+  version: v1.4.3-2.1.1-1
   name: backup_borg
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-cinny.git
   version: v4.10.3-0
@@ -13,11 +13,11 @@
   version: v0.4.2-3
   name: container_socket_proxy
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-coturn.git
-  version: v4.8.0-1
+  version: v4.8.0-2
   name: coturn
   activation_prefix: coturn_
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-ddclient.git
-  version: v4.0.0-0
+  version: v4.0.0-1
   name: ddclient
   activation_prefix: ddclient_
 - src: git+https://github.com/geerlingguy/ansible-role-docker
@@ -27,25 +27,25 @@
   version: 542a2d68db4e9a8e9bb4b508052760b900c7dce6
   name: docker_sdk_for_python
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-etherpad.git
-  version: v2.6.1-0
+  version: v2.6.1-1
   name: etherpad
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-exim-relay.git
   version: v4.98.1-r0-2-3
   name: exim_relay
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-grafana.git
-  version: v11.6.5-6
+  version: v11.6.5-7
   name: grafana
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-hydrogen.git
-  version: v0.5.1-0
+  version: v0.5.1-1
   name: hydrogen
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-jitsi.git
   version: v10741-0
   name: jitsi
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-livekit-server.git
-  version: v1.9.11-1
+  version: v1.9.11-2
   name: livekit_server
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-ntfy.git
-  version: v2.17.0-0
+  version: v2.17.0-1
   name: ntfy
 - src: git+https://github.com/devture/com.devture.ansible.role.playbook_help.git
   version: 8630e4f1749bcb659c412820f754473f09055052
@@ -57,19 +57,22 @@
   version: dd6e15246b7a9a2d921e0b3f9cd8a4a917a1bb2f
   name: playbook_state_preserver
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-postgres.git
-  version: v18.2-1
+  version: v18.2-2
   name: postgres
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-postgres-backup.git
-  version: v18-0
+  version: v18-1
   name: postgres_backup
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus.git
-  version: v3.9.1-0
+  version: v3.9.1-1
   name: prometheus
+- src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus-nginxlog-exporter.git
+  version: v1.10.0-0
+  name: prometheus_nginxlog_exporter
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus-node-exporter.git
-  version: v1.9.1-13
+  version: v1.9.1-14
   name: prometheus_node_exporter
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus-postgres-exporter.git
-  version: v0.19.0-0
+  version: v0.19.0-1
   name: prometheus_postgres_exporter
 - src: git+https://github.com/devture/com.devture.ansible.role.systemd_docker_base.git
   version: v1.4.1-0
@@ -87,5 +90,5 @@
   version: v2.10.0-5
   name: traefik_certs_dumper
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-valkey.git
-  version: v9.0.2-0
+  version: v9.0.2-1
   name: valkey
