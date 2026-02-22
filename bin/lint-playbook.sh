@@ -64,31 +64,47 @@ if [[ ! -d "${venv_path}" ]]; then
   log "virtualenv missing, creating a new one..."
   "${python_cmd}" -m venv "${venv_path}"
 else
-  venv_python=""
-  if [[ -x "${venv_path}/bin/python" ]]; then
-    venv_python="${venv_path}/bin/python"
-  elif [[ -x "${venv_path}/bin/python3" ]]; then
-    venv_python="${venv_path}/bin/python3"
-  fi
+  log "virtualenv already exists, reusing current installation."
+fi
 
-  if [[ -z "${venv_python}" ]]; then
-    log "virtualenv appears broken (missing python), recreating..."
-    rm -rf "${venv_path}"
-    "${python_cmd}" -m venv "${venv_path}"
-  else
-    log "virtualenv already exists, reusing current installation."
-  fi
+# If the venv is corrupted (missing activate), rebuild it.
+if [[ ! -f "${venv_path}/bin/activate" ]]; then
+  log "virtualenv missing activation script; rebuilding..."
+  "${python_cmd}" -m venv --clear "${venv_path}"
 fi
 
 # shellcheck disable=SC1090,SC1091
 source "${venv_path}/bin/activate"
 log "virtualenv activated: ${venv_path}"
 
+venv_python="${venv_path}/bin/python"
+
+if ! "${venv_python}" - <<'PY' >/dev/null 2>&1; then
+import pip  # noqa: F401
+PY
+  log "pip missing inside virtualenv; bootstrapping with ensurepip..."
+  if ! "${venv_python}" -m ensurepip --upgrade >/dev/null 2>&1; then
+    log "ensurepip unavailable in virtualenv; rebuilding virtualenv..."
+    deactivate || true
+    "${python_cmd}" -m venv --clear "${venv_path}"
+    # shellcheck disable=SC1090,SC1091
+    source "${venv_path}/bin/activate"
+    venv_python="${venv_path}/bin/python"
+    if ! "${venv_python}" - <<'PY' >/dev/null 2>&1; then
+import pip  # noqa: F401
+PY
+      log "error: pip still unavailable. Install Python ensurepip/venv support and re-run."
+      deactivate || true
+      exit 1
+    fi
+  fi
+fi
+
 log "updating pip/setuptools/wheel..."
-pip install --upgrade pip setuptools wheel >/dev/null
+"${venv_python}" -m pip install --upgrade pip setuptools wheel >/dev/null
 
 log "ensuring ansible-core, ansible-lint, and pre-commit are current..."
-pip install --upgrade ansible-core ansible-lint pre-commit >/dev/null
+"${venv_python}" -m pip install --upgrade ansible-core ansible-lint pre-commit >/dev/null
 
 gather_targets() {
   local mode=$1
@@ -129,7 +145,7 @@ gather_targets() {
     done
   fi
 
-  printf '%s\n' "${paths[@]}" | sort -u
+  printf '%s\n' "${paths[@]}" | sort -u | grep -Ev '(^|/)(\.venv|venv)(/|$)' || true
 }
 
 mapfile -t relevant_files < <(gather_targets "${playbook}")
