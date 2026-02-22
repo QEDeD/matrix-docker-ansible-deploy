@@ -13,7 +13,7 @@ matrix_static_files_enabled: true
 matrix_static_files_identifier: matrix-static-files
 
 # renovate: datasource=docker depName=joseluisq/static-web-server
-matrix_static_files_version: 2.40.1
+matrix_static_files_version: 2.41.0
 
 matrix_static_files_base_path: "{{ matrix_base_data_path }}/{{ 'static-files' if matrix_static_files_identifier == 'matrix-static-files' else matrix_static_files_identifier }}"
 matrix_static_files_config_path: "{{ matrix_static_files_base_path }}/config"
@@ -120,6 +120,10 @@ matrix_static_files_environment_variable_server_log_remote_address: false
 # Controls the SERVER_CONFIG_FILE environment variable.
 # See: https://static-web-server.net/configuration/environment-variables/
 matrix_static_files_environment_variable_server_config_file: /config/config.toml
+
+# Controls the SERVER_IGNORE_HIDDEN_FILES environment variable.
+# See: https://static-web-server.net/configuration/environment-variables/
+matrix_static_files_environment_variable_server_ignore_hidden_files: false
 
 # Additional environment variables.
 matrix_static_files_environment_variables_additional_variables: ''
