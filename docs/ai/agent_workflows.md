@@ -126,6 +126,51 @@
 - intentionally patching/forking that role
 - preparing a dedicated upstream PR for the role/playbook
 
+## Post-Merge Branch Cleanup
+
+- Preconditions checklist:
+- primary branch identified
+- branch merge confirmed into primary branch
+- clean working tree (`git status --short` is empty)
+
+### Verification commands
+
+- `git status --short`
+- `git branch --merged <primary_branch>`
+- `git log --oneline <primary_branch>..<candidate_branch>` (expected no output)
+
+### Local cleanup command template
+
+```sh
+# If currently on the branch to clean up, switch first:
+git switch <primary_branch>
+
+# Delete merged branches conservatively:
+git branch -d <candidate_branch>
+
+# Optional: auxiliary upstream-subset branch
+git branch -d upstreamable/<topic>
+```
+
+### Remote cleanup guidance (explicit request only)
+
+- Remote branch deletion is not default behavior.
+- Provide user-run command blocks only when explicitly requested.
+
+```sh
+# User-run only (explicit request required):
+git push origin --delete <candidate_branch>
+```
+
+- Post-delete verification:
+- `git branch -r --list '*<candidate_branch>'` (expected no output)
+
+### Failure and edge handling
+
+- If branch is unmerged: do not delete; report that it is not merged.
+- If candidate branch is currently checked out: switch to primary branch first.
+- If remote branch is unknown or unpublished: skip remote cleanup.
+
 ## Pre-Flight and Finalization
 
 - Before suggesting remote-impact execution, run local pre-flight checks:

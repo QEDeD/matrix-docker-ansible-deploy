@@ -117,6 +117,19 @@ Mini-plan (brief bullets) is sufficient for:
 - unless the user explicitly requests edits on primary branch
 - Operator-owned paths can be edited on any branch.
 
+## Post-merge branch cleanup
+
+- Branch cleanup is allowed only after:
+- merge into the primary branch is complete locally
+- `git status --short` is empty
+- Preferred local cleanup command: `git branch -d <work-branch>`.
+- If auxiliary upstream-subset branches exist (for example
+  `upstreamable/<topic>`), apply the same merged-only deletion rule.
+- Do not delete remote branches by default.
+- Remote branch deletion requires explicit user request and should be provided
+  as user-run command blocks.
+- Do not use force deletion (`git branch -D`) unless explicitly requested.
+
 ## Non-editable or managed paths
 
 MUST NOT edit these directly:
