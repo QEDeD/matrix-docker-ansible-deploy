@@ -18,6 +18,7 @@
 # because you can't change the Domain after deployment.
 #
 # Example value: example.com
+domain: "{{ vault_domain }}"
 matrix_domain: "{{ domain }}"
 
 # The Matrix homeserver software to install.
@@ -26,7 +27,7 @@ matrix_domain: "{{ domain }}"
 # - the `docs/configuring-playbook-IMPLEMENTATION_NAME.md` documentation page, if one is available for your implementation choice
 matrix_homeserver_implementation: synapse
 
-matrix_homeserver_generic_secret_key: "{{ matrix_homeserver_generic_secret_key }}"
+matrix_homeserver_generic_secret_key: "{{ vault_matrix_homeserver_generic_secret_key }}"
 
 matrix_synapse_max_upload_size_mb: 150
 
@@ -88,7 +89,7 @@ matrix_static_files_container_labels_base_domain_enabled: true
 matrix_synapse_admin_enabled: true
 
 matrix_synapse_ext_password_provider_shared_secret_auth_enabled: true
-matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{ matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret }}"
+matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{ vault_matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret }}"
 
 # Synapse Stats
 matrix_synapse_usage_exporter_enabled: true
@@ -232,8 +233,8 @@ traefik_config_certificatesResolvers_acme_email: "{{ admin_user_email }}"  # noq
 traefik_dashboard_enabled: true
 traefik_dashboard_hostname: "{{ matrix_server_fqn_matrix }}"
 traefik_dashboard_basicauth_enabled: true
-traefik_dashboard_basicauth_user: "{{ traefik_dashboard_basicauth_user }}"
-traefik_dashboard_basicauth_password: "{{ traefik_dashboard_basicauth_password }}"
+traefik_dashboard_basicauth_user: "{{ vault_traefik_dashboard_basicauth_user }}"
+traefik_dashboard_basicauth_password: "{{ vault_traefik_dashboard_basicauth_password }}"
 
 # By default, the playbook manages its own Traefik (https://doc.traefik.io/traefik/) reverse-proxy server.
 # It will retrieve SSL certificates for you on-demand and forward requests to all other components.
@@ -361,13 +362,13 @@ ddclient_domain_configurations:
 
 # A secret used to protect access keys issued by the server.
 # You can put any string here, but generating a strong one is preferred (e.g. `pwgen -s 64 1`).
-matrix_synapse_macaroon_secret_key: "{{ matrix_synapse_macaroon_secret_key }}"
+matrix_synapse_macaroon_secret_key: "{{ vault_matrix_synapse_macaroon_secret_key }}"
 
 # A Postgres password to use for the superuser Postgres user (called `matrix` by default).
 #
 # The playbook creates additional Postgres users and databases (one for each enabled service)
 # using this superuser account.
-postgres_connection_password: "{{ postgres_connection_password }}"
+postgres_connection_password: "{{ vault_postgres_connection_password }}"
 
 ########################################################################
 #                                                                      #
@@ -388,7 +389,7 @@ grafana_anonymous_access: false
 grafana_default_admin_user: "{{ admin_user_email }}"
 
 # Changing the password subsequently won't work.
-grafana_default_admin_password: "{{ grafana_default_admin_password }}"
+grafana_default_admin_password: "{{ vault_grafana_default_admin_password }}"
 
 ########################################################################
 #                                                                      #
@@ -416,8 +417,8 @@ matrix_playbook_docker_installation_enabled: false
 #                                                                      #
 ########################################################################
 
-exim_relay_sender_address: "{{ vault_exim_relay_sender_address }}"  # matrix@{{domain}}
 exim_relay_relay_use: true
+exim_relay_sender_address: "{{ vault_exim_relay_sender_address }}"
 exim_relay_relay_host_name: "{{ vault_exim_relay_relay_host_name }}"
 exim_relay_relay_host_port: "{{ vault_exim_relay_relay_host_port | int }}"
 exim_relay_relay_auth: true
