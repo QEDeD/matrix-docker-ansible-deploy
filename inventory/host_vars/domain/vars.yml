@@ -20,6 +20,7 @@
 # Example value: example.com
 domain: "{{ vault_domain }}"
 matrix_domain: "{{ domain }}"
+admin_user_email: "{{ vault_admin_user_email }}"
 
 # The Matrix homeserver software to install.
 # See:
