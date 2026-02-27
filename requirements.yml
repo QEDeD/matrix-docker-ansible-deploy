@@ -13,7 +13,7 @@
   version: v0.4.2-3
   name: container_socket_proxy
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-coturn.git
-  version: v4.8.0-2
+  version: v4.9.0-0
   name: coturn
   activation_prefix: coturn_
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-ddclient.git
@@ -57,13 +57,13 @@
   version: dd6e15246b7a9a2d921e0b3f9cd8a4a917a1bb2f
   name: playbook_state_preserver
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-postgres.git
-  version: v18.2-2
+  version: v18.3-0
   name: postgres
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-postgres-backup.git
   version: v18-1
   name: postgres_backup
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus.git
-  version: v3.9.1-1
+  version: v3.10.0-0
   name: prometheus
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus-nginxlog-exporter.git
   version: v1.10.0-0
@@ -72,7 +72,7 @@
   version: v1.9.1-14
   name: prometheus_node_exporter
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-prometheus-postgres-exporter.git
-  version: v0.19.0-1
+  version: v0.19.1-0
   name: prometheus_postgres_exporter
 - src: git+https://github.com/devture/com.devture.ansible.role.systemd_docker_base.git
   version: v1.4.1-0
@@ -84,11 +84,11 @@
   version: v1.1.0-1
   name: timesync
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-traefik.git
-  version: v3.6.8-4
+  version: v3.6.9-0
   name: traefik
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-traefik-certs-dumper.git
   version: v2.10.0-5
   name: traefik_certs_dumper
 - src: git+https://github.com/mother-of-all-self-hosting/ansible-role-valkey.git
-  version: v9.0.2-1
+  version: v9.0.3-0
   name: valkey
