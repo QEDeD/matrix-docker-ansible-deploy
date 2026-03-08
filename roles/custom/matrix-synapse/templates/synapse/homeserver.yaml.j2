@@ -2540,6 +2540,9 @@ password_providers:
       filter: {{ matrix_synapse_ext_password_provider_ldap_filter | string|to_json }}
       tls_options:
         validate: {{ matrix_synapse_ext_password_provider_ldap_tls_options_validate | to_json }}
+{% if matrix_synapse_ext_password_provider_ldap_tls_options_ca_certs_file %}
+        ca_certs_file: {{ matrix_synapse_ext_password_provider_ldap_tls_options_ca_certs_file | string | to_json }}
+{% endif %}
 {% endif %}
 {% endif %}
 
@@ -2928,6 +2931,11 @@ redis:
   #
   host: {{ matrix_synapse_redis_host | to_json }}
   port: {{ matrix_synapse_redis_port | to_json }}
+
+  # The full path to a local Unix socket file. If this is used, host and port are ignored.
+  {% if matrix_synapse_redis_path_enabled %}
+  path: {{ matrix_synapse_redis_path | to_json }}
+  {% endif %}
 
   # Optional database ID to connect to. Defaults to 0.
   dbid: {{ matrix_synapse_redis_dbid | to_json }}
