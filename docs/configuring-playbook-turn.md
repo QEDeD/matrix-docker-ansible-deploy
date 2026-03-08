@@ -25,7 +25,7 @@ and configure its IP-related settings in the section below.
 
 If you'd like coturn to stay disabled even when Jitsi is enabled, or if you prefer to use an external TURN provider, see [disabling coturn](#disabling-coturn) section below.
 
-When Coturn is not enabled, homeservers (like Synapse) would not point to TURN servers and *legacy* audio/video call functionality may fail. If you're using [Matrix RTC](configuring-playbook-rtc.md) (for [Element Call](configuring-playbook-element-call.md)), you likely don't have a need to enable coturn.
+When Coturn is not enabled, homeservers (like Synapse) would not point to TURN servers and *legacy* audio/video call functionality may fail. If you're using [Matrix RTC](configuring-playbook-matrix-rtc.md) (for [Element Call](configuring-playbook-element-call.md)), you likely don't have a need to enable coturn.
 
 ## Adjusting firewall rules
 
@@ -36,6 +36,8 @@ To ensure Coturn functions correctly, the following firewall rules and port forw
 - `5349/tcp`: TURN over TCP
 - `5349/udp`: TURN over UDP
 - `49152-49172/udp`: TURN/UDP relay range
+
+If LiveKit's embedded TURN is enabled at the same time (for MatrixRTC/Element Call), keep the Coturn relay range distinct from LiveKit's relay range (`livekit_server_config_turn_relay_range_start`/`livekit_server_config_turn_relay_range_end`).
 
 💡 Docker configures the server's internal firewall for you. In most cases, you don't need to do anything special on the host itself.
 

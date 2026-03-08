@@ -577,6 +577,13 @@ devture_systemd_service_manager_services_list_auto: |
     }] if cinny_enabled else [])
     +
     ([{
+      'name': (sable_identifier + '.service'),
+      'priority': 2000,
+      'restart_necessary': (sable_restart_necessary | bool),
+      'groups': ['matrix', 'clients', 'sable', 'client-sable'],
+    }] if sable_enabled else [])
+    +
+    ([{
       'name': 'matrix-client-element.service',
       'priority': 2000,
       'restart_necessary': (matrix_client_element_restart_necessary | bool),
@@ -596,6 +603,13 @@ devture_systemd_service_manager_services_list_auto: |
       'restart_necessary': (matrix_client_schildichat_restart_necessary | bool),
       'groups': ['matrix', 'clients', 'schildichat', 'client-schildichat'],
     }] if matrix_client_schildichat_enabled else [])
+    +
+    ([{
+      'name': 'matrix-client-commet.service',
+      'priority': 2000,
+      'restart_necessary': (matrix_client_commet_restart_necessary | bool),
+      'groups': ['matrix', 'clients', 'commet', 'client-commet'],
+    }] if matrix_client_commet_enabled else [])
     +
     ([{
       'name': 'matrix-client-fluffychat.service',
@@ -826,14 +840,14 @@ devture_systemd_service_manager_services_list_auto: |
       'priority': 800,
       'restart_necessary': true,
       'groups': ['matrix', 'goofys'],
-    }] if matrix_s3_media_store_enabled else [])
+    }] if (matrix_synapse_enabled and matrix_s3_media_store_enabled) else [])
     +
     ([{
       'name': 'matrix-synapse-s3-storage-provider-migrate.timer',
       'priority': 5000,
       'restart_necessary': true,
       'groups': ['matrix'],
-    }] if matrix_synapse_ext_synapse_s3_storage_provider_enabled else [])
+    }] if (matrix_synapse_enabled and matrix_synapse_ext_synapse_s3_storage_provider_enabled) else [])
     +
     ([{
       'name': 'matrix-synapse-auto-compressor.timer',
@@ -3257,6 +3271,9 @@ matrix_pantalaimon_homeserver_url: "{{ matrix_addons_homeserver_client_api_url }
 ######################################################################
 
 backup_borg_enabled: false
+backup_borg_mariadb_enabled: false
+backup_borg_mysql_enabled: false
+backup_borg_mongodb_enabled: false
 
 backup_borg_identifier: matrix-backup-borg
 backup_borg_storage_archive_name_format: matrix-{now:%Y-%m-%d-%H%M%S}
@@ -3585,6 +3602,9 @@ etherpad_identifier: matrix-etherpad
 etherpad_scheme: "{{ 'https' if matrix_playbook_ssl_enabled else 'http' }}"
 
 etherpad_base_path: "{{ matrix_base_data_path }}/etherpad"
+
+etherpad_uid: "{{ matrix_user_uid }}"
+etherpad_gid: "{{ matrix_user_gid }}"
 
 etherpad_framing_enabled: "{{ jitsi_enabled }}"
 
@@ -4385,6 +4405,7 @@ matrix_client_element_container_additional_networks: "{{ [matrix_playbook_revers
 
 matrix_client_element_container_labels_traefik_enabled: "{{ matrix_playbook_reverse_proxy_type in ['playbook-managed-traefik', 'other-traefik-container'] }}"
 matrix_client_element_container_labels_traefik_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
+
 matrix_client_element_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
 matrix_client_element_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
 
@@ -4424,6 +4445,36 @@ matrix_client_element_element_call_url: "{{ matrix_element_call_public_url if ma
 ######################################################################
 #
 # /matrix-client-element
+#
+######################################################################
+
+######################################################################
+#
+# matrix-client-commet
+#
+######################################################################
+
+matrix_client_commet_enabled: false
+
+matrix_client_commet_hostname: "commet.{{ matrix_domain }}"
+
+matrix_client_commet_container_http_host_bind_port: "{{ (matrix_playbook_service_host_bind_interface_prefix ~ '8766') if matrix_playbook_service_host_bind_interface_prefix else '' }}"
+
+matrix_client_commet_container_network: "{{ matrix_addons_container_network }}"
+
+matrix_client_commet_container_additional_networks: "{{ [matrix_playbook_reverse_proxyable_services_additional_network] if (matrix_client_commet_container_labels_traefik_enabled and matrix_playbook_reverse_proxyable_services_additional_network) else [] }}"
+
+matrix_client_commet_container_labels_traefik_enabled: "{{ matrix_playbook_reverse_proxy_type in ['playbook-managed-traefik', 'other-traefik-container'] }}"
+matrix_client_commet_container_labels_traefik_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
+matrix_client_commet_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
+matrix_client_commet_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
+
+matrix_client_commet_container_labels_traefik_compression_middleware_enabled: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compression_enabled }}"
+matrix_client_commet_container_labels_traefik_compression_middleware_name: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compression_name if matrix_playbook_reverse_proxy_traefik_middleware_compression_enabled else '' }}"
+
+######################################################################
+#
+# /matrix-client-commet
 #
 ######################################################################
 
@@ -4520,6 +4571,54 @@ cinny_hostname: "{{ matrix_server_fqn_cinny }}"
 ######################################################################
 #
 # /cinny
+#
+######################################################################
+
+######################################################################
+#
+# sable
+#
+######################################################################
+
+sable_enabled: false
+
+sable_identifier: matrix-client-sable
+
+sable_uid: "{{ matrix_user_uid }}"
+sable_gid: "{{ matrix_user_gid }}"
+
+sable_container_image_registry_prefix: "{{ 'localhost/' if sable_container_image_self_build else sable_container_image_registry_prefix_upstream }}"
+sable_container_image_registry_prefix_upstream: "{{ matrix_container_global_registry_prefix_override if matrix_container_global_registry_prefix_override else sable_container_image_registry_prefix_upstream_default }}"
+
+sable_container_image_self_build: "{{ matrix_architecture not in ['arm64', 'amd64'] }}"
+
+sable_container_http_host_bind_port: "{{ (matrix_playbook_service_host_bind_interface_prefix ~ '8771') if matrix_playbook_service_host_bind_interface_prefix else '' }}"
+
+sable_container_network: "{{ matrix_addons_container_network }}"
+
+sable_container_additional_networks: "{{ [matrix_playbook_reverse_proxyable_services_additional_network] if (sable_container_labels_traefik_enabled and matrix_playbook_reverse_proxyable_services_additional_network) else [] }}"
+
+sable_container_labels_traefik_enabled: "{{ matrix_playbook_reverse_proxy_type in ['playbook-managed-traefik', 'other-traefik-container'] }}"
+sable_container_labels_traefik_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
+sable_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
+sable_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
+
+sable_container_labels_traefik_compression_middleware_enabled: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compression_enabled }}"
+sable_container_labels_traefik_compression_middleware_name: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compression_name if matrix_playbook_reverse_proxy_traefik_middleware_compression_enabled else '' }}"
+
+sable_scheme: "{{ 'https' if matrix_playbook_ssl_enabled else 'http' }}"
+
+sable_default_hs_url: "{{ matrix_homeserver_url }}"
+
+sable_self_check_validate_certificates: "{{ matrix_playbook_ssl_enabled }}"
+
+sable_base_path: "{{ matrix_base_data_path }}/client-sable"
+
+sable_hostname: "{{ matrix_server_fqn_sable }}"
+
+######################################################################
+#
+# /sable
 #
 ######################################################################
 
@@ -4745,6 +4844,13 @@ matrix_synapse_redis_enabled: "{{ valkey_enabled }}"
 matrix_synapse_redis_host: "{{ valkey_identifier if valkey_enabled else '' }}"
 matrix_synapse_redis_password: "{{ valkey_connection_password if valkey_enabled else '' }}"
 
+# unix socket connection, disabled by default temporarily until properly tested
+matrix_synapse_redis_path_enabled: false
+# path to the Redis socket inside the Synapse container, using Synapse's default value
+matrix_synapse_redis_path: "{{ '/tmp/redis.sock' if valkey_enabled else '' }}"
+# path to the Redis socket on the host, using Valkey
+matrix_synapse_redis_path_host: "{{ valkey_run_path+'/valkey.sock' if valkey_enabled else '' }}"
+
 matrix_synapse_container_extra_arguments_auto: "{{ matrix_homeserver_container_extra_arguments_auto }}"
 matrix_synapse_app_service_config_files_auto: "{{ matrix_homeserver_app_service_config_files_auto }}"
 
@@ -4787,6 +4893,32 @@ matrix_synapse_register_user_script_matrix_authentication_service_path: "{{ matr
 # providers.providersThrottleDuration setting (+1s grace for our healthcheck polling interval),
 # so it stays in sync automatically.
 matrix_synapse_systemd_service_post_start_delay_seconds: "{{ (traefik_config_providers_providersThrottleDuration_seconds | int + 1) if matrix_playbook_reverse_proxy_type in ['playbook-managed-traefik', 'other-traefik-container'] else 0 }}"
+
+matrix_synapse_reverse_proxy_companion_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
+matrix_synapse_reverse_proxy_companion_container_image_registry_prefix_upstream: "{{ matrix_container_global_registry_prefix_override if matrix_container_global_registry_prefix_override else matrix_synapse_reverse_proxy_companion_container_image_registry_prefix_upstream_default }}"
+matrix_synapse_reverse_proxy_companion_container_client_api_host_bind_port: "{{ (matrix_playbook_service_host_bind_interface_prefix ~ '8008') if matrix_playbook_service_host_bind_interface_prefix else '' }}"
+matrix_synapse_reverse_proxy_companion_container_federation_api_host_bind_port: "{{ (matrix_playbook_service_host_bind_interface_prefix ~ '8048') if matrix_playbook_service_host_bind_interface_prefix else '' }}"
+matrix_synapse_reverse_proxy_companion_container_labels_traefik_enabled: "{{ matrix_playbook_reverse_proxy_type in ['playbook-managed-traefik', 'other-traefik-container'] }}"
+matrix_synapse_reverse_proxy_companion_container_labels_traefik_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
+matrix_synapse_reverse_proxy_companion_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
+matrix_synapse_reverse_proxy_companion_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
+matrix_synapse_reverse_proxy_companion_container_labels_traefik_hostname: "{{ matrix_server_fqn_matrix }}"
+matrix_synapse_reverse_proxy_companion_container_labels_traefik_compression_middleware_enabled: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compression_enabled }}"
+matrix_synapse_reverse_proxy_companion_container_labels_traefik_compression_middleware_name: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compression_name if matrix_playbook_reverse_proxy_traefik_middleware_compression_enabled else '' }}"
+matrix_synapse_reverse_proxy_companion_container_labels_internal_client_synapse_admin_api_traefik_entrypoints: "{{ matrix_playbook_internal_matrix_client_api_traefik_entrypoint_name }}"
+matrix_synapse_reverse_proxy_companion_access_log_syslog_integration_enabled: "{{ prometheus_nginxlog_exporter_enabled }}"
+matrix_synapse_reverse_proxy_companion_access_log_syslog_integration_server_port: "{{ (prometheus_nginxlog_exporter_identifier | string +':'+ prometheus_nginxlog_exporter_container_syslog_port | string) | default('') }}"
+
+matrix_synapse_reverse_proxy_companion_container_additional_networks_auto: |
+  {{
+    (
+      ([matrix_playbook_reverse_proxyable_services_additional_network] if matrix_synapse_reverse_proxy_companion_container_labels_traefik_enabled and matrix_playbook_reverse_proxyable_services_additional_network else [])
+      +
+      ([prometheus_nginxlog_exporter_container_network] if (prometheus_nginxlog_exporter_enabled and prometheus_nginxlog_exporter_container_network != matrix_synapse_reverse_proxy_companion_container_network) else [])
+      +
+      ([] if matrix_homeserver_container_network in ['', matrix_synapse_reverse_proxy_companion_container_network] else [matrix_homeserver_container_network])
+    ) | unique
+  }}
 
 ######################################################################
 #
@@ -4832,81 +4964,6 @@ matrix_synapse_auto_compressor_systemd_required_services_list_auto: |
 #
 ######################################################################
 
-
-######################################################################
-#
-# matrix-synapse-reverse-proxy-companion
-#
-######################################################################
-
-matrix_synapse_reverse_proxy_companion_enabled: "{{ matrix_synapse_enabled and matrix_synapse_workers_enabled }}"
-
-matrix_synapse_reverse_proxy_companion_container_image_registry_prefix_upstream: "{{ matrix_container_global_registry_prefix_override if matrix_container_global_registry_prefix_override else matrix_synapse_reverse_proxy_companion_container_image_registry_prefix_upstream_default }}"
-
-matrix_synapse_reverse_proxy_companion_container_network: "{{ matrix_synapse_container_network }}"
-
-matrix_synapse_reverse_proxy_companion_container_additional_networks_auto: |
-  {{
-    (
-      ([matrix_playbook_reverse_proxyable_services_additional_network] if matrix_synapse_reverse_proxy_companion_container_labels_traefik_enabled and matrix_playbook_reverse_proxyable_services_additional_network else [])
-      +
-      ([prometheus_nginxlog_exporter_container_network] if (prometheus_nginxlog_exporter_enabled and prometheus_nginxlog_exporter_container_network != matrix_synapse_reverse_proxy_companion_container_network) else [])
-      +
-      ([] if matrix_homeserver_container_network in ['', matrix_synapse_reverse_proxy_companion_container_network] else [matrix_homeserver_container_network])
-    ) | unique
-  }}
-
-matrix_synapse_reverse_proxy_companion_client_api_client_max_body_size_mb: "{{ matrix_synapse_max_upload_size_mb }}"
-
-matrix_synapse_reverse_proxy_companion_container_client_api_host_bind_port: "{{ (matrix_playbook_service_host_bind_interface_prefix ~ '8008') if matrix_playbook_service_host_bind_interface_prefix else '' }}"
-matrix_synapse_reverse_proxy_companion_container_federation_api_host_bind_port: "{{ (matrix_playbook_service_host_bind_interface_prefix ~ '8048') if matrix_playbook_service_host_bind_interface_prefix else '' }}"
-
-matrix_synapse_reverse_proxy_companion_container_labels_traefik_enabled: "{{ matrix_playbook_reverse_proxy_type in ['playbook-managed-traefik', 'other-traefik-container'] }}"
-matrix_synapse_reverse_proxy_companion_container_labels_traefik_docker_network: "{{ matrix_playbook_reverse_proxyable_services_additional_network }}"
-matrix_synapse_reverse_proxy_companion_container_labels_traefik_entrypoints: "{{ traefik_entrypoint_primary }}"
-matrix_synapse_reverse_proxy_companion_container_labels_traefik_tls_certResolver: "{{ traefik_certResolver_primary }}"
-matrix_synapse_reverse_proxy_companion_container_labels_traefik_hostname: "{{ matrix_server_fqn_matrix }}"
-
-matrix_synapse_reverse_proxy_companion_container_labels_traefik_compression_middleware_enabled: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compression_enabled }}"
-matrix_synapse_reverse_proxy_companion_container_labels_traefik_compression_middleware_name: "{{ matrix_playbook_reverse_proxy_traefik_middleware_compression_name if matrix_playbook_reverse_proxy_traefik_middleware_compression_enabled else '' }}"
-
-matrix_synapse_reverse_proxy_companion_container_labels_public_client_synapse_client_api_enabled: "{{ matrix_synapse_container_labels_public_client_synapse_client_api_enabled }}"
-matrix_synapse_reverse_proxy_companion_container_labels_public_client_synapse_admin_api_enabled: "{{ matrix_synapse_container_labels_public_client_synapse_admin_api_enabled }}"
-
-matrix_synapse_reverse_proxy_companion_container_labels_internal_client_synapse_admin_api_enabled: "{{ matrix_synapse_container_labels_internal_client_synapse_admin_api_enabled }}"
-matrix_synapse_reverse_proxy_companion_container_labels_internal_client_synapse_admin_api_traefik_entrypoints: "{{ matrix_playbook_internal_matrix_client_api_traefik_entrypoint_name }}"
-
-matrix_synapse_reverse_proxy_companion_container_labels_public_federation_api_traefik_entrypoints: "{{ matrix_synapse_container_labels_public_federation_api_traefik_entrypoints }}"
-matrix_synapse_reverse_proxy_companion_container_labels_public_federation_api_traefik_tls: "{{ matrix_synapse_container_labels_public_federation_api_traefik_tls }}"
-
-matrix_synapse_reverse_proxy_companion_container_labels_internal_client_api_enabled: "{{ matrix_synapse_container_labels_internal_client_api_enabled }}"
-matrix_synapse_reverse_proxy_companion_container_labels_internal_client_api_traefik_entrypoints: "{{ matrix_synapse_container_labels_internal_client_api_traefik_entrypoints }}"
-
-matrix_synapse_reverse_proxy_companion_synapse_workers_enabled: "{{ matrix_synapse_workers_enabled }}"
-matrix_synapse_reverse_proxy_companion_synapse_workers_list: "{{ matrix_synapse_workers_enabled_list }}"
-matrix_synapse_reverse_proxy_companion_synapse_room_worker_client_server_locations: "{{ matrix_synapse_workers_room_worker_client_server_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_room_worker_federation_locations: "{{ matrix_synapse_workers_room_worker_federation_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_sync_worker_client_server_locations: "{{ matrix_synapse_workers_sync_worker_client_server_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_client_reader_client_server_locations: "{{ matrix_synapse_workers_client_reader_client_server_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_federation_reader_federation_locations: "{{ matrix_synapse_workers_federation_reader_federation_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_generic_worker_client_server_locations: "{{ matrix_synapse_workers_generic_worker_client_server_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_generic_worker_federation_locations: "{{ matrix_synapse_workers_generic_worker_federation_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_stream_writer_typing_stream_worker_client_server_locations: "{{ matrix_synapse_workers_stream_writer_typing_stream_worker_client_server_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_stream_writer_to_device_stream_worker_client_server_locations: "{{ matrix_synapse_workers_stream_writer_to_device_stream_worker_client_server_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_stream_writer_account_data_stream_worker_client_server_locations: "{{ matrix_synapse_workers_stream_writer_account_data_stream_worker_client_server_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_stream_writer_receipts_stream_worker_client_server_locations: "{{ matrix_synapse_workers_stream_writer_receipts_stream_worker_client_server_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_stream_writer_presence_stream_worker_client_server_locations: "{{ matrix_synapse_workers_stream_writer_presence_stream_worker_client_server_endpoints }}"
-matrix_synapse_reverse_proxy_companion_synapse_media_repository_locations: "{{matrix_synapse_workers_media_repository_endpoints|default([]) }}"
-matrix_synapse_reverse_proxy_companion_synapse_user_dir_locations: "{{ matrix_synapse_workers_user_dir_worker_client_server_endpoints|default([]) }}"
-
-matrix_synapse_reverse_proxy_companion_access_log_syslog_integration_enabled: "{{ prometheus_nginxlog_exporter_enabled }}"
-matrix_synapse_reverse_proxy_companion_access_log_syslog_integration_server_port: "{{ (prometheus_nginxlog_exporter_identifier | string +':'+ prometheus_nginxlog_exporter_container_syslog_port | string) | default('') }}"
-
-######################################################################
-#
-# /matrix-synapse-reverse-proxy-companion
-#
-######################################################################
 
 ######################################################################
 #
@@ -5731,7 +5788,7 @@ matrix_user_creator_users_auto: |
       'username': matrix_bot_baibot_config_user_mxid_localpart,
       'initial_password': matrix_bot_baibot_config_user_password,
       'initial_type': 'bot',
-    }] if matrix_bot_baibot_enabled else [])
+    }] if matrix_bot_baibot_enabled and ((matrix_bot_baibot_config_user_password | default('', true) | string | length) > 0) else [])
     +
     ([{
       'username': matrix_bot_matrix_reminder_bot_matrix_user_id_localpart,
