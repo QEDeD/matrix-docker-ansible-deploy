@@ -27,7 +27,10 @@ cd /home/ansible-admin/matrix-docker-ansible-deploy
 # Scoped default (inventory/group_vars plus explicit DAS role path)
 LINT_PLAYBOOK_ROLE_PATHS="roles/docker_ansible_summary" bash ./bin/lint-playbook.sh
 
-# Optional broad diagnostic pass (upstream debt visibility)
+# Reuse the warm .venv without refreshing tool versions
+LINT_PLAYBOOK_UPGRADE_TOOLS=0 LINT_PLAYBOOK_ROLE_PATHS="roles/docker_ansible_summary" bash ./bin/lint-playbook.sh
+
+# Optional broad diagnostic pass (includes DAS role automatically)
 LINT_PLAYBOOK_SCOPE=full bash ./bin/lint-playbook.sh
 ```
 
