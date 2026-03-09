@@ -67,6 +67,7 @@ matrix_matrixto_enabled: true
 
 # Workers
 
+matrix_synapse_workers_enabled: true
 matrix_synapse_workers_preset: one-of-each
 
 # Element
