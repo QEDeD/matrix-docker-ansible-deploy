@@ -22,6 +22,8 @@ domain: "{{ vault_domain }}"
 matrix_domain: "{{ domain }}"
 admin_user_email: "{{ vault_admin_user_email }}"
 
+devture_systemd_service_manager_service_restart_mode: priority-batched
+
 # The Matrix homeserver software to install.
 # See:
 #  - `roles/custom/matrix-base/defaults/main.yml` for valid options
