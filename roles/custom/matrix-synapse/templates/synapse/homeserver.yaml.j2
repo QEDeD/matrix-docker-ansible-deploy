@@ -864,7 +864,7 @@ database:
     user: {{ matrix_synapse_database_user | string|to_json }}
     password: {{ matrix_synapse_database_password | string|to_json }}
     database: "{{ matrix_synapse_database_database }}"
-    host: "{{ matrix_synapse_database_host }}"
+    host: "{{ matrix_synapse_database_socket_path if matrix_synapse_database_socket_enabled else matrix_synapse_database_host }}"
     port: {{ matrix_synapse_database_port }}
     cp_min: {{ matrix_synapse_database_cp_min | to_json }}
     cp_max: {{ matrix_synapse_database_cp_max | to_json }}
@@ -3005,6 +3005,9 @@ experimental_features:
   {% endif %}
   {% if matrix_synapse_experimental_features_msc4222_enabled %}
   msc4222_enabled: true
+  {% endif %}
+  {% if matrix_synapse_experimental_features_msc4354_enabled %}
+  msc4354_enabled: true
   {% endif %}
 
 {% if matrix_synapse_experimental_features_msc4140_enabled %}
