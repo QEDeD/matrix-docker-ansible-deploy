@@ -320,7 +320,7 @@ aux_file_definitions:
 # Enable the DNS‑01 challenge via Cloudflare
 traefik_config_certificatesResolvers_acme_dnsChallenge_enabled: true  # noqa var-naming
 traefik_config_certificatesResolvers_acme_dnsChallenge_provider: "cloudflare"  # noqa var-naming
-traefik_config_certificatesResolvers_acme_dnsChallenge_delayBeforeCheck: 60  # noqa var-naming
+traefik_config_certificatesResolvers_acme_dnsChallenge_propagation_delayBeforeChecks: 60  # noqa var-naming
 traefik_config_certificatesResolvers_acme_dnsChallenge_resolvers:  # noqa var-naming
   - "1.1.1.1:53"
 
