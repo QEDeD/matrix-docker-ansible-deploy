@@ -79,6 +79,8 @@ matrix_client_element_location_sharing_enabled: true
 matrix_client_element_location_sharing_map_style_content_sources_localsource_tiles:
   - "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 matrix_client_element_location_sharing_map_style_content_sources_localsource_attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors"
+matrix_client_element_features_custom:
+  feature_jump_to_date: true
 
 # Compatibility for clients fetching map_style.json cross-origin
 matrix_client_element_container_labels_traefik_additional_response_headers_custom:
