@@ -111,6 +111,18 @@ matrix_synapse_usage_exporter_enabled: true
 matrix_element_call_enabled: false
 matrix_rtc_enabled: true
 
+# MatrixRTC transport discovery test:
+# expose Synapse's MSC4143 transport endpoint in addition to the current
+# .well-known-based rtc_foci discovery.
+matrix_synapse_configuration_extension_yaml: |
+  experimental_features:
+    msc4143_enabled: true
+
+  matrix_rtc:
+    transports:
+      - type: livekit
+        livekit_service_url: "https://matrix.{{ domain }}/livekit-jwt-service"
+
 ########################################################################
 #                                                                      #
 # /Synapse & Element                                                   #
