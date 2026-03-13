@@ -18,6 +18,8 @@ This directory is the canonical support layer for agent/operator collaboration.
 
 - `AGENTS.md` - repository policy guardrails and allowed behavior.
 - `docs/ai/agent_workflows.md` - implementation/reporting workflow details.
+- `docs/ai/upstream_role_contribution.md` - upstream role/new-role contribution
+  workflow and branch hygiene rules.
 - `docs/ai/vault-operations.md` - human-run vault workflow and secret-safe output rules.
 
 ## Relation to top-level docs
