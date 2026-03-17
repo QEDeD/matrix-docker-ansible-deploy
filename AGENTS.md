@@ -48,7 +48,8 @@ Operator mode may edit these paths by default:
 - `inventory/**`
 - `local-notes/**` (local operator documentation)
 - `docs/ai/**` (support documentation for agents/operators)
-- `.codex/**` (Codex config/skills, if present)
+- `.agents/skills/**` (repo-local Codex skills, if present)
+- `.codex/**` (repo-local Codex config/support, if present)
 - `plans/**` (execution plans, if used)
 - `AGENTS.md`
 - Operator mode may create missing files/directories under operator-owned local
@@ -121,7 +122,8 @@ Mini-plan (brief bullets) is sufficient for:
 
 ## Fork-Tracked Support Paths and Upstream PR Hygiene
 
-- `AGENTS.md`, `docs/ai/**`, `.codex/**`, `local-notes/**`, and `plans/**`
+- `AGENTS.md`, `docs/ai/**`, `.agents/skills/**`, `.codex/**`,
+  `local-notes/**`, and `plans/**`
   are fork-tracked support paths and are not automatically upstreamable.
 - Upstream-facing branches must not contain changes to those paths unless the
   task explicitly intends to upstream support files.

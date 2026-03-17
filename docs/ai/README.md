@@ -12,7 +12,8 @@ This directory is the canonical support layer for agent/operator collaboration.
 
 - Define execution and safety rules for automation-assisted maintenance.
 - Provide runbooks that agents can reference without inventing workflow details.
-- Keep cross-repo behavior consistent between MDAD and MASH where possible.
+- Keep cross-repo behavior consistent between MDAD and
+  MASH where possible.
 
 ## Source of truth
 
@@ -33,5 +34,6 @@ top-level docs for service/playbook semantics.
 
 ## Maintenance rule
 
-Non-repository-specific support rules should remain text-identical across MDAD
-and MASH. Divergence should be limited to real structural differences.
+Non-repository-specific support rules should remain text-identical across
+MDAD and MASH. Divergence should be limited to real
+structural differences.

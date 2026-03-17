@@ -47,6 +47,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 - These fork-tracked support paths are not automatically upstreamable:
   - `AGENTS.md`
   - `docs/ai/**`
+  - `.agents/skills/**`
   - `.codex/**`
   - `local-notes/**`
   - `plans/**`
