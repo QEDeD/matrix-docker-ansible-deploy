@@ -1,0 +1,197 @@
+# Agent Workflows
+
+## Grounding Before Proposing Changes
+
+- Do not propose editing a specific inventory file until read-only search confirms variable location.
+- If location is unresolved, mark `UNKNOWN` and propose a conditional plan (locate -> then edit).
+- Use conditional language until confirmed (for example: "If found in X, edit X; else search Y").
+
+## Grounding Just Commands
+
+- Before suggesting `just` with flags, verify recipe interface in `justfile`.
+- Use `just --list` and inspect recipe definitions/arg forwarding.
+- Do not assume `--ask-vault-pass -K --limit` passthrough.
+- For this operator setup, treat vault + become prompts as required for
+  user-run remote-impact commands: use `-J -K` (or
+  `--ask-vault-pass --ask-become-pass`) in operator command blocks.
+- Use `--limit <host>` to constrain scope and avoid changing non-target inventory hosts.
+- If uncertain, suggest explicit `ansible-playbook` user-run command with required flags.
+
+## Human-Only Execution Boundaries
+
+- Do not run commands that require SSH/remote host access (for example `ssh`,
+  `scp`, `rsync`, remote-impact `ansible-playbook`, or `just run*`/`install*`/
+  `setup*`/`start*` against managed hosts).
+- Do not run commands that require sudo/become privileges.
+- Do not read, decrypt, diff, edit, or re-encrypt vault files (for example
+  `inventory/**/vault.yml`, `*vault*.yml`) and do not run `ansible-vault`.
+- For these tasks, provide user-run command blocks only.
+- Local-only `ansible-playbook` inspection commands are allowed only when they
+  do not require remote host connection, Vault unlock, or become/sudo
+  (for example `--syntax-check`, `--list-tags`, `--list-tasks`).
+
+## Verification Grounding
+
+- Prefer repo-defined status/verify commands first.
+- If service identifiers are unknown, discover them first.
+- Use `docker`/`systemctl` checks only when evidence supports that runtime path.
+
+### Read-Only Discovery Primitives
+
+- `just --list`
+- `rg -n "<service>" justfile docs inventory roles templates`
+- `rg -n "<varname>" inventory/host_vars inventory/group_vars group_vars`
+- `rg -n "stop-group|start-group|status" justfile`
+
+## Service-Enablement Grounding
+
+- For each newly enabled service, review both documentation layers:
+- playbook service docs: `docs/services/<service>.md`
+- role-specific docs (if present): `roles/galaxy/<service>/docs/configuring-<service>.md`
+- Inspect role validation tasks before first remote run:
+- `roles/galaxy/<service>/tasks/validate_config.yml`
+- Use validation tasks to enumerate required variables and allowed values, and cross-check them against planned inventory edits.
+- If role docs or validation files are missing/unresolved, mark `UNKNOWN` and provide exact `rg` commands to locate them.
+
+## Secrets and Vault Grounding
+
+- Variables loaded from vault must be referenced with names prefixed by `vault_` (for example: `some_secret: "{{ vault_some_secret }}"`).
+- Before proposing vault-backed variables, verify existing naming patterns in `inventory/host_vars/**/vars.yml`.
+- For cross-host secrets (for example, service + dependency host), explicitly note when the same vault value must be reused.
+- Do not inspect or modify vault files directly; instruct the operator what to
+  add/update manually.
+
+## Multi-Host Dependency Pattern Grounding
+
+- When a service is modeled with a dedicated dependency host (for example `*-immich-deps`), verify:
+- inventory host entry exists in `inventory/hosts`
+- supplementary host vars path exists in `inventory/host_vars/<host>/vars.yml`
+- main host wiring variables point to dependency host identifiers/networks/services
+- If any of the above is unresolved, mark `UNKNOWN` and provide exact `rg` commands.
+
+## Retention and Uninstall Grounding
+
+- Distinguish temporary deactivation from uninstall intent:
+- temporary deactivation: prefer `stop-group` / `start-group` flow
+- uninstall/cleanup intent: use service-scoped `setup-<service>` path when evidence shows uninstall tasks are wired there
+- Do not default to broad `setup-all` for single-service uninstall unless explicitly requested.
+- For services with data directories or migrations, cite uninstall tasks and data-path behavior (delete vs keep vs unknown).
+
+## Remote-Impact Command Annotation
+
+- For any suggested remote-impact command, mark it as `user-run only`.
+- Always include:
+- target host/limit scope
+- expected impact (`state-changing` / `disruptive` / `destructive`)
+- retention expectation (`keep` / `delete` / `unknown`)
+- verification command(s)
+- rollback direction
+
+## Markdown Linting
+
+- Markdown files should be linted locally after edits.
+- Use the repository lint script in scoped mode (default):
+- `bash ./bin/lint-playbook.sh`
+- To reuse the current `.venv` tool versions without refreshing them, set `LINT_PLAYBOOK_UPGRADE_TOOLS=0`.
+- Example: `LINT_PLAYBOOK_UPGRADE_TOOLS=0 bash ./bin/lint-playbook.sh`
+- To include markdown files explicitly, pass them via `EXTRA_LINT_PATHS`.
+- Example: `EXTRA_LINT_PATHS="docs/ai/agent_workflows.md" bash ./bin/lint-playbook.sh`
+
+## Lint Scope Modes
+
+- `bin/lint-playbook.sh` supports `LINT_PLAYBOOK_SCOPE=scoped|full`.
+- Default is `scoped`.
+- Scoped mode:
+- lints the repository's target inventory/group vars list
+- does not auto-lint `roles/custom`, `roles/docker_ansible_summary`, or Jitsi playbooks
+- use `LINT_PLAYBOOK_ROLE_PATHS` to include specific local role trees
+- Example (target DAS role): `LINT_PLAYBOOK_ROLE_PATHS="roles/docker_ansible_summary" bash ./bin/lint-playbook.sh`
+- Full mode:
+- restores broad diagnostics for upstream debt discovery
+- includes discovered local roles under `roles/custom`, `roles/docker_ansible_summary`, and matrix Jitsi targets
+- Example: `LINT_PLAYBOOK_SCOPE=full bash ./bin/lint-playbook.sh`
+- Treat full-mode output as diagnostic by default:
+- classify findings into local actionable changes, upstream baseline debt, and external/vendor findings
+- only broaden fixes when explicitly doing upstream contribution work
+
+## External Role Lint Policy
+
+- Treat lint findings in external/vendor role trees as informational by default
+  (for example, `roles/galaxy/**`).
+- Do not block local operator-owned changes on unrelated external-role lint
+  issues.
+- Default validation scope should be:
+- changed files
+- operator-owned local paths
+- service-specific syntax/lint checks relevant to the task
+- Only fix external-role lint when explicitly in contribution mode:
+- intentionally patching/forking that role
+- preparing a dedicated upstream PR for the role/playbook
+
+## Upstream Role Contribution
+
+- For upstream role PRs, upstream PR refreshes, and new-role contribution work,
+  also follow `docs/ai/upstream_role_contribution.md`.
+- Before push or PR update, verify the branch is based on
+  `upstream/<default>` and that the diff against `upstream/<default>` does not
+  contain fork-tracked support paths unless the task explicitly intends to
+  upstream them.
+- If the branch changed materially after review started, refresh the PR body
+  and add a short top-level comment.
+
+## Post-Merge Branch Cleanup
+
+- Preconditions checklist:
+- primary branch identified
+- branch merge confirmed into primary branch
+- clean working tree (`git status --short` is empty)
+
+### Verification commands
+
+- `git status --short`
+- `git branch --merged <primary_branch>`
+- `git log --oneline <primary_branch>..<candidate_branch>` (expected no output)
+
+### Local cleanup command template
+
+```sh
+# If currently on the branch to clean up, switch first:
+git switch <primary_branch>
+
+# Delete merged branches conservatively:
+git branch -d <candidate_branch>
+
+# Optional: auxiliary upstream-subset branch
+git branch -d upstreamable/<topic>
+```
+
+### Remote cleanup guidance (explicit request only)
+
+- Remote branch deletion is not default behavior.
+- Provide user-run command blocks only when explicitly requested.
+
+```sh
+# User-run only (explicit request required):
+git push origin --delete <candidate_branch>
+```
+
+- Post-delete verification:
+- `git branch -r --list '*<candidate_branch>'` (expected no output)
+
+### Failure and edge handling
+
+- If branch is unmerged: do not delete; report that it is not merged.
+- If candidate branch is currently checked out: switch to primary branch first.
+- If remote branch is unknown or unpublished: skip remote cleanup.
+
+## Pre-Flight and Finalization
+
+- Before suggesting remote-impact execution, run local pre-flight checks:
+- `bash ./bin/lint-playbook.sh`
+- `LINT_PLAYBOOK_ROLE_PATHS="roles/docker_ansible_summary" bash ./bin/lint-playbook.sh` (when DAS/local-role changes are in scope)
+- `ansible-playbook -i inventory/hosts setup.yml --syntax-check`
+- Run `ansible-playbook -i inventory/hosts setup.yml --list-tags` as a sanity check after optimization/template regeneration and verify expected service tags are present.
+- For commit hygiene:
+- review with `git status --short` (and `git diff` as needed)
+- use targeted staging (for example, `git add <explicit-paths>`) instead of broad staging
+- use a scoped commit message that matches the actual change set
