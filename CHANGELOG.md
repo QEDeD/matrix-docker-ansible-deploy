@@ -1,3 +1,36 @@
+# 2026-03-19
+
+## Matrix Authentication Service now prefers UNIX sockets for playbook-managed Postgres
+
+When [Matrix Authentication Service](docs/configuring-playbook-matrix-authentication-service.md) (MAS) uses the playbook-managed Postgres service, it now connects to it via a [UNIX socket](https://en.wikipedia.org/wiki/Unix_domain_socket) by default instead of TCP.
+
+This follows the same approach [applied to Synapse](#synapse-now-prefers-unix-sockets-for-playbook-managed-postgres-and-valkey) and reduces unnecessary container-network wiring, keeping local IPC off the network stack.
+
+If you use an external Postgres server for MAS, this does not change your setup.
+
+If you'd like to keep the previous TCP-based behavior, add the following configuration to your `vars.yml`:
+
+```yaml
+matrix_authentication_service_config_database_socket_enabled: false
+```
+
+# 2026-03-17
+
+## Synapse now prefers UNIX sockets for playbook-managed Postgres and Valkey
+
+When Synapse uses the playbook-managed Postgres and Valkey services, it now connects to them via [UNIX sockets](https://en.wikipedia.org/wiki/Unix_domain_socket) by default instead of TCP.
+
+This reduces unnecessary container-network wiring and keeps local IPC off the network stack, which is a bit simpler and slightly more secure.
+
+If you use an external Postgres server or external Redis/Valkey for Synapse, this does not change your setup.
+
+If you'd like to keep the previous TCP-based behavior, add the following configuration to your `vars.yml`:
+
+```yaml
+matrix_synapse_database_socket_enabled: false
+matrix_synapse_redis_path_enabled: false
+```
+
 # 2026-03-01
 
 ## (Potential BC Break) Synapse S3 media prefix is now applied consistently
