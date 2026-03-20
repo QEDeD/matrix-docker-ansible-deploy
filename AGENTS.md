@@ -48,7 +48,9 @@ Operator mode may edit these paths by default:
 - `inventory/**`
 - `local-notes/**` (local operator documentation)
 - `docs/ai/**` (support documentation for agents/operators)
-- `.agents/skills/**` (repo-local Codex skills, if present)
+- `.agents/skills/**` (repo-local Codex skills, if present; shared custom
+  skills are sourced from `~/codex-support/skills` and installed via
+  `~/.agents/skills`)
 - `.codex/**` (repo-local Codex config/support, if present)
 - `plans/**` (execution plans, if used)
 - `AGENTS.md`
