@@ -11,6 +11,7 @@
 .python-version
 .idea/
 .direnv/
+/var/
 
 # Python virtual environments
 ansible-validation-env/
