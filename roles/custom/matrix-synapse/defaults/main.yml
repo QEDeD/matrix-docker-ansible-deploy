@@ -16,7 +16,7 @@ matrix_synapse_enabled: true
 matrix_synapse_github_org_and_repo: element-hq/synapse
 
 # renovate: datasource=docker depName=ghcr.io/element-hq/synapse
-matrix_synapse_version: v1.149.1
+matrix_synapse_version: v1.150.0
 
 matrix_synapse_username: ''
 matrix_synapse_uid: ''
@@ -124,6 +124,17 @@ matrix_synapse_ext_s3_storage_provider_bin_path: "{{ matrix_synapse_ext_s3_stora
 matrix_synapse_ext_s3_storage_provider_data_path: "{{ matrix_synapse_ext_s3_storage_provider_base_path }}/data"
 # extra arguments to pass to s3-storage-provider script when starting Synapse container
 matrix_synapse_ext_s3_storage_provider_container_arguments: []
+
+# matrix_synapse_s3_storage_provider_restart_necessary controls whether the
+# s3-storage-provider migrate timer will be restarted (when true) or merely
+# started (when false) by the systemd service manager role (when conditional
+# restart is enabled).
+#
+# This value is automatically computed during installation based on whether
+# any configuration files or the systemd service/timer files changed.
+# The default of `false` means "no restart needed" — appropriate when the role's
+# installation tasks haven't run (e.g., due to --tags skipping them).
+matrix_synapse_s3_storage_provider_restart_necessary: false
 
 matrix_synapse_container_client_api_port: 8008
 
@@ -1310,6 +1321,10 @@ matrix_synapse_sentry_dsn: ""
 
 # Postgres database information
 matrix_synapse_database_txn_limit: 0
+#
+# Use this hostname for TCP-based Postgres connections.
+# When `matrix_synapse_database_socket_enabled` is true, this is ignored and
+# `matrix_synapse_database_socket_path` is used instead.
 matrix_synapse_database_host: ''
 matrix_synapse_database_port: 5432
 matrix_synapse_database_cp_min: 5
@@ -1414,6 +1429,13 @@ matrix_synapse_experimental_features_msc4140_enabled: false
 #
 # See `matrix_synapse_experimental_features_msc4140_enabled`.
 matrix_synapse_max_event_delay_duration: 24h
+
+# Controls whether to enable the MSC4143 experimental feature (RTC transports).
+#
+# This is used by MatrixRTC clients to discover the unstable RTC transports API.
+#
+# See https://github.com/matrix-org/matrix-spec-proposals/pull/4143
+matrix_synapse_experimental_features_msc4143_enabled: false
 
 # Controls whether to enable the MSC4222 experimental feature (adding `state_after` to sync v2).
 #
@@ -1644,6 +1666,16 @@ matrix_s3_media_store_aws_secret_key: "your-aws-secret-key"
 matrix_s3_media_store_region: "eu-central-1"
 matrix_s3_media_store_path: "{{ matrix_synapse_media_store_path }}"
 
+# matrix_goofys_restart_necessary controls whether the Goofys service
+# will be restarted (when true) or merely started (when false) by the
+# systemd service manager role (when conditional restart is enabled).
+#
+# This value is automatically computed during installation based on whether
+# any configuration files, the systemd service file, or the container image changed.
+# The default of `false` means "no restart needed" — appropriate when the role's
+# installation tasks haven't run (e.g., due to --tags skipping them).
+matrix_goofys_restart_necessary: false
+
 # Controls whether the self-check feature should validate SSL certificates.
 matrix_synapse_self_check_validate_certificates: true
 
@@ -1803,7 +1835,7 @@ matrix_synapse_register_user_script_matrix_authentication_service_path: ""
 matrix_synapse_reverse_proxy_companion_enabled: "{{ matrix_synapse_enabled and matrix_synapse_workers_enabled }}"
 
 # renovate: datasource=docker depName=nginx
-matrix_synapse_reverse_proxy_companion_version: 1.29.6-alpine
+matrix_synapse_reverse_proxy_companion_version: 1.29.7-alpine
 
 matrix_synapse_reverse_proxy_companion_base_path: "{{ matrix_synapse_base_path }}/reverse-proxy-companion"
 matrix_synapse_reverse_proxy_companion_confd_path: "{{ matrix_synapse_reverse_proxy_companion_base_path }}/conf.d"
