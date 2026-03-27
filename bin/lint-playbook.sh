@@ -204,8 +204,8 @@ if [[ "${upgrade_tools}" == "1" ]]; then
   log "updating pip/setuptools/wheel..."
   "${venv_python}" -m pip install --upgrade pip setuptools wheel >/dev/null
 
-  log "ensuring ansible-core, ansible-lint, and pre-commit are current..."
-  "${venv_python}" -m pip install --upgrade ansible-core ansible-lint pre-commit >/dev/null
+  log "ensuring ansible-core, ansible-lint, pre-commit, and passlib are current..."
+  "${venv_python}" -m pip install --upgrade ansible-core ansible-lint pre-commit passlib >/dev/null
 else
   mapfile -t missing_packages < <("${venv_python}" - <<'PY'
 import importlib.util
@@ -214,6 +214,7 @@ checks = [
     ("ansible", "ansible-core"),
     ("ansiblelint", "ansible-lint"),
     ("pre_commit", "pre-commit"),
+    ("passlib", "passlib"),
 ]
 
 for module_name, package_name in checks:
@@ -226,7 +227,7 @@ PY
     log "installing missing packages: ${missing_packages[*]}"
     "${venv_python}" -m pip install "${missing_packages[@]}" >/dev/null
   else
-    log "reusing installed ansible-core, ansible-lint, and pre-commit."
+    log "reusing installed ansible-core, ansible-lint, pre-commit, and passlib."
   fi
 fi
 
