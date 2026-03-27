@@ -18,6 +18,9 @@
 # because you can't change the Domain after deployment.
 #
 # Example value: example.com
+
+matrix_playbook_migration_validated_version: v2026.03.23.0
+
 domain: "{{ vault_domain }}"
 matrix_domain: "{{ domain }}"
 admin_user_email: "{{ vault_admin_user_email }}"
