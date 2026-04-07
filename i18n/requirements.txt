@@ -1,8 +1,8 @@
 alabaster==1.0.0
 babel==2.18.0
 certifi==2026.2.25
-charset-normalizer==3.4.6
-click==8.3.1
+charset-normalizer==3.4.7
+click==8.3.2
 docutils==0.22.4
 idna==3.11
 imagesize==2.0.0
@@ -14,9 +14,9 @@ mdit-py-plugins==0.5.0
 mdurl==0.1.2
 myst-parser==5.0.0
 packaging==26.0
-Pygments==2.19.2
+Pygments==2.20.0
 PyYAML==6.0.3
-requests==2.32.5
+requests==2.33.1
 setuptools==82.0.1
 snowballstemmer==3.0.1
 Sphinx==9.1.0
