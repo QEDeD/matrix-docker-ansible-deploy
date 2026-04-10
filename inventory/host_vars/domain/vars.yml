@@ -19,7 +19,7 @@
 #
 # Example value: example.com
 
-matrix_playbook_migration_validated_version: v2026.03.23.0
+matrix_playbook_migration_validated_version: v2026.04.03.0
 
 domain: "{{ vault_domain }}"
 matrix_domain: "{{ domain }}"
@@ -96,7 +96,7 @@ matrix_static_files_container_labels_base_domain_enabled: true
 
 # Synapse Admin
 
-matrix_synapse_admin_enabled: true
+matrix_ketesa_enabled: true
 
 matrix_synapse_ext_password_provider_shared_secret_auth_enabled: true
 matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret: "{{ vault_matrix_synapse_ext_password_provider_shared_secret_auth_shared_secret }}"
