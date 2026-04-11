@@ -217,8 +217,7 @@ traefik_config_certificatesResolvers_acme_email: "{{ admin_user_email }}"  # noq
 traefik_dashboard_enabled: true
 traefik_dashboard_hostname: "{{ matrix_server_fqn_matrix }}"
 traefik_dashboard_basicauth_enabled: true
-traefik_dashboard_basicauth_user: "{{ vault_traefik_dashboard_basicauth_user }}"
-traefik_dashboard_basicauth_password: "{{ vault_traefik_dashboard_basicauth_password }}"
+traefik_dashboard_basicauth_htpasswd: "{{ vault_traefik_dashboard_basicauth_user }}:{{ vault_traefik_dashboard_basicauth_password_hash }}"
 
 # By default, the playbook manages its own Traefik (https://doc.traefik.io/traefik/) reverse-proxy server.
 # It will retrieve SSL certificates for you on-demand and forward requests to all other components.
