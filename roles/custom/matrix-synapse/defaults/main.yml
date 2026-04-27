@@ -389,6 +389,20 @@ matrix_synapse_systemd_healthcheck_enabled: true
 matrix_synapse_systemd_healthcheck_max_retries: 180
 matrix_synapse_systemd_healthcheck_interval_seconds: 1
 
+# Controls the systemd startup timeout for matrix-synapse.service.
+# By default, this is derived from the healthcheck budget, plus a small buffer.
+# This can be raised further on especially slow servers.
+matrix_synapse_systemd_service_timeout_start_seconds: >-
+  {{
+    [
+      90,
+      (matrix_synapse_systemd_healthcheck_max_retries | int
+       * matrix_synapse_systemd_healthcheck_interval_seconds | int)
+      + (matrix_synapse_systemd_service_post_start_delay_seconds | int)
+      + 15
+    ] | max
+  }}
+
 # The command used for the health check in ExecStartPost.
 # Polls `docker inspect` for the container's health status until it reports "healthy".
 matrix_synapse_systemd_healthcheck_command: >-
