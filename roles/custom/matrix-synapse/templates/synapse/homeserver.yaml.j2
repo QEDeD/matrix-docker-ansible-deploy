@@ -3032,6 +3032,12 @@ experimental_features:
   msc4354_enabled: true
   {% endif %}
 
+{% if matrix_synapse_matrix_rtc_transports | length > 0 %}
+matrix_rtc:
+  transports:
+{{ matrix_synapse_matrix_rtc_transports | to_nice_yaml(indent=2, width=999999) | indent(4, true) }}
+{% endif %}
+
 {% if matrix_synapse_experimental_features_msc4140_enabled %}
 max_event_delay_duration: {{ matrix_synapse_max_event_delay_duration | to_json }}
 rc_delayed_event_mgmt: {{ matrix_synapse_rc_delayed_event_mgmt | to_json }}
