@@ -66,6 +66,8 @@ For a more custom setup, see the [Other configuration options](#other-configurat
 
   - [Using your own webserver, instead of this playbook's Traefik reverse-proxy](configuring-playbook-own-webserver.md) (advanced)
 
+  - [Configuring Docker](configuring-playbook-docker.md) (advanced)
+
   - [Adjusting SSL certificate retrieval](configuring-playbook-ssl-certificates.md) (advanced)
 
   - [Adjusting email-sending settings](configuring-playbook-email.md)

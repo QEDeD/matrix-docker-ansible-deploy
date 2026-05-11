@@ -78,6 +78,8 @@ If your server and services experience issues, feel free to come to [our support
 
 - [Container images used by the playbook](container-images.md)
 
+- [Configuring Docker](configuring-playbook-docker.md)
+
 - [Obtaining an Access Token](obtaining-access-tokens.md)
 
 - [Playbook tags](playbook-tags.md)
