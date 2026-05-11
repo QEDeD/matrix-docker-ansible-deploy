@@ -107,6 +107,84 @@ If it's all green, everything is probably running correctly.
 
 Besides this self-check, you can also check whether your server federates with the Matrix network by using the [Federation Tester](https://federationtester.matrix.org/) against your base domain (`example.com`), not the `matrix.example.com` subdomain.
 
+### Docker cannot find an available IPv4 address pool
+
+If Docker reports an error like `could not find an available, non-overlapping IPv4 address pool among the defaults to assign to the network`, Docker may have run out of automatically allocatable bridge-network subnets.
+
+This can happen on servers that run many Docker networks. Docker's built-in local address pools provide 31 automatically allocated IPv4 subnets, and the default `bridge` network commonly consumes one of them.
+
+If Docker is managed by the playbook, see [Adjusting Docker's default address pools](configuring-playbook-docker.md#adjusting-dockers-default-address-pools) for an example that changes newly created Docker networks to `/24` subnets and greatly increases the number of possible networks. If Docker is not managed by the playbook, configure Docker manually using Docker's [`default-address-pools` documentation](https://docs.docker.com/engine/network/#default-address-pools).
+
+This change only affects Docker networks created after the Docker daemon configuration changes. Existing Docker networks keep their current subnets until they are recreated. Changing Docker daemon options causes the playbook to restart Docker, so plan it as a disruptive maintenance-window change on an active server.
+
+#### Recreating existing networks
+
+Changing Docker's `default-address-pools` setting only affects networks created after the Docker daemon starts with the new configuration. Existing networks keep their old subnet until they are deleted and recreated.
+
+The playbook recreates missing Docker networks during installation tasks, so the usual migration path is to record the playbook-managed networks, stop services, delete those networks, and rerun the playbook. This does not delete service data under `/matrix`, but it is disruptive because all affected services need to stop while their networks are recreated.
+
+Run `just` commands from the playbook directory. Run `docker` commands on the Matrix server.
+
+Before stopping services, record the networks currently attached to Matrix containers:
+
+```sh
+for container in $(docker ps -a --format '{{.Names}}' | grep '^matrix-'); do
+  docker inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' "$container"
+done | sort -u | awk '!/^(bridge|host|none)$/ { print }' | tee /tmp/mdad-networks-to-recreate.txt
+```
+
+Review `/tmp/mdad-networks-to-recreate.txt` before deleting anything. Remove any network names that are externally managed or shared with non-Matrix containers. For example, if you use `matrix_playbook_reverse_proxy_type: other-traefik-container`, the Traefik network may belong to another stack and should not be deleted as part of the Matrix playbook.
+
+If this Docker host also runs other playbook-managed stacks, such as MASH, record and review their networks too. With MASH's default identifiers, run:
+
+```sh
+for container in $(docker ps -a --format '{{.Names}}' | grep '^mash-'); do
+  docker inspect --format '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' "$container"
+done | sort -u | awk '!/^(bridge|host|none)$/ { print }' | tee -a /tmp/mdad-networks-to-recreate.txt
+
+sort -u -o /tmp/mdad-networks-to-recreate.txt /tmp/mdad-networks-to-recreate.txt
+```
+
+Stop every stack that uses networks you plan to delete. If you recorded MASH networks, also run `just stop-all` from the MASH playbook directory before deleting networks.
+
+Stop Matrix services:
+
+```sh
+just stop-all
+```
+
+Delete the reviewed networks on the Matrix server:
+
+```sh
+while IFS= read -r network; do
+  [ -n "$network" ] && docker network rm "$network"
+done < /tmp/mdad-networks-to-recreate.txt
+```
+
+If Docker refuses to remove a network because endpoints are still attached, inspect it before retrying:
+
+```sh
+docker network inspect NETWORK_NAME --format '{{json .Containers}}'
+```
+
+After the old networks are removed, rerun the playbook. If Docker is managed by this playbook, this applies the new Docker daemon configuration, recreates missing networks, and starts services:
+
+```sh
+just install-all
+```
+
+If you recorded MASH networks, also run `just install-all` from the MASH playbook directory. On a shared MDAD/MASH host, only one playbook should manage Docker daemon configuration; if MASH is the playbook that manages Docker, run the MASH install first so it applies the Docker daemon configuration, then run the MDAD install so missing MDAD networks are recreated.
+
+If Docker is not managed by any playbook, configure Docker's `default-address-pools` manually, restart Docker yourself, and then run `just install-all` so the playbook recreates missing networks and starts services.
+
+You can verify the recreated subnets with:
+
+```sh
+while IFS= read -r network; do
+  [ -n "$network" ] && docker network inspect "$network" --format '{{.Name}}: {{range .IPAM.Config}}{{.Subnet}} {{end}}'
+done < /tmp/mdad-networks-to-recreate.txt
+```
+
 ### How to debug or force SSL certificate renewal
 
 SSL certificates are managed automatically by the [Traefik](https://doc.traefik.io/traefik/) reverse-proxy server.
