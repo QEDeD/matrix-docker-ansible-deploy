@@ -34,7 +34,7 @@ Add the following configuration to your `inventory/host_vars/matrix.example.com/
 matrix_rtc_enabled: true
 ```
 
-When the Matrix RTC stack uses the playbook-managed LiveKit JWT Service, the playbook publishes the LiveKit focus through `.well-known/matrix/client` and configures Synapse's MSC4143 MatrixRTC transport endpoint with the same LiveKit JWT Service URL.
+When Synapse is the selected homeserver and the Matrix RTC stack uses the playbook-managed LiveKit JWT Service, the playbook publishes the LiveKit focus through `.well-known/matrix/client` and configures Synapse's `/_matrix/client/v1/rtc/transports` endpoint with the same LiveKit JWT Service URL.
 
 ## Adjusting firewall rules
 
