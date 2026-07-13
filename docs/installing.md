@@ -41,10 +41,7 @@ If you **don't** use SSH keys for authentication, but rather a regular password,
 
 If you **do** use SSH keys for authentication, **and** use a non-root user to *become* root (sudo), you may need to add `-K` (`--ask-become-pass`) to all Ansible commands.
 
-If your inventory uses encrypted vault files, you may need to add `-J`
-(`--ask-vault-pass`) to raw `ansible-playbook` commands. For `just` commands,
-append `--ask-vault-pass` (and usually `--ask-become-pass` when sudo is
-required).
+If your inventory contains encrypted Ansible Vault data and no other vault password source is configured, add `-J` (`--ask-vault-pass`) to raw `ansible-playbook` commands. `just` recipes forward additional arguments, so add `--ask-vault-pass` after the recipe name (for example, `just install-all --ask-vault-pass`). See [Running this playbook with `just`](just.md) for more examples.
 
 Instead of typing the sudo password on each run (`-K`) or storing it in plain text in the inventory hosts file, you can also pull it from the [pass](https://www.passwordstore.org/) password manager by adding `ansible_become_password='{{ lookup("community.general.passwordstore", "path/to/password") }}'` to your host line. See the [passwordstore lookup documentation](https://docs.ansible.com/ansible/latest/collections/community/general/passwordstore_lookup.html) for more details.
 
