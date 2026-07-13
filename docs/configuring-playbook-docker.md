@@ -20,23 +20,14 @@ If this server is also managed by another playbook, such as [MASH](https://githu
 
 ## Adjusting Docker's default address pools
 
-Docker automatically chooses IPv4 subnets for newly created bridge networks from its [default address pools](https://docs.docker.com/engine/network/#default-address-pools). A server running many Docker networks can exhaust Docker's built-in pools, which may produce errors like `could not find an available, non-overlapping IPv4 address pool among the defaults to assign to the network`.
-
-Docker's built-in local address pools provide 31 automatically allocated IPv4 subnets:
-
-- 15 `/16` subnets from the `172.17.0.0/16` through `172.31.0.0/16` ranges
-- 16 `/20` subnets from the `192.168.0.0/16` range
-
-On a typical Docker installation, the default [`bridge` network](https://docs.docker.com/engine/network/drivers/bridge/) already uses `172.17.0.0/16`, so fewer subnets may be available for new user-defined networks. Other existing Docker networks or host/VPN/LAN routes can reduce the usable count further.
+Docker automatically chooses IPv4 subnets for newly created bridge networks from its [default address pools](https://docs.docker.com/engine/network/#default-address-pools). A server running many Docker networks can exhaust the available non-overlapping subnets, which may produce errors like `could not find an available, non-overlapping IPv4 address pool among the defaults to assign to the network`.
 
 If Docker is managed by the playbook, you can ask the playbook to configure Docker's `default-address-pools` setting by adding this to your `vars.yml` file:
 
 ```yaml
 matrix_playbook_docker_installation_daemon_options_custom:
   default-address-pools:
-    - base: "172.16.0.0/12"
-      size: 24
-    - base: "192.168.0.0/16"
+    - base: "10.240.0.0/16"
       size: 24
 ```
 
@@ -46,12 +37,8 @@ The playbook builds Docker daemon options by merging its automatic options with 
 
 When Docker is managed by the playbook, the resulting Docker daemon options are passed to the Docker role as `docker_daemon_options` and written to `/etc/docker/daemon.json`. This writes the playbook's resulting dictionary; it does not append to an existing daemon configuration file. If you already maintain other Docker daemon settings, include them under `matrix_playbook_docker_installation_daemon_options_custom` together with `default-address-pools`.
 
-With this example, Docker allocates `/24` subnets from the listed private address ranges. The `172.16.0.0/12` range can be divided into 4096 `/24` subnets, and the `192.168.0.0/16` range can be divided into 256 `/24` subnets, for a theoretical total of 4352 candidate Docker networks. Existing Docker networks and host routes reduce the number that Docker can actually allocate. For example, if the default `bridge` network uses `172.17.0.0/16`, its overlap makes the 256 `/24` subnets inside that `/16` unavailable, leaving at most 4096 candidates when there are no other overlaps.
-
-Each `/24` network has 254 usable IPv4 addresses. Docker normally uses one as the bridge gateway, leaving up to 253 for containers on that network.
-
-Choose address ranges that do not overlap with your server's LAN, VPN, or other routed networks. If either example range conflicts with your environment, use your own private address range instead.
+With this example, Docker can allocate `/24` subnets from the `10.240.0.0/16` range. Treat the range as an example, not a universal recommendation. Choose a private range that does not overlap with existing Docker networks or your server's LAN, VPN, container, and other routed networks.
 
 This setting affects Docker networks created after the Docker daemon configuration changes. Existing Docker networks keep their current subnets until they are recreated.
 
-Changing Docker daemon options causes the playbook to restart Docker. Treat this as disruptive for running containers and plan it for a maintenance window if your server is already in use. If you are changing this on an existing installation, see [Docker cannot find an available IPv4 address pool](maintenance-and-troubleshooting.md#docker-cannot-find-an-available-ipv4-address-pool) for the troubleshooting workflow that recreates existing Docker networks.
+Applying changed Docker daemon options may restart Docker. Treat this as disruptive for running containers and plan it for a maintenance window if your server is already in use. If you are changing this on an existing installation, see [Docker cannot find an available IPv4 address pool](maintenance-and-troubleshooting.md#docker-cannot-find-an-available-ipv4-address-pool) for safe inspection guidance.
