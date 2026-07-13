@@ -46,11 +46,9 @@ The playbook builds Docker daemon options by merging its automatic options with 
 
 When Docker is managed by the playbook, the resulting Docker daemon options are passed to the Docker role as `docker_daemon_options` and written to `/etc/docker/daemon.json`. This writes the playbook's resulting dictionary; it does not append to an existing daemon configuration file. If you already maintain other Docker daemon settings, include them under `matrix_playbook_docker_installation_daemon_options_custom` together with `default-address-pools`.
 
-With this example, Docker allocates `/24` subnets from the listed private address ranges. The `172.16.0.0/12` range can be divided into 4096 `/24` subnets, and the `192.168.0.0/16` range can be divided into 256 `/24` subnets, for 4352 candidate Docker networks. If the default `bridge` network keeps using `172.17.0.0/16`, Docker cannot use the 256 `/24` subnets inside that `/16`, leaving 4096 candidate networks for new user-defined networks.
+With this example, Docker allocates `/24` subnets from the listed private address ranges. The `172.16.0.0/12` range can be divided into 4096 `/24` subnets, and the `192.168.0.0/16` range can be divided into 256 `/24` subnets, for a theoretical total of 4352 candidate Docker networks. Existing Docker networks and host routes reduce the number that Docker can actually allocate. For example, if the default `bridge` network uses `172.17.0.0/16`, its overlap makes the 256 `/24` subnets inside that `/16` unavailable, leaving at most 4096 candidates when there are no other overlaps.
 
-Compared to Docker's built-in 31-subnet pool, this `/24` example gives up to 4321 additional candidate networks. Compared to a typical installation where the default `bridge` network already consumes one of the built-in `/16` ranges, this example gives about 4066 additional user-defined networks.
-
-Each `/24` network has up to 254 usable IPv4 addresses, one of which is used by Docker as the bridge gateway.
+Each `/24` network has 254 usable IPv4 addresses. Docker normally uses one as the bridge gateway, leaving up to 253 for containers on that network.
 
 Choose address ranges that do not overlap with your server's LAN, VPN, or other routed networks. If either example range conflicts with your environment, use your own private address range instead.
 
