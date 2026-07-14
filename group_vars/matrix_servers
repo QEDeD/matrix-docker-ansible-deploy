@@ -5158,10 +5158,14 @@ matrix_synapse_password_config_enabled: "{{ not matrix_synapse_matrix_authentica
 
 matrix_synapse_register_user_script_matrix_authentication_service_path: "{{ matrix_authentication_service_bin_path }}/register-user"
 
-# After Synapse's systemd health check passes, the reverse proxy still needs time to
-# discover the container and register its routes. We derive this delay from Traefik's
-# providers.providersThrottleDuration setting (+1s grace for our healthcheck polling interval),
-# so it stays in sync automatically.
+# Heuristic compatibility delay for Traefik to process Docker-provider events after
+# the main Synapse container becomes healthy. This is not an active readiness proof
+# and cannot guarantee worker routes, because workers start after the main unit.
+#
+# For playbook-managed Traefik, this tracks providersThrottleDuration (+1s grace).
+# See: https://doc.traefik.io/traefik/reference/install-configuration/cli-options-list/
+# For `other-traefik-container`, the playbook cannot inspect the external Traefik
+# instance; operators must override this when its real throttle setting differs.
 matrix_synapse_systemd_service_post_start_delay_seconds: "{{ (traefik_config_providers_providersThrottleDuration_seconds | int + 1) if matrix_playbook_reverse_proxy_type in ['playbook-managed-traefik', 'other-traefik-container'] else 0 }}"
 
 matrix_synapse_reverse_proxy_companion_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
