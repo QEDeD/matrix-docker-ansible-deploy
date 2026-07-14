@@ -7,7 +7,7 @@
 - name: Validate startup timing inputs for {{ timing_scenario.name }}
   ansible.builtin.include_tasks: ../../tasks/validate_startup_timing.yml
   vars:
-    matrix_synapse_container_health_interval_seconds: 5
+    matrix_synapse_container_labels_traefik_enabled: "{{ timing_scenario.traefik_enabled }}"
     matrix_synapse_systemd_healthcheck_enabled: "{{ timing_scenario.healthcheck_enabled }}"
     matrix_synapse_systemd_healthcheck_max_retries: "{{ timing_scenario.max_retries }}"
     matrix_synapse_systemd_healthcheck_interval_seconds: "{{ timing_scenario.interval_seconds }}"
@@ -23,6 +23,7 @@
     that:
       - matrix_synapse_systemd_healthcheck_sleep_budget_seconds | int == timing_scenario.expected_sleep_budget_seconds
       - matrix_synapse_systemd_healthcheck_budget_seconds | int == timing_scenario.expected_healthcheck_budget_seconds
+      - matrix_synapse_container_health_interval_seconds | int == ((timing_scenario.traefik_enabled | bool) | ternary(5, 15))
       - matrix_synapse_systemd_service_timeout_start_known_wait_seconds | int == timing_scenario.expected_known_wait_seconds
       - matrix_synapse_systemd_service_timeout_start_effective_headroom_seconds | int == timing_scenario.expected_effective_headroom_seconds | default(timing_scenario.headroom_seconds)
       - matrix_synapse_systemd_service_timeout_start_minimum_seconds | int == timing_scenario.expected_minimum_seconds
@@ -30,6 +31,7 @@
       - matrix_synapse_systemd_service_timeout_start_seconds_auto | string | trim == timing_scenario.expected_auto_seconds
       - matrix_synapse_systemd_service_timeout_start_seconds | string | trim == timing_scenario.expected_timeout_seconds
   vars:
+    matrix_synapse_container_labels_traefik_enabled: "{{ timing_scenario.traefik_enabled }}"
     matrix_synapse_systemd_healthcheck_enabled: "{{ timing_scenario.healthcheck_enabled }}"
     matrix_synapse_systemd_healthcheck_max_retries: "{{ timing_scenario.max_retries }}"
     matrix_synapse_systemd_healthcheck_interval_seconds: "{{ timing_scenario.interval_seconds }}"
@@ -45,6 +47,7 @@
     dest: "{{ timing_test_output_dir }}/{{ timing_scenario.name }}.service"
     mode: '0644'
   vars:
+    matrix_synapse_container_labels_traefik_enabled: "{{ timing_scenario.traefik_enabled }}"
     matrix_synapse_systemd_healthcheck_enabled: "{{ timing_scenario.healthcheck_enabled }}"
     matrix_synapse_systemd_healthcheck_max_retries: "{{ timing_scenario.max_retries }}"
     matrix_synapse_systemd_healthcheck_interval_seconds: "{{ timing_scenario.interval_seconds }}"
@@ -78,6 +81,9 @@
         ('stop -t ' + (timing_scenario.stop_grace_seconds | string) + ' matrix-synapse')
         in (timing_rendered_unit.content | b64decode)
       - >-
+        ('--health-interval=' + (((timing_scenario.traefik_enabled | bool) | ternary(5, 15)) | string) + 's')
+        in (timing_rendered_unit.content | b64decode)
+      - >-
         (timing_scenario.post_start_delay_seconds | int == 0
           and ('ExecStartPost=-' + matrix_host_command_sleep) not in (timing_rendered_unit.content | b64decode))
         or
@@ -85,5 +91,6 @@
           and ('ExecStartPost=-' + matrix_host_command_sleep + ' ' + (timing_scenario.post_start_delay_seconds | string))
             in (timing_rendered_unit.content | b64decode))
   vars:
+    matrix_synapse_container_labels_traefik_enabled: "{{ timing_scenario.traefik_enabled }}"
     matrix_synapse_systemd_healthcheck_max_retries: "{{ timing_scenario.max_retries }}"
     matrix_synapse_systemd_healthcheck_interval_seconds: "{{ timing_scenario.interval_seconds }}"
