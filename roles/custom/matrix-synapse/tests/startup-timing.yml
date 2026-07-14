@@ -1,0 +1,223 @@
+# SPDX-FileCopyrightText: 2026 MDAD project contributors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+
+- name: Synapse startup timing local regression suite
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - ../defaults/main.yml
+  vars:
+    # vars_files has higher precedence than play vars. Apply these fixture
+    # overrides with set_fact after loading the real role defaults.
+    timing_test_role_overrides:
+      matrix_synapse_bin_path: "{{ playbook_dir | dirname }}/files/synapse/bin"
+      matrix_synapse_systemd_healthcheck_program_path: "{{ playbook_dir | dirname }}/files/synapse/bin/systemd-healthcheck"
+      matrix_synapse_systemd_required_services_list: []
+      matrix_synapse_systemd_wanted_services_list: []
+      matrix_synapse_workers_enabled: false
+      matrix_synapse_workers_enabled_list: []
+      devture_systemd_docker_base_systemd_unit_home_path: /tmp
+      devture_systemd_docker_base_docker_service_name: docker.service
+      devture_systemd_docker_base_host_command_sh: /usr/bin/env sh
+      devture_systemd_docker_base_host_command_docker: /usr/bin/env docker
+      matrix_synapse_uid: 1000
+      matrix_synapse_gid: 1000
+      matrix_synapse_tmp_directory_size_mb: 1024
+      matrix_synapse_container_network: host
+      matrix_synapse_container_client_api_host_bind_port: ''
+      matrix_synapse_container_client_api_port: 8008
+      matrix_synapse_federation_enabled: false
+      matrix_synapse_tls_federation_listener_enabled: false
+      matrix_synapse_container_federation_api_tls_host_bind_port: ''
+      matrix_synapse_container_federation_api_tls_port: 8448
+      matrix_synapse_federation_port_enabled: false
+      matrix_synapse_container_federation_api_plain_host_bind_port: ''
+      matrix_synapse_container_federation_api_plain_port: 8048
+      matrix_synapse_metrics_enabled: false
+      matrix_synapse_container_metrics_api_host_bind_port: ''
+      matrix_synapse_metrics_port: 9100
+      matrix_synapse_manhole_enabled: false
+      matrix_synapse_container_manhole_api_host_bind_port: ''
+      matrix_synapse_config_dir_path: /tmp/matrix-synapse/config
+      matrix_synapse_storage_path: /tmp/matrix-synapse/storage
+      matrix_synapse_redis_path_enabled: false
+      matrix_synapse_redis_path_host: /tmp/redis
+      matrix_synapse_redis_path: /run/redis
+      matrix_synapse_database_socket_enabled: false
+      matrix_synapse_database_socket_path_host: /tmp/postgres
+      matrix_synapse_database_socket_path: /run/postgresql
+      matrix_synapse_base_path: /tmp/matrix-synapse
+      matrix_synapse_container_additional_volumes: []
+      matrix_synapse_container_arguments: []
+      matrix_synapse_container_master_extra_arguments: []
+      matrix_synapse_container_image_final: example.invalid/synapse:test
+      matrix_host_command_sleep: /usr/bin/env sleep
+    timing_scenarios:
+      - name: default-traefik
+        healthcheck_enabled: true
+        max_retries: 180
+        interval_seconds: 1
+        post_start_delay_seconds: 3
+        stop_grace_seconds: 3
+        headroom_seconds: 15
+        expected_sleep_budget_seconds: 179
+        expected_healthcheck_budget_seconds: 180
+        expected_known_wait_seconds: 186
+        expected_minimum_seconds: 201
+        expected_auto_seconds: '201'
+        expected_timeout_seconds: '201'
+      - name: default-no-traefik
+        healthcheck_enabled: true
+        max_retries: 180
+        interval_seconds: 1
+        post_start_delay_seconds: 0
+        stop_grace_seconds: 3
+        headroom_seconds: 15
+        expected_sleep_budget_seconds: 179
+        expected_healthcheck_budget_seconds: 180
+        expected_known_wait_seconds: 183
+        expected_minimum_seconds: 198
+        expected_auto_seconds: '198'
+        expected_timeout_seconds: '198'
+      - name: disabled-traefik
+        healthcheck_enabled: false
+        max_retries: 180
+        interval_seconds: 1
+        post_start_delay_seconds: 3
+        stop_grace_seconds: 3
+        headroom_seconds: 15
+        expected_sleep_budget_seconds: 179
+        expected_healthcheck_budget_seconds: 180
+        expected_known_wait_seconds: 6
+        expected_minimum_seconds: 21
+        expected_auto_seconds: ''
+        expected_timeout_seconds: ''
+      - name: quoted-disabled-traefik
+        healthcheck_enabled: 'false'
+        max_retries: 180
+        interval_seconds: 1
+        post_start_delay_seconds: 3
+        stop_grace_seconds: 3
+        headroom_seconds: 15
+        expected_sleep_budget_seconds: 179
+        expected_healthcheck_budget_seconds: 180
+        expected_known_wait_seconds: 6
+        expected_minimum_seconds: 21
+        expected_auto_seconds: ''
+        expected_timeout_seconds: ''
+      - name: disabled-no-post-start-work
+        healthcheck_enabled: false
+        max_retries: 180
+        interval_seconds: 1
+        post_start_delay_seconds: 0
+        stop_grace_seconds: 3
+        headroom_seconds: 15
+        expected_sleep_budget_seconds: 179
+        expected_healthcheck_budget_seconds: 180
+        expected_known_wait_seconds: 3
+        expected_minimum_seconds: 18
+        expected_auto_seconds: ''
+        expected_timeout_seconds: ''
+      - name: custom-retries-and-interval
+        healthcheck_enabled: true
+        max_retries: 3
+        interval_seconds: 2
+        post_start_delay_seconds: 1
+        stop_grace_seconds: 4
+        headroom_seconds: 5
+        expected_effective_headroom_seconds: 5
+        expected_sleep_budget_seconds: 4
+        expected_healthcheck_budget_seconds: 6
+        expected_known_wait_seconds: 11
+        expected_minimum_seconds: 16
+        expected_auto_seconds: '90'
+        expected_timeout_seconds: '90'
+      - name: zero-headroom-keeps-reporting-margin
+        healthcheck_enabled: true
+        max_retries: 1
+        interval_seconds: 1
+        post_start_delay_seconds: 0
+        stop_grace_seconds: 0
+        headroom_seconds: 0
+        floor_seconds: 1
+        expected_sleep_budget_seconds: 0
+        expected_healthcheck_budget_seconds: 1
+        expected_known_wait_seconds: 1
+        expected_effective_headroom_seconds: 1
+        expected_minimum_seconds: 2
+        expected_auto_seconds: '2'
+        expected_timeout_seconds: '2'
+      - name: explicit-timeout-override
+        healthcheck_enabled: true
+        max_retries: 180
+        interval_seconds: 1
+        post_start_delay_seconds: 3
+        stop_grace_seconds: 3
+        headroom_seconds: 15
+        timeout_override_seconds: '300'
+        expected_sleep_budget_seconds: 179
+        expected_healthcheck_budget_seconds: 180
+        expected_known_wait_seconds: 186
+        expected_minimum_seconds: 201
+        expected_auto_seconds: '201'
+        expected_timeout_seconds: '300'
+    timing_invalid_scenarios:
+      - name: zero-retries
+        max_retries: 0
+        expected_failed_task: Fail if a Synapse startup timing setting is invalid
+        expected_error_fragment: matrix_synapse_systemd_healthcheck_max_retries
+      - name: negative-delay
+        post_start_delay_seconds: -1
+        expected_failed_task: Fail if a Synapse startup timing setting is invalid
+        expected_error_fragment: matrix_synapse_systemd_service_post_start_delay_seconds
+      - name: invalid-timeout-span
+        timeout_override_seconds: 5min
+        expected_failed_task: Fail if matrix_synapse_systemd_service_timeout_start_seconds is invalid
+        expected_error_fragment: matrix_synapse_systemd_service_timeout_start_seconds
+      - name: contradictory-timeout
+        timeout_override_seconds: '100'
+        expected_failed_task: Fail if matrix_synapse_systemd_service_timeout_start_seconds is too short
+        expected_error_fragment: known sequential waits
+      - name: short-healthcheck-budget
+        healthcheck_budget_seconds: 179
+        expected_failed_task: Fail if the Synapse systemd healthcheck budget is invalid
+        expected_error_fragment: matrix_synapse_systemd_healthcheck_budget_seconds
+      - name: empty-timeout-with-readiness
+        timeout_override_seconds: ''
+        expected_failed_task: Fail if the Synapse startup timeout is omitted while readiness is enabled
+        expected_error_fragment: matrix_synapse_systemd_service_timeout_start_seconds
+      - name: empty-healthcheck-command
+        healthcheck_command: ''
+        expected_failed_task: Fail if the Synapse systemd healthcheck command is empty
+        expected_error_fragment: matrix_synapse_systemd_healthcheck_command
+  tasks:
+    - name: Apply local role fixture overrides
+      ansible.builtin.set_fact:
+        "{{ item.key }}": "{{ item.value }}"
+      loop: "{{ timing_test_role_overrides | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: Ensure rendered-unit output directory exists
+      ansible.builtin.file:
+        path: "{{ timing_test_output_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Validate timing scenarios and render their units
+      ansible.builtin.include_tasks: tasks/startup-timing-scenario.yml
+      loop: "{{ timing_scenarios }}"
+      loop_control:
+        loop_var: timing_scenario
+        label: "{{ timing_scenario.name }}"
+
+    - name: Verify invalid timing scenarios are rejected
+      ansible.builtin.include_tasks: tasks/startup-timing-invalid-scenario.yml
+      loop: "{{ timing_invalid_scenarios }}"
+      loop_control:
+        loop_var: timing_invalid_scenario
+        label: "{{ timing_invalid_scenario.name }}"

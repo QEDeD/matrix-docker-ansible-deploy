@@ -140,6 +140,9 @@
 
     - {'name': 'matrix_synapse_container_labels_traefik_compression_middleware_name', when: "{{ matrix_synapse_container_labels_traefik_compression_middleware_enabled }}"}
 
+- name: Validate Synapse startup timing settings
+  ansible.builtin.include_tasks: validate_startup_timing.yml
+
 - name: Fail if asking for more than 1 instance of single-instance workers
   ansible.builtin.fail:
     msg: >-

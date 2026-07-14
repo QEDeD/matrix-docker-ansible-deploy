@@ -1,0 +1,255 @@
+#!/bin/sh
+
+# SPDX-FileCopyrightText: 2026 MDAD project contributors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+set -u
+
+log_prefix='Synapse systemd readiness check'
+
+fail_usage() {
+	printf '%s: %s\n' "$log_prefix" "$1" >&2
+	printf 'Usage: %s CONTAINER MAX_ATTEMPTS INTERVAL_SECONDS BUDGET_SECONDS PROGRESS_SECONDS DOCKER_COMMAND [ARG ...]\n' "$0" >&2
+	exit 2
+}
+
+is_decimal_digits() {
+	case "$1" in
+		'' | *[!0-9]*) return 1 ;;
+	esac
+	return 0
+}
+
+canonical_decimal() {
+	value=$1
+	while [ "${value#0}" != "$value" ]; do
+		value=${value#0}
+	done
+	[ -n "$value" ] || value=0
+	printf '%s\n' "$value"
+}
+
+monotonic_milliseconds() {
+	if ! read -r uptime_value _ < /proc/uptime; then
+		return 1
+	fi
+
+	case "$uptime_value" in
+		*.*)
+			uptime_whole=${uptime_value%%.*}
+			uptime_fraction=${uptime_value#*.}
+			;;
+		*)
+			uptime_whole=$uptime_value
+			uptime_fraction=0
+			;;
+	esac
+	uptime_fraction_milliseconds=$(printf '%.3s' "${uptime_fraction}000")
+	printf '%s\n' "$((uptime_whole * 1000 + 1${uptime_fraction_milliseconds} - 1000))"
+}
+
+format_milliseconds_as_seconds() {
+	printf '%s.%03d' "$(( $1 / 1000 ))" "$(( $1 % 1000 ))"
+}
+
+invoke_timeout() {
+	if [ "$timeout_provider" = busybox ]; then
+		busybox timeout "$@"
+	else
+		timeout "$@"
+	fi
+}
+
+invoke_sleep() {
+	if [ "$sleep_provider" = busybox ]; then
+		busybox sleep "$1"
+	else
+		sleep "$1"
+	fi
+}
+
+detect_timeout_style() {
+	timeout_help=$(invoke_timeout --help 2>&1)
+	case "$timeout_help" in
+		*BusyBox*)
+			# BusyBox gained coreutils-style arguments before its watchdog
+			# reliably honored fractional durations. Use integer seconds for
+			# all BusyBox versions and support both argument layouts.
+			if invoke_timeout -t 1 -s KILL /bin/sh -c 'exit 0' >/dev/null 2>&1; then
+				printf '%s\n' legacy
+			elif invoke_timeout -s KILL 1 /bin/sh -c 'exit 0' >/dev/null 2>&1; then
+				printf '%s\n' integer
+			else
+				return 1
+			fi
+			;;
+		*)
+			if invoke_timeout -s KILL 0.1s /bin/sh -c 'exit 0' >/dev/null 2>&1; then
+				printf '%s\n' precise
+			elif invoke_timeout -t 1 -s KILL /bin/sh -c 'exit 0' >/dev/null 2>&1; then
+				printf '%s\n' legacy
+			elif invoke_timeout -s KILL 1 /bin/sh -c 'exit 0' >/dev/null 2>&1; then
+				printf '%s\n' integer
+			else
+				return 1
+			fi
+			;;
+	esac
+}
+
+[ "$#" -ge 6 ] || fail_usage 'missing arguments'
+
+container_name=$1
+max_attempts_raw=$2
+interval_seconds_raw=$3
+budget_seconds_raw=$4
+progress_interval_seconds_raw=$5
+shift 5
+
+[ -n "$container_name" ] || fail_usage 'CONTAINER must not be empty'
+is_decimal_digits "$max_attempts_raw" || fail_usage 'MAX_ATTEMPTS must be a positive integer'
+is_decimal_digits "$interval_seconds_raw" || fail_usage 'INTERVAL_SECONDS must be a positive integer'
+is_decimal_digits "$budget_seconds_raw" || fail_usage 'BUDGET_SECONDS must be a positive integer'
+is_decimal_digits "$progress_interval_seconds_raw" || fail_usage 'PROGRESS_SECONDS must be a positive integer'
+
+max_attempts=$(canonical_decimal "$max_attempts_raw")
+interval_seconds=$(canonical_decimal "$interval_seconds_raw")
+budget_seconds=$(canonical_decimal "$budget_seconds_raw")
+progress_interval_seconds=$(canonical_decimal "$progress_interval_seconds_raw")
+
+[ "$max_attempts" -ge 1 ] || fail_usage 'MAX_ATTEMPTS must be a positive integer'
+[ "$interval_seconds" -ge 1 ] || fail_usage 'INTERVAL_SECONDS must be a positive integer'
+[ "$budget_seconds" -ge 1 ] || fail_usage 'BUDGET_SECONDS must be a positive integer'
+[ "$progress_interval_seconds" -ge 1 ] || fail_usage 'PROGRESS_SECONDS must be a positive integer'
+[ "$budget_seconds" -ge "$((max_attempts * interval_seconds))" ] || fail_usage 'BUDGET_SECONDS must cover MAX_ATTEMPTS * INTERVAL_SECONDS'
+if command -v timeout >/dev/null 2>&1; then
+	timeout_provider=command
+elif command -v busybox >/dev/null 2>&1; then
+	timeout_provider=busybox
+else
+	fail_usage 'the host command `timeout` (or the BusyBox timeout applet) is required'
+fi
+timeout_style=$(detect_timeout_style) || fail_usage 'the host command `timeout` has an unsupported interface'
+if command -v sleep >/dev/null 2>&1 && sleep 0 >/dev/null 2>&1; then
+	sleep_provider=command
+elif command -v busybox >/dev/null 2>&1 && busybox sleep 0 >/dev/null 2>&1; then
+	sleep_provider=busybox
+else
+	fail_usage 'the host command `sleep` (or the BusyBox sleep applet) is required'
+fi
+
+# POSIX sleep accepts integer seconds. GNU coreutils also guarantees fractional
+# durations; use that extension only when positively identified. Integer-only
+# providers are rounded up below, against absolute attempt targets, so they never
+# wake early and cannot turn the retry loop into a tight poll.
+sleep_style=integer
+if [ "$sleep_provider" = command ]; then
+	sleep_version=$(LC_ALL=C invoke_sleep --version 2>&1)
+	case "$sleep_version" in
+		*'GNU coreutils'*) sleep_style=precise ;;
+	esac
+fi
+
+interval_milliseconds=$((interval_seconds * 1000))
+budget_milliseconds=$((budget_seconds * 1000))
+progress_interval_milliseconds=$((progress_interval_seconds * 1000))
+start_milliseconds=$(monotonic_milliseconds) || fail_usage 'cannot read the monotonic clock from /proc/uptime'
+deadline_milliseconds=$((start_milliseconds + budget_milliseconds))
+attempt=1
+last_status=''
+next_progress_elapsed_milliseconds=0
+
+printf '%s: waiting for container %s to become healthy (attempts=%s, interval=%ss, budget=%ss)\n' \
+	"$log_prefix" "$container_name" "$max_attempts" "$interval_seconds" "$budget_seconds"
+
+while [ "$attempt" -le "$max_attempts" ]; do
+	now_milliseconds=$(monotonic_milliseconds) || fail_usage 'cannot read the monotonic clock from /proc/uptime'
+	remaining_milliseconds=$((deadline_milliseconds - now_milliseconds))
+	if [ "$remaining_milliseconds" -le 0 ]; then
+		elapsed=$(format_milliseconds_as_seconds "$((now_milliseconds - start_milliseconds))")
+		printf '%s: failed after %ss; readiness budget exhausted before attempt %s/%s (final status: %s)\n' \
+			"$log_prefix" "$elapsed" "$attempt" "$max_attempts" "${last_status:-unknown}" >&2
+		exit 1
+	fi
+
+	probe_timeout_milliseconds=$interval_milliseconds
+	if [ "$remaining_milliseconds" -lt "$probe_timeout_milliseconds" ]; then
+		probe_timeout_milliseconds=$remaining_milliseconds
+	fi
+
+	if [ "$timeout_style" = precise ]; then
+		probe_timeout=$(format_milliseconds_as_seconds "$probe_timeout_milliseconds")
+		status=$(invoke_timeout -s KILL "${probe_timeout}s" "$@" inspect '--format={{.State.Health.Status}}' "$container_name" 2>/dev/null)
+	else
+		# Integer-only timeout implementations (including BusyBox) need whole
+		# seconds. Round up so the final
+		# configured attempt still has a chance to complete; the monotonic
+		# deadline check below rejects any result that arrives late.
+		probe_timeout_seconds=$(((probe_timeout_milliseconds + 999) / 1000))
+		if [ "$timeout_style" = legacy ]; then
+			status=$(invoke_timeout -t "$probe_timeout_seconds" -s KILL "$@" inspect '--format={{.State.Health.Status}}' "$container_name" 2>/dev/null)
+		else
+			status=$(invoke_timeout -s KILL "$probe_timeout_seconds" "$@" inspect '--format={{.State.Health.Status}}' "$container_name" 2>/dev/null)
+		fi
+	fi
+	probe_exit_code=$?
+	if [ "$probe_exit_code" -ne 0 ]; then
+		status="unavailable(docker-inspect-exit-${probe_exit_code})"
+	elif [ -z "$status" ]; then
+		status='unavailable(empty-status)'
+	fi
+
+	now_milliseconds=$(monotonic_milliseconds) || fail_usage 'cannot read the monotonic clock from /proc/uptime'
+	elapsed_milliseconds=$((now_milliseconds - start_milliseconds))
+	elapsed=$(format_milliseconds_as_seconds "$elapsed_milliseconds")
+
+	if [ "$now_milliseconds" -ge "$deadline_milliseconds" ]; then
+		printf '%s: failed after %ss; readiness budget exhausted during attempt %s/%s (final status: %s)\n' \
+			"$log_prefix" "$elapsed" "$attempt" "$max_attempts" "$status" >&2
+		exit 1
+	fi
+
+	if [ "$status" = 'healthy' ]; then
+		printf '%s: passed after %ss on attempt %s/%s (final status: healthy)\n' \
+			"$log_prefix" "$elapsed" "$attempt" "$max_attempts"
+		exit 0
+	fi
+
+	if [ "$attempt" -eq "$max_attempts" ]; then
+		printf '%s: failed after %ss and %s attempts (final status: %s)\n' \
+			"$log_prefix" "$elapsed" "$attempt" "$status" >&2
+		exit 1
+	fi
+
+	if [ "$status" != "$last_status" ] || [ "$elapsed_milliseconds" -ge "$next_progress_elapsed_milliseconds" ]; then
+		printf '%s: waiting after %ss on attempt %s/%s (status: %s)\n' \
+			"$log_prefix" "$elapsed" "$attempt" "$max_attempts" "$status"
+		last_status=$status
+		next_progress_elapsed_milliseconds=$((elapsed_milliseconds + progress_interval_milliseconds))
+	fi
+
+	next_attempt_milliseconds=$((start_milliseconds + attempt * interval_milliseconds))
+	now_milliseconds=$(monotonic_milliseconds) || fail_usage 'cannot read the monotonic clock from /proc/uptime'
+	sleep_milliseconds=$((next_attempt_milliseconds - now_milliseconds))
+	if [ "$sleep_milliseconds" -gt 0 ]; then
+		if [ "$sleep_style" = precise ]; then
+			sleep_duration=$(format_milliseconds_as_seconds "$sleep_milliseconds")
+		else
+			# An integer-only provider may wake less than one second late. The
+			# next target remains anchored to start time, and the monotonic
+			# deadline checks reject work that completes after the budget.
+			sleep_duration=$(((sleep_milliseconds + 999) / 1000))
+		fi
+		if ! invoke_sleep "$sleep_duration"; then
+			printf '%s: sleep command failed before attempt %s/%s\n' \
+				"$log_prefix" "$((attempt + 1))" "$max_attempts" >&2
+			exit 2
+		fi
+	fi
+
+	attempt=$((attempt + 1))
+done
+
+printf '%s: internal error: attempt loop ended unexpectedly\n' "$log_prefix" >&2
+exit 2

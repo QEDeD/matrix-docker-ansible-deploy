@@ -155,6 +155,22 @@
       dest: "{{ devture_systemd_docker_base_systemd_path }}/matrix-synapse.service"
       mode: '0644'
 
+- name: Ensure root-controlled Synapse systemd helper path exists
+  ansible.builtin.file:
+    path: "{{ matrix_synapse_systemd_helper_bin_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Ensure Synapse systemd healthcheck installed
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/synapse/bin/systemd-healthcheck"
+    dest: "{{ matrix_synapse_systemd_healthcheck_program_path }}"
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Generate sample prometheus.yml for external scraping
   ansible.builtin.template:
     src: "{{ role_path }}/templates/synapse/prometheus/external_prometheus.yml.example.j2"

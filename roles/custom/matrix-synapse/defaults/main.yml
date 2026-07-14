@@ -116,6 +116,13 @@ matrix_synapse_storage_path: "{{ matrix_synapse_base_path }}/storage"
 matrix_synapse_media_store_path: "{{ matrix_synapse_storage_path }}/media-store"
 matrix_synapse_bin_path: "{{ matrix_synapse_base_path }}/bin"
 
+# Host-side helpers invoked by the root-owned systemd unit must not live below
+# matrix_synapse_base_path, which is writable by the Synapse service account.
+# Keep matrix_synapse_systemd_helper_bin_path dedicated to this role and below a
+# root-controlled parent; uninstall removes the directory recursively.
+matrix_synapse_systemd_helper_bin_path: /usr/local/libexec/matrix-synapse
+matrix_synapse_systemd_healthcheck_program_path: "{{ matrix_synapse_systemd_helper_bin_path }}/systemd-healthcheck"
+
 matrix_synapse_ext_path: "{{ matrix_synapse_base_path }}/ext"
 
 matrix_synapse_ext_s3_storage_provider_base_path: "{{ matrix_synapse_base_path }}/ext/s3-storage-provider"
@@ -326,7 +333,7 @@ matrix_synapse_container_labels_public_metrics_middleware_basic_auth_users: ''
 #   another.label="here"
 matrix_synapse_container_labels_additional_labels: ''
 
-# Specifies how often the container health check will run.
+# Specifies how often Docker's continuous container health check will run.
 #
 # The Synapse container image ships with a default HEALTHCHECK (curl to /health)
 # with an interval of 15s, timeout of 5s, and start period of 5s.
@@ -335,8 +342,11 @@ matrix_synapse_container_labels_additional_labels: ''
 # because the interval value also specifies the "initial wait time".
 # This is a Docker (moby) bug: https://github.com/moby/moby/issues/33410
 # Without a successful healthcheck, Traefik will not register the service for reverse-proxying.
-# A shorter interval also lets our systemd ExecStartPost health check
-# (see matrix_synapse_systemd_healthcheck_enabled) detect readiness faster at startup.
+# A shorter interval also lets our systemd ExecStartPost readiness gate
+# (see matrix_synapse_systemd_healthcheck_enabled) observe container health faster at startup.
+# Docker runs these checks independently and continuously. Their interval, timeout,
+# start period, and retry count are concurrent with the systemd readiness gate and
+# must not be added to the systemd startup timeout as sequential waits.
 #
 # For non-Traefik setups, we use the default healthcheck interval (15s) to decrease overhead.
 matrix_synapse_container_health_interval_seconds: "{{ 5 if matrix_synapse_container_labels_traefik_enabled else 15 }}"
@@ -378,37 +388,117 @@ matrix_synapse_goofys_systemd_required_services_list_default: "{{ [devture_syste
 matrix_synapse_goofys_systemd_required_services_list_auto: []
 matrix_synapse_goofys_systemd_required_services_list_custom: []
 
-# Controls the post-start health check in the systemd service.
-# When enabled, ExecStartPost polls Docker's container health status via `docker inspect`,
-# keeping the service in "activating (start-post)" state until Synapse is ready.
-# Services with After=matrix-synapse.service will properly wait.
-# This relies on the container image's built-in HEALTHCHECK (curl to /health),
-# with the interval controlled by matrix_synapse_container_health_interval.
+# Controls the post-start readiness gate in the systemd service.
+#
+# When enabled, ExecStartPost polls Docker's container health status, keeping the
+# service in "activating (start-post)" state until the image's `/health` probe passes.
+# Synapse documents `/health` as an HTTP-listener health endpoint. A passing probe
+# does not prove full database, federation, worker, or reverse-proxy readiness.
+# See: https://element-hq.github.io/synapse/latest/reverse_proxy.html#health-check-endpoint
+# Services ordered After=matrix-synapse.service wait for this gate to finish.
 matrix_synapse_systemd_healthcheck_enabled: true
 matrix_synapse_systemd_healthcheck_max_retries: 180
 matrix_synapse_systemd_healthcheck_interval_seconds: 1
+matrix_synapse_systemd_healthcheck_progress_interval_seconds: 30
+
+# The default readiness helper polls immediately and sleeps only between attempts,
+# so it has N-1 sleeps. This calculated value is informational and is not an
+# override point. The helper schedules attempts at a fixed interval and bounds each
+# `docker inspect` call within the same schedule, giving the polling loop an N*I
+# wall-clock budget rather than adding Docker command time to every sleep. On
+# integer-only timing implementations (including BusyBox), a scheduled wake or
+# probe interruption may complete less than one second after that deadline; the
+# outer startup headroom covers this overhead, and a result arriving after the
+# monotonic deadline is always rejected.
+matrix_synapse_systemd_healthcheck_sleep_budget_seconds: >-
+  {{
+    ((matrix_synapse_systemd_healthcheck_max_retries | int) - 1)
+    * (matrix_synapse_systemd_healthcheck_interval_seconds | int)
+  }}
+matrix_synapse_systemd_healthcheck_budget_seconds: >-
+  {{
+    (matrix_synapse_systemd_healthcheck_max_retries | int)
+    * (matrix_synapse_systemd_healthcheck_interval_seconds | int)
+  }}
 
 # The command used for the health check in ExecStartPost.
-# Polls `docker inspect` for the container's health status until it reports "healthy".
+#
+# The default installed helper's polling loop is bounded by
+# `matrix_synapse_systemd_healthcheck_budget_seconds`. If overriding this command,
+# keep it bounded and override that budget when its maximum runtime differs.
 matrix_synapse_systemd_healthcheck_command: >-
-  {{ devture_systemd_docker_base_host_command_sh }} -c
-  'for i in $(seq 1 {{ matrix_synapse_systemd_healthcheck_max_retries }}); do
-  echo "[Attempt $i/{{ matrix_synapse_systemd_healthcheck_max_retries }}] Synapse systemd health check: checking container health status..";
-  status=$( {{ devture_systemd_docker_base_host_command_docker }} inspect --format={{ '"{{' }}.State.Health.Status{{ '}}"' }} matrix-synapse 2>/dev/null);
-  if [ "$status" = "healthy" ]; then echo "[Attempt $i/{{ matrix_synapse_systemd_healthcheck_max_retries }}] Synapse systemd health check: passed" && exit 0; fi;
-  echo "[Attempt $i/{{ matrix_synapse_systemd_healthcheck_max_retries }}] Synapse systemd health check: not ready yet (status: $status), retrying in {{ matrix_synapse_systemd_healthcheck_interval_seconds }}s..";
-  sleep {{ matrix_synapse_systemd_healthcheck_interval_seconds }};
-  done; echo "[Attempt $i/{{ matrix_synapse_systemd_healthcheck_max_retries }}] Synapse systemd health check: failed after {{ matrix_synapse_systemd_healthcheck_max_retries }} attempts"; exit 1'
+  {{ matrix_synapse_systemd_healthcheck_program_path }}
+  matrix-synapse
+  {{ matrix_synapse_systemd_healthcheck_max_retries | int }}
+  {{ matrix_synapse_systemd_healthcheck_interval_seconds | int }}
+  {{ matrix_synapse_systemd_healthcheck_budget_seconds | int }}
+  {{ matrix_synapse_systemd_healthcheck_progress_interval_seconds | int }}
+  {{ devture_systemd_docker_base_host_command_docker }}
 
 # Controls how long to sleep for after the systemd health check passes.
-# Even after Synapse is healthy, the reverse proxy (e.g. Traefik) needs time to discover
-# the container and register its routes. Traefik waits `providers.providersThrottleDuration`
-# (see https://doc.traefik.io/traefik/v3.3/providers/overview/#providersprovidersthrottleduration)
-# before applying new configuration from Docker events.
-# Without this delay, services depending on Synapse may encounter 404 errors
-# when connecting through the reverse proxy.
-# This value is meant to be wired to the Traefik throttle duration by the playbook's group vars.
+#
+# This is a compatibility heuristic for reverse proxies such as Traefik, which
+# may still be processing Docker-provider events after the container becomes healthy.
+# It is not an active proxy-readiness check and does not guarantee worker routes:
+# Synapse workers are ordered after the main service and start only after this delay.
+# The playbook's group vars wire this to the Traefik throttle duration where applicable.
 matrix_synapse_systemd_service_post_start_delay_seconds: 0
+
+# Extra time in the outer systemd activation deadline for Docker CLI execution,
+# container creation/networking, and scheduling overhead around known waits.
+matrix_synapse_systemd_service_timeout_start_headroom_seconds: 15
+
+# The automatic deadline must remain strictly outside the bounded readiness helper
+# even when an operator configures zero headroom. This calculated value is not an
+# override point: one second is the minimum reporting margin; larger configured
+# headroom values are preserved.
+matrix_synapse_systemd_service_timeout_start_effective_headroom_seconds: >-
+  {{ [matrix_synapse_systemd_service_timeout_start_headroom_seconds | int, 1] | max }}
+
+# A lower bound for an automatically generated unit-specific startup deadline.
+# This is an MDAD policy floor, not an assumption about the host manager's current
+# DefaultTimeoutStartSec value. It prevents short custom polling settings from
+# creating an unexpectedly short deadline for the whole activation.
+matrix_synapse_systemd_service_timeout_start_floor_seconds: 90
+
+# Known sequential activation time: the pre-start container stop grace, the
+# bounded readiness gate (when enabled), and the optional proxy compatibility delay.
+# RestartSec and playbook verification waits happen outside activation and are excluded.
+matrix_synapse_systemd_service_timeout_start_known_wait_seconds: >-
+  {{
+    (devture_systemd_docker_base_container_stop_grace_time_seconds | int)
+    + (
+      (matrix_synapse_systemd_healthcheck_budget_seconds | int)
+      if matrix_synapse_systemd_healthcheck_enabled | bool
+      else 0
+    )
+    + (matrix_synapse_systemd_service_post_start_delay_seconds | int)
+  }}
+matrix_synapse_systemd_service_timeout_start_minimum_seconds: >-
+  {{
+    (matrix_synapse_systemd_service_timeout_start_known_wait_seconds | int)
+    + (matrix_synapse_systemd_service_timeout_start_effective_headroom_seconds | int)
+  }}
+
+# Controls TimeoutStartSec for matrix-synapse.service as numeric seconds.
+#
+# MDAD sets an automatic unit-specific deadline only while its long readiness gate
+# is enabled. With the gate disabled, the automatic value is empty even if a short
+# proxy delay remains, so MDAD does not replace the manager deadline with a small
+# whole-activation timeout. Leave this variable at its default for automatic
+# behavior. An explicit override must be a positive integer and must cover the
+# calculated minimum. An empty value is accepted only while the readiness gate is
+# disabled, where it intentionally leaves the host manager's default in effect.
+matrix_synapse_systemd_service_timeout_start_seconds_auto: >-
+  {{
+    [
+      matrix_synapse_systemd_service_timeout_start_floor_seconds | int,
+      matrix_synapse_systemd_service_timeout_start_minimum_seconds | int,
+    ] | max
+    if matrix_synapse_systemd_healthcheck_enabled | bool
+    else ''
+  }}
+matrix_synapse_systemd_service_timeout_start_seconds: "{{ matrix_synapse_systemd_service_timeout_start_seconds_auto }}"
 
 matrix_synapse_in_container_python_packages_path: "/usr/local/lib/python3.13/site-packages"
 

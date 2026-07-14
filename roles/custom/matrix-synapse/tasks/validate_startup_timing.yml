@@ -1,0 +1,88 @@
+# SPDX-FileCopyrightText: 2026 MDAD project contributors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+
+- name: Fail if a Synapse startup timing setting is invalid
+  ansible.builtin.fail:
+    msg: >-
+      Invalid value for `{{ item.name }}`: `{{ item.value }}`.
+      The value must be {{ 'a positive' if item.minimum == 1 else 'a non-negative' }} integer (or numeric string)
+      {{ 'in seconds' if item.unit == 'seconds' else 'as an attempt count' }}.
+  when: >-
+    not (
+      (item.value | string | trim) is match('^[0-9]+$')
+      and (item.value | int) >= item.minimum
+    )
+  loop:
+    - {name: matrix_synapse_systemd_healthcheck_max_retries, value: "{{ matrix_synapse_systemd_healthcheck_max_retries }}", minimum: 1, unit: attempts}
+    - {name: matrix_synapse_systemd_healthcheck_interval_seconds, value: "{{ matrix_synapse_systemd_healthcheck_interval_seconds }}", minimum: 1, unit: seconds}
+    - {name: matrix_synapse_systemd_healthcheck_progress_interval_seconds, value: "{{ matrix_synapse_systemd_healthcheck_progress_interval_seconds }}", minimum: 1, unit: seconds}
+    - {name: matrix_synapse_systemd_service_post_start_delay_seconds, value: "{{ matrix_synapse_systemd_service_post_start_delay_seconds }}", minimum: 0, unit: seconds}
+    - {name: matrix_synapse_systemd_service_timeout_start_headroom_seconds, value: "{{ matrix_synapse_systemd_service_timeout_start_headroom_seconds }}", minimum: 0, unit: seconds}
+    - {name: matrix_synapse_systemd_service_timeout_start_floor_seconds, value: "{{ matrix_synapse_systemd_service_timeout_start_floor_seconds }}", minimum: 1, unit: seconds}
+    - {name: devture_systemd_docker_base_container_stop_grace_time_seconds, value: "{{ devture_systemd_docker_base_container_stop_grace_time_seconds }}", minimum: 0, unit: seconds}
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: Fail if the Synapse systemd healthcheck budget is invalid
+  ansible.builtin.fail:
+    msg: >-
+      Invalid value for `matrix_synapse_systemd_healthcheck_budget_seconds`:
+      `{{ matrix_synapse_systemd_healthcheck_budget_seconds }}`.
+      The value must be a positive integer (or numeric string) and must cover
+      max_retries * interval_seconds ({{ (matrix_synapse_systemd_healthcheck_max_retries | int) * (matrix_synapse_systemd_healthcheck_interval_seconds | int) }} seconds).
+  when: >-
+    not (
+      (matrix_synapse_systemd_healthcheck_budget_seconds | string | trim) is match('^[0-9]+$')
+      and (matrix_synapse_systemd_healthcheck_budget_seconds | int)
+        >= (matrix_synapse_systemd_healthcheck_max_retries | int) * (matrix_synapse_systemd_healthcheck_interval_seconds | int)
+    )
+
+- name: Fail if the Synapse systemd healthcheck command is empty
+  ansible.builtin.fail:
+    msg: >-
+      `matrix_synapse_systemd_healthcheck_command` must not be empty while
+      `matrix_synapse_systemd_healthcheck_enabled` is true.
+  when: >-
+    (matrix_synapse_systemd_healthcheck_enabled | bool)
+    and (matrix_synapse_systemd_healthcheck_command | string | trim | length == 0)
+
+- name: Fail if the Synapse startup timeout is omitted while readiness is enabled
+  ansible.builtin.fail:
+    msg: >-
+      `matrix_synapse_systemd_service_timeout_start_seconds` must not be empty while
+      `matrix_synapse_systemd_healthcheck_enabled` is true. Leave the variable at
+      its default for the automatic deadline, or set a positive integer in seconds.
+  when: >-
+    (matrix_synapse_systemd_healthcheck_enabled | bool)
+    and (matrix_synapse_systemd_service_timeout_start_seconds | string | trim | length == 0)
+
+- name: Fail if matrix_synapse_systemd_service_timeout_start_seconds is invalid
+  ansible.builtin.fail:
+    msg: >-
+      Invalid value for `matrix_synapse_systemd_service_timeout_start_seconds`:
+      `{{ matrix_synapse_systemd_service_timeout_start_seconds }}`.
+      Leave the variable at its default for automatic behavior, or use a positive
+      integer (or numeric string) in seconds. Systemd duration strings and
+      `infinity` are not accepted.
+  when: >-
+    (matrix_synapse_systemd_service_timeout_start_seconds | string | trim | length > 0)
+    and not (
+      (matrix_synapse_systemd_service_timeout_start_seconds | string | trim) is match('^[0-9]+$')
+      and (matrix_synapse_systemd_service_timeout_start_seconds | int) >= 1
+    )
+
+- name: Fail if matrix_synapse_systemd_service_timeout_start_seconds is too short
+  ansible.builtin.fail:
+    msg: >-
+      `matrix_synapse_systemd_service_timeout_start_seconds` is
+      {{ matrix_synapse_systemd_service_timeout_start_seconds }} seconds, but the known sequential waits
+      plus effective headroom (including the mandatory one-second reporting margin) require at least
+      {{ matrix_synapse_systemd_service_timeout_start_minimum_seconds }} seconds.
+      Increase the override or reduce the underlying readiness/proxy timing settings.
+  when: >-
+    (matrix_synapse_systemd_service_timeout_start_seconds | string | trim | length > 0)
+    and (matrix_synapse_systemd_service_timeout_start_seconds | int)
+      < (matrix_synapse_systemd_service_timeout_start_minimum_seconds | int)

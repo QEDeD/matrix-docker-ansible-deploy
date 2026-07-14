@@ -1,0 +1,89 @@
+# SPDX-FileCopyrightText: 2026 MDAD project contributors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+
+- name: Validate startup timing inputs for {{ timing_scenario.name }}
+  ansible.builtin.include_tasks: ../../tasks/validate_startup_timing.yml
+  vars:
+    matrix_synapse_container_health_interval_seconds: 5
+    matrix_synapse_systemd_healthcheck_enabled: "{{ timing_scenario.healthcheck_enabled }}"
+    matrix_synapse_systemd_healthcheck_max_retries: "{{ timing_scenario.max_retries }}"
+    matrix_synapse_systemd_healthcheck_interval_seconds: "{{ timing_scenario.interval_seconds }}"
+    matrix_synapse_systemd_healthcheck_progress_interval_seconds: 30
+    matrix_synapse_systemd_service_post_start_delay_seconds: "{{ timing_scenario.post_start_delay_seconds }}"
+    matrix_synapse_systemd_service_timeout_start_headroom_seconds: "{{ timing_scenario.headroom_seconds }}"
+    matrix_synapse_systemd_service_timeout_start_floor_seconds: "{{ timing_scenario.floor_seconds | default(90) }}"
+    matrix_synapse_systemd_service_timeout_start_seconds: "{{ timing_scenario.timeout_override_seconds | default(matrix_synapse_systemd_service_timeout_start_seconds_auto) }}"
+    devture_systemd_docker_base_container_stop_grace_time_seconds: "{{ timing_scenario.stop_grace_seconds }}"
+
+- name: Assert calculated startup timing for {{ timing_scenario.name }}
+  ansible.builtin.assert:
+    that:
+      - matrix_synapse_systemd_healthcheck_sleep_budget_seconds | int == timing_scenario.expected_sleep_budget_seconds
+      - matrix_synapse_systemd_healthcheck_budget_seconds | int == timing_scenario.expected_healthcheck_budget_seconds
+      - matrix_synapse_systemd_service_timeout_start_known_wait_seconds | int == timing_scenario.expected_known_wait_seconds
+      - matrix_synapse_systemd_service_timeout_start_effective_headroom_seconds | int == timing_scenario.expected_effective_headroom_seconds | default(timing_scenario.headroom_seconds)
+      - matrix_synapse_systemd_service_timeout_start_minimum_seconds | int == timing_scenario.expected_minimum_seconds
+      - not (timing_scenario.healthcheck_enabled | bool) or (matrix_synapse_systemd_service_timeout_start_seconds | int) > (matrix_synapse_systemd_service_timeout_start_known_wait_seconds | int)
+      - matrix_synapse_systemd_service_timeout_start_seconds_auto | string | trim == timing_scenario.expected_auto_seconds
+      - matrix_synapse_systemd_service_timeout_start_seconds | string | trim == timing_scenario.expected_timeout_seconds
+  vars:
+    matrix_synapse_systemd_healthcheck_enabled: "{{ timing_scenario.healthcheck_enabled }}"
+    matrix_synapse_systemd_healthcheck_max_retries: "{{ timing_scenario.max_retries }}"
+    matrix_synapse_systemd_healthcheck_interval_seconds: "{{ timing_scenario.interval_seconds }}"
+    matrix_synapse_systemd_service_post_start_delay_seconds: "{{ timing_scenario.post_start_delay_seconds }}"
+    matrix_synapse_systemd_service_timeout_start_headroom_seconds: "{{ timing_scenario.headroom_seconds }}"
+    matrix_synapse_systemd_service_timeout_start_floor_seconds: "{{ timing_scenario.floor_seconds | default(90) }}"
+    matrix_synapse_systemd_service_timeout_start_seconds: "{{ timing_scenario.timeout_override_seconds | default(matrix_synapse_systemd_service_timeout_start_seconds_auto) }}"
+    devture_systemd_docker_base_container_stop_grace_time_seconds: "{{ timing_scenario.stop_grace_seconds }}"
+
+- name: Render systemd unit for {{ timing_scenario.name }}
+  ansible.builtin.template:
+    src: "{{ playbook_dir | dirname }}/templates/synapse/systemd/matrix-synapse.service.j2"
+    dest: "{{ timing_test_output_dir }}/{{ timing_scenario.name }}.service"
+    mode: '0644'
+  vars:
+    matrix_synapse_systemd_healthcheck_enabled: "{{ timing_scenario.healthcheck_enabled }}"
+    matrix_synapse_systemd_healthcheck_max_retries: "{{ timing_scenario.max_retries }}"
+    matrix_synapse_systemd_healthcheck_interval_seconds: "{{ timing_scenario.interval_seconds }}"
+    matrix_synapse_systemd_service_post_start_delay_seconds: "{{ timing_scenario.post_start_delay_seconds }}"
+    matrix_synapse_systemd_service_timeout_start_headroom_seconds: "{{ timing_scenario.headroom_seconds }}"
+    matrix_synapse_systemd_service_timeout_start_floor_seconds: "{{ timing_scenario.floor_seconds | default(90) }}"
+    matrix_synapse_systemd_service_timeout_start_seconds: "{{ timing_scenario.timeout_override_seconds | default(matrix_synapse_systemd_service_timeout_start_seconds_auto) }}"
+    devture_systemd_docker_base_container_stop_grace_time_seconds: "{{ timing_scenario.stop_grace_seconds }}"
+
+- name: Read rendered systemd unit for {{ timing_scenario.name }}
+  ansible.builtin.slurp:
+    src: "{{ timing_test_output_dir }}/{{ timing_scenario.name }}.service"
+  register: timing_rendered_unit
+
+- name: Assert rendered startup timeout for {{ timing_scenario.name }}
+  ansible.builtin.assert:
+    that:
+      - >-
+        (timing_scenario.expected_timeout_seconds | length == 0
+          and 'TimeoutStartSec=' not in (timing_rendered_unit.content | b64decode))
+        or
+        (timing_scenario.expected_timeout_seconds | length > 0
+          and ('TimeoutStartSec=' + timing_scenario.expected_timeout_seconds + 's') in (timing_rendered_unit.content | b64decode))
+      - >-
+        ((timing_scenario.healthcheck_enabled | bool)
+          and 'ExecStartPost=' + matrix_synapse_systemd_healthcheck_command in (timing_rendered_unit.content | b64decode))
+        or
+        (not (timing_scenario.healthcheck_enabled | bool)
+          and matrix_synapse_systemd_healthcheck_command not in (timing_rendered_unit.content | b64decode))
+      - >-
+        ('stop -t ' + (timing_scenario.stop_grace_seconds | string) + ' matrix-synapse')
+        in (timing_rendered_unit.content | b64decode)
+      - >-
+        (timing_scenario.post_start_delay_seconds | int == 0
+          and ('ExecStartPost=-' + matrix_host_command_sleep) not in (timing_rendered_unit.content | b64decode))
+        or
+        (timing_scenario.post_start_delay_seconds | int > 0
+          and ('ExecStartPost=-' + matrix_host_command_sleep + ' ' + (timing_scenario.post_start_delay_seconds | string))
+            in (timing_rendered_unit.content | b64decode))
+  vars:
+    matrix_synapse_systemd_healthcheck_max_retries: "{{ timing_scenario.max_retries }}"
+    matrix_synapse_systemd_healthcheck_interval_seconds: "{{ timing_scenario.interval_seconds }}"
