@@ -36,7 +36,7 @@ count=$("$REAL_CAT" "$FAKE_DOCKER_COUNT_FILE")
 count=$((count + 1))
 printf '%s\n' "$count" > "$FAKE_DOCKER_COUNT_FILE"
 if [ "${FAKE_DOCKER_HANG:-0}" = 1 ]; then
-	/bin/sleep 10
+	exec /bin/sleep 10
 fi
 if [ -n "${FAKE_DOCKER_DELAY_SECONDS:-}" ]; then
 	/bin/sleep "$FAKE_DOCKER_DELAY_SECONDS"
