@@ -34,6 +34,16 @@ Add the following configuration to your `inventory/host_vars/matrix.example.com/
 matrix_rtc_enabled: true
 ```
 
+When Synapse is the selected homeserver and the Matrix RTC stack uses the playbook-managed LiveKit JWT Service, the playbook publishes the LiveKit focus through `.well-known/matrix/client` and configures Synapse's `/_matrix/client/v1/rtc/transports` endpoint with the same LiveKit JWT Service URL.
+
+To advertise additional or externally managed transports through Synapse, add them to `matrix_synapse_matrix_rtc_transports_custom`. Custom transports are appended to the transports generated automatically by the playbook.
+
+```yaml
+matrix_synapse_matrix_rtc_transports_custom:
+  - type: livekit
+    livekit_service_url: "https://matrix.example.com/livekit-jwt-service"
+```
+
 ## Adjusting firewall rules
 
 In addition to the HTTP/HTTPS ports (which you've already exposed as per the [prerequisites](prerequisites.md) document), you'll also need to open ports required by [LiveKit Server](configuring-playbook-livekit-server.md) as described in its own [Adjusting firewall rules](configuring-playbook-livekit-server.md#adjusting-firewall-rules) section.

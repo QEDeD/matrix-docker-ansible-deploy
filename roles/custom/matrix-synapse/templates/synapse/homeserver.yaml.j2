@@ -3003,6 +3003,12 @@ matrix_authentication_service:
   secret: {{ matrix_synapse_matrix_authentication_service_secret | to_json }}
 {% endif %}
 
+{% if matrix_synapse_matrix_rtc_transports | length > 0 %}
+matrix_rtc:
+  transports:
+{{ matrix_synapse_matrix_rtc_transports | to_nice_yaml(indent=2, width=999999) | indent(4, true) }}
+{% endif %}
+
 experimental_features: {{ matrix_synapse_experimental_features | to_json }}
 
 {% if matrix_synapse_delayed_events_enabled %}
