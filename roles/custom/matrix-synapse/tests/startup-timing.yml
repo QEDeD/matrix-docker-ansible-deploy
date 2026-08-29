@@ -58,6 +58,7 @@
       matrix_host_command_sleep: /usr/bin/env sleep
     timing_scenarios:
       - name: default-traefik
+        traefik_enabled: true
         healthcheck_enabled: true
         max_retries: 180
         interval_seconds: 1
@@ -71,6 +72,7 @@
         expected_auto_seconds: '201'
         expected_timeout_seconds: '201'
       - name: default-no-traefik
+        traefik_enabled: false
         healthcheck_enabled: true
         max_retries: 180
         interval_seconds: 1
@@ -84,6 +86,7 @@
         expected_auto_seconds: '198'
         expected_timeout_seconds: '198'
       - name: disabled-traefik
+        traefik_enabled: true
         healthcheck_enabled: false
         max_retries: 180
         interval_seconds: 1
@@ -97,6 +100,7 @@
         expected_auto_seconds: ''
         expected_timeout_seconds: ''
       - name: quoted-disabled-traefik
+        traefik_enabled: true
         healthcheck_enabled: 'false'
         max_retries: 180
         interval_seconds: 1
@@ -110,6 +114,7 @@
         expected_auto_seconds: ''
         expected_timeout_seconds: ''
       - name: disabled-no-post-start-work
+        traefik_enabled: false
         healthcheck_enabled: false
         max_retries: 180
         interval_seconds: 1
@@ -123,6 +128,7 @@
         expected_auto_seconds: ''
         expected_timeout_seconds: ''
       - name: custom-retries-and-interval
+        traefik_enabled: true
         healthcheck_enabled: true
         max_retries: 3
         interval_seconds: 2
@@ -137,6 +143,7 @@
         expected_auto_seconds: '90'
         expected_timeout_seconds: '90'
       - name: zero-headroom-keeps-reporting-margin
+        traefik_enabled: false
         healthcheck_enabled: true
         max_retries: 1
         interval_seconds: 1
@@ -152,6 +159,7 @@
         expected_auto_seconds: '2'
         expected_timeout_seconds: '2'
       - name: explicit-timeout-override
+        traefik_enabled: true
         healthcheck_enabled: true
         max_retries: 180
         interval_seconds: 1
