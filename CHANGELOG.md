@@ -1,3 +1,25 @@
+# 2026-08-30
+
+## Synapse startup readiness now has a bounded systemd deadline
+
+The Synapse service now uses a small installed readiness helper to wait for the
+container health check without sleeping after the final attempt or allowing a
+stuck Docker inspection to run indefinitely. Progress and final diagnostics now
+include elapsed time and the observed container-health state.
+
+While this readiness gate is enabled, the playbook renders an explicit
+`TimeoutStartSec` that covers its bounded polling budget, pre-start container
+stop grace, the configured post-start proxy delay, and configurable headroom.
+Docker's own continuous health-check timers remain concurrent and are not added
+again. With the readiness gate disabled, the playbook does not synthesize a
+short whole-service deadline merely because a proxy delay remains.
+
+`matrix_synapse_systemd_service_timeout_start_seconds` can be overridden with
+a positive integer in seconds, provided it covers the calculated minimum. Leave
+the variable at its default to use the automatic deadline. An empty value is
+accepted only when the readiness gate is disabled, where it intentionally leaves
+the systemd manager's default deadline in effect.
+
 # 2026-08-20
 
 ## MatrixRTC transports are advertised in the client well-known again
