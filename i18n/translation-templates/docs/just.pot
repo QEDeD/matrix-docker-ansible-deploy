@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: matrix-docker-ansible-deploy \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-15 09:10+0000\n"
+"POT-Creation-Date: 2026-08-30 00:06+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -102,7 +102,7 @@ msgid "`just install-service mautrix-slack`"
 msgstr ""
 
 #: ../../../docs/just.md:0
-msgid "Run `just run-tags install-mautrix-slack,start` with even less typing"
+msgid "Install mautrix-slack, then start/restart only its service group"
 msgstr ""
 
 #: ../../../docs/just.md:0
@@ -162,17 +162,77 @@ msgid "Conditional service restart"
 msgstr ""
 
 #: ../../../docs/just.md:49
-msgid "When running `install-all` or `install-service` (whether via `just` or raw `ansible-playbook`), only services whose configuration or container image actually changed during the playbook run will be restarted. Unchanged services are left running (or get started if they were stopped). This reduces unnecessary downtime."
+msgid "The standard `just` recipes automatically add the playbook tags shown below. Users type only the command in the first column."
 msgstr ""
 
-#: ../../../docs/just.md:51
-msgid "When running with `setup-*` tags (e.g. `setup-all`, `setup-synapse`), all services are unconditionally restarted regardless of whether changes were detected. This is appropriate for setup's thorough \"full setup\" semantics."
+#: ../../../docs/just.md:0
+msgid "Command"
 msgstr ""
 
-#: ../../../docs/just.md:53
-msgid "`start-all` and `start-group` always restart all targeted services, since no installation tasks run during these commands."
+#: ../../../docs/just.md:0
+msgid "Tags added by the recipe"
 msgstr ""
 
-#: ../../../docs/just.md:55
-msgid "This behavior is automatically determined based on the playbook tags in use. It can be overridden with the `devture_systemd_service_manager_conditional_restart_enabled` variable. For example, to force unconditional restarts during installation: `just install-all --extra-vars='devture_systemd_service_manager_conditional_restart_enabled=false'`"
+#: ../../../docs/just.md:0
+msgid "Restart behavior"
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "`install-all,ensure-matrix-users-created,start`"
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "Conditional: restart only services marked as needing restart."
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "`just install-service SERVICE`"
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "`install-SERVICE,start-group`"
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "Conditional within the selected service group."
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "`setup-all,ensure-matrix-users-created,start`"
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "Unconditional: restart all targeted services."
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "`start-all`"
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "Unconditional: restart all services."
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "`just start-group GROUP`"
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "`start-group`"
+msgstr ""
+
+#: ../../../docs/just.md:0
+msgid "Unconditional within the selected service group."
+msgstr ""
+
+#: ../../../docs/just.md:59
+msgid "In conditional mode, unchanged running services are left alone, while unchanged stopped services are started."
+msgstr ""
+
+#: ../../../docs/just.md:61
+msgid "For raw `ansible-playbook` or `just run-tags` invocations, conditional restart is enabled only when the selected tags include an `install-*` tag and no `setup-*` tag. Runs without an `install-*` tag, including standalone start or restart tag selections, restart their targeted services unconditionally."
+msgstr ""
+
+#: ../../../docs/just.md:63
+msgid "This behavior can be overridden with the `devture_systemd_service_manager_conditional_restart_enabled` variable. For example, to force unconditional restarts during installation: `just install-all --extra-vars='{\"devture_systemd_service_manager_conditional_restart_enabled\": false}'`"
 msgstr ""

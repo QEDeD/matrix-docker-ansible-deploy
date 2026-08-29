@@ -1,3 +1,12 @@
+# 2026-08-29
+
+## Fix standalone service restart commands
+
+Standalone `start`, `start-all`, `start-group`, `restart`, `restart-all`, and `restart-group` runs now unconditionally restart their targeted services. Conditional restart remains enabled only for `install-*` runs that do not also include a `setup-*` tag.
+
+The documented override example now uses JSON extra-vars so `false` is passed to Ansible as a boolean rather than a string.
+
+
 # 2026-08-20
 
 ## MatrixRTC transports are advertised in the client well-known again

@@ -1,0 +1,20 @@
+---
+# SPDX-FileCopyrightText: 2026 MDAD project contributors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+- name: Verify conditional restart command semantics
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - ../group_vars/matrix_servers
+  tasks:
+    - name: Assert conditional restart mode matches the command scenario
+      ansible.builtin.assert:
+        that:
+          - (devture_systemd_service_manager_conditional_restart_enabled | bool) == (conditional_restart_expected | bool)
+        fail_msg: >-
+          Conditional restart mode was {{ devture_systemd_service_manager_conditional_restart_enabled }}
+          for tags {{ ansible_run_tags }}, expected {{ conditional_restart_expected }}.
+      tags:
+        - always
