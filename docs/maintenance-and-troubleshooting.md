@@ -107,6 +107,20 @@ If it's all green, everything is probably running correctly.
 
 Besides this self-check, you can also check whether your server federates with the Matrix network by using the [Federation Tester](https://federationtester.matrix.org/) against your base domain (`example.com`), not the `matrix.example.com` subdomain.
 
+### Docker cannot find an available IPv4 address pool
+
+If Docker reports an error like `could not find an available, non-overlapping IPv4 address pool among the defaults to assign to the network`, Docker may have run out of automatically allocatable bridge-network subnets.
+
+This can happen on servers that run many Docker networks or whose existing networks and host routes overlap the subnets Docker would otherwise allocate.
+
+If Docker is managed by the playbook, see [Adjusting Docker's default address pools](configuring-playbook-docker.md#adjusting-dockers-default-address-pools) for an example that changes newly created Docker networks to `/24` subnets and greatly increases the number of possible networks. If Docker is not managed by the playbook, configure Docker manually using Docker's [`default-address-pools` documentation](https://docs.docker.com/engine/network/#default-address-pools).
+
+This change only affects Docker networks created after the Docker daemon configuration changes. Existing Docker networks keep their current subnets. Applying changed Docker daemon options may restart Docker, so plan it as a disruptive maintenance-window change on an active server.
+
+Before changing or recreating networks, inspect the complete host-wide network inventory with `docker network ls` and inspect individual networks with `docker network inspect NETWORK_NAME`. Do not rely only on networks currently attached to `matrix-*` containers: stopped, empty, shared, and externally managed networks may also exist.
+
+Recreating Docker networks is disruptive and environment-specific. A network may be shared with another stack or managed outside this playbook, and Docker will refuse to remove a network while endpoints remain attached. Confirm each network's owner, attached containers, and data-retention implications before deleting it. This troubleshooting workflow therefore does not provide a bulk network-deletion command.
+
 ### How to debug or force SSL certificate renewal
 
 SSL certificates are managed automatically by the [Traefik](https://doc.traefik.io/traefik/) reverse-proxy server.
