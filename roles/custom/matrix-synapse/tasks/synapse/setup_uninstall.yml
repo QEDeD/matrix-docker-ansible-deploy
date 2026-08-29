@@ -34,3 +34,8 @@
         path: "{{ matrix_synapse_base_path }}/external_prometheus.yml.example"
         state: absent
       when: "not matrix_synapse_metrics_proxying_enabled | bool"
+
+- name: Ensure Synapse systemd helper path doesn't exist
+  ansible.builtin.file:
+    path: "{{ matrix_synapse_systemd_helper_bin_path }}"
+    state: absent

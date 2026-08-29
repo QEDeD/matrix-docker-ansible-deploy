@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 MDAD project contributors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+
+- name: Reset validation result for {{ timing_invalid_scenario.name }}
+  ansible.builtin.set_fact:
+    timing_validation_failed_as_expected: false
+    timing_validation_failed_task: ''
+    timing_validation_failure_message: ''
+
+- name: Exercise invalid startup timing for {{ timing_invalid_scenario.name }}
+  block:
+    - name: Run startup timing validation for {{ timing_invalid_scenario.name }}
+      ansible.builtin.include_tasks: ../../tasks/validate_startup_timing.yml
+      vars:
+        matrix_synapse_container_health_interval_seconds: 5
+        matrix_synapse_systemd_healthcheck_enabled: true
+        matrix_synapse_systemd_healthcheck_max_retries: "{{ timing_invalid_scenario.max_retries | default(180) }}"
+        matrix_synapse_systemd_healthcheck_interval_seconds: 1
+        matrix_synapse_systemd_healthcheck_progress_interval_seconds: 30
+        matrix_synapse_systemd_healthcheck_budget_seconds: "{{ timing_invalid_scenario.healthcheck_budget_seconds | default(180) }}"
+        matrix_synapse_systemd_healthcheck_command: "{{ timing_invalid_scenario.healthcheck_command | default('/usr/bin/true') }}"
+        matrix_synapse_systemd_service_post_start_delay_seconds: "{{ timing_invalid_scenario.post_start_delay_seconds | default(3) }}"
+        matrix_synapse_systemd_service_timeout_start_headroom_seconds: 15
+        matrix_synapse_systemd_service_timeout_start_floor_seconds: 90
+        matrix_synapse_systemd_service_timeout_start_seconds: "{{ timing_invalid_scenario.timeout_override_seconds | default(matrix_synapse_systemd_service_timeout_start_seconds_auto) }}"
+        devture_systemd_docker_base_container_stop_grace_time_seconds: 3
+  rescue:
+    - name: Record expected validation failure for {{ timing_invalid_scenario.name }}
+      ansible.builtin.set_fact:
+        timing_validation_failed_as_expected: true
+        timing_validation_failed_task: "{{ ansible_failed_task.name }}"
+        timing_validation_failure_message: "{{ ansible_failed_result | to_json }}"
+
+- name: Assert invalid startup timing was rejected for {{ timing_invalid_scenario.name }}
+  ansible.builtin.assert:
+    that:
+      - timing_validation_failed_as_expected
+      - timing_validation_failed_task == timing_invalid_scenario.expected_failed_task
+      - timing_invalid_scenario.expected_error_fragment in timing_validation_failure_message

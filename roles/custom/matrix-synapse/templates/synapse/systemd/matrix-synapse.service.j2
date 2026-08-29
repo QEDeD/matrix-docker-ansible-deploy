@@ -20,6 +20,9 @@ DefaultDependencies=no
 
 [Service]
 Type=simple
+{% if matrix_synapse_systemd_service_timeout_start_seconds | string | trim | length > 0 %}
+TimeoutStartSec={{ matrix_synapse_systemd_service_timeout_start_seconds | int }}s
+{% endif %}
 Environment="HOME={{ devture_systemd_docker_base_systemd_unit_home_path }}"
 ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} stop -t {{ devture_systemd_docker_base_container_stop_grace_time_seconds }} matrix-synapse 2>/dev/null || true'
 ExecStartPre=-{{ devture_systemd_docker_base_host_command_sh }} -c '{{ devture_systemd_docker_base_host_command_docker }} rm matrix-synapse 2>/dev/null || true'
@@ -78,7 +81,7 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network conne
 
 ExecStart={{ devture_systemd_docker_base_host_command_docker }} start --attach matrix-synapse
 
-{% if matrix_synapse_systemd_healthcheck_enabled %}
+{% if matrix_synapse_systemd_healthcheck_enabled | bool %}
 ExecStartPost={{ matrix_synapse_systemd_healthcheck_command }}
 {% endif %}
 
