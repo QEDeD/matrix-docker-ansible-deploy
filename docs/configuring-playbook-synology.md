@@ -99,8 +99,12 @@ In your `inventory/hosts` file, set the Python interpreter to your virtual envir
 
 ```ini
 # SSH key authentication with empty passphrase example
-matrix.example.com ansible_host=<your-dsm-ip> ansible_ssh_user=<dsm-ssh-user> become=true become_user=root ansible_python_interpreter=/volume1/homes/path/to/your/project/folder/myenv/bin/python ansible_sudo_pass='your-password'
+matrix.example.com ansible_host=<your-dsm-ip> ansible_ssh_user=<dsm-ssh-user> ansible_python_interpreter=/volume1/homes/path/to/your/project/folder/myenv/bin/python
 ```
+
+The playbook enables privilege escalation and selects the required target account for each task. Do not set `ansible_become` or `ansible_become_user` in inventory, because these variables override the playbook's task-level choices.
+
+If sudo requires a password, add `--ask-become-pass` (`-K`) to each command below. For non-interactive use, see the [installation guide](installing.md) for an example which obtains `ansible_become_password` from a secure password-store lookup instead of keeping the password in inventory.
 
 ## vars.yml Configuration
 

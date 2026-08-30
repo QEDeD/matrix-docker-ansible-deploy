@@ -12,5 +12,3 @@ matrix_servers:
     matrix.<your domain>:
       ansible_host: <your server's external ip address>
       ansible_ssh_user: <your ssh user>
-      become: true
-      become_user: root
