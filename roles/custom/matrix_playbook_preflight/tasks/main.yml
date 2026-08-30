@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 MDAD project contributors
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+
+- name: Reject variables which override playbook privilege escalation
+  ansible.builtin.assert:
+    that:
+      - ansible_become is not defined
+      - ansible_become_user is not defined
+      - ansible_sudo_user is not defined
+    fail_msg: >-
+      MDAD_PRIVILEGE_ESCALATION_CONFIGURATION_ERROR:
+      Do not set ansible_become, ansible_become_user, or ansible_sudo_user in inventory, group variables, host variables, or extra variables.
+      These connection variables override play and task keywords, preventing the playbook from reliably switching between root, service accounts, and tasks without privilege escalation.
+      Keep the SSH login identity in ansible_user or ansible_ssh_user instead.
+      If sudo requires a password, use --ask-become-pass (-K) or provide ansible_become_password securely.
+    quiet: true

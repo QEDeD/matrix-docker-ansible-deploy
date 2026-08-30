@@ -13,6 +13,33 @@ permissions:
   contents: read
 
 jobs:
+  matrix-playbook-preflight:
+    name: Test playbook preflight (ansible-core ${{ matrix.ansible_core }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ansible_core: "2.15.1"
+            python: "3.11"
+          - ansible_core: "2.21.3"
+            python: "3.12"
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install Ansible
+        run: python -m pip install "ansible-core==${{ matrix.ansible_core }}"
+
+      - name: Test playbook preflight
+        run: tests/matrix-playbook-preflight.sh
+
   prek:
     name: Run prek hooks
     runs-on: ubuntu-latest

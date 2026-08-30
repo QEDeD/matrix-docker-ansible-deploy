@@ -1,7 +1,17 @@
 ---
+- name: Validate Matrix server privilege escalation configuration
+  hosts: "{{ target if target is defined else 'matrix_servers' }}"
+  gather_facts: false
+
+  roles:
+    - role: custom/matrix_playbook_preflight
+      tags:
+        - always
+
 - name: "Set up a Matrix server"
   hosts: "{{ target if target is defined else 'matrix_servers' }}"
   become: true
+  become_user: root
 
   roles:
     # Most of the roles below are not distributed with the playbook, but downloaded separately using `ansible-galaxy` via the `just roles` command (see `justfile`).

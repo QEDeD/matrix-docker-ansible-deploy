@@ -2,9 +2,9 @@
 
 ## Non-root SSH inventory no longer overrides playbook privilege escalation
 
-The inventory examples previously recommended setting `ansible_become=true` and `ansible_become_user=root` when connecting over SSH as a non-root user. Ansible connection variables take precedence over playbook keywords, so these inventory values forced all tasks to use privilege escalation as root. They prevented the playbook from switching selected tasks to service accounts such as `matrix` or deliberately disabling privilege escalation.
+The main inventory example previously recommended setting `ansible_become=true` and `ansible_become_user=root` when connecting over SSH as a non-root user. Ansible connection variables take precedence over playbook keywords, so these values overrode the playbook's privilege-escalation choices for tasks executed on that host. In particular, `ansible_become_user=root` prevented selected tasks from switching to service accounts such as `matrix`. Independently, `ansible_become=true` can override tasks which deliberately set `become: false`.
 
-If you copied this configuration, remove `ansible_become` and `ansible_become_user` from your inventory. Keep only the SSH login identity there, for example `ansible_ssh_user=username`. The playbook already enables privilege escalation and now explicitly selects root for its main plays, while individual tasks can still select another account or set `become: false`.
+If you copied this configuration, remove `ansible_become` and `ansible_become_user` from your inventory. Remove the legacy `ansible_sudo_user` alias too, if you use it. During normal playbook runs, these variables are now rejected before service roles run. Keep only the SSH login identity in inventory, for example `ansible_ssh_user=username`. The playbook already enables privilege escalation and now explicitly selects root for its main plays, while individual tasks can still select another account or set `become: false`.
 
 If sudo requires a password, continue adding `--ask-become-pass` (`-K`) to your playbook commands or configure `ansible_become_password` through a secure lookup. The password setting supplies a credential; it does not force a target account.
 

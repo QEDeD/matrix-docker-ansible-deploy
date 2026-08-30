@@ -6,9 +6,19 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
+- name: Validate Jitsi Videobridge privilege escalation configuration
+  hosts: "jitsi_jvb_servers"
+  gather_facts: false
+
+  roles:
+    - role: custom/matrix_playbook_preflight
+      tags:
+        - always
+
 - name: "Set up additional Jitsi Videobridge (JVB) servers"
   hosts: "jitsi_jvb_servers"
   become: true
+  become_user: root
 
   roles:
     - role: galaxy/playbook_help
