@@ -98,9 +98,11 @@ python3 -m venv ./myenv
 In your `inventory/hosts` file, set the Python interpreter to your virtual environment:
 
 ```ini
-# SSH key authentication with empty passphrase example
-matrix.example.com ansible_host=<your-dsm-ip> ansible_ssh_user=<dsm-ssh-user> become=true become_user=root ansible_python_interpreter=/volume1/homes/path/to/your/project/folder/myenv/bin/python ansible_sudo_pass='your-password'
+# SSH login account and Python interpreter on the DSM host
+matrix.example.com ansible_host=<your-dsm-ip> ansible_ssh_user=<dsm-ssh-user> ansible_python_interpreter=/volume1/homes/path/to/your/project/folder/myenv/bin/python
 ```
+
+Use an SSH user that can run `sudo`, and do not add `become` settings to the host line: the playbook runs `sudo` itself and picks the right account for each task (see [Privilege escalation settings](installing.md#privilege-escalation-settings)). If `sudo` asks that user for a password, add `-K` (`--ask-become-pass`) to the command or use one of the [stored-password options](installing.md#install-matrix-server-and-services).
 
 ## vars.yml Configuration
 

@@ -139,15 +139,15 @@ If you don't have either `just` tool or `make` program, you can run the `ansible
 
 ### Run installation command
 
+If you **don't** use SSH keys for authentication, but rather a regular password, you may need to add `--ask-pass` to the command below.
+
+If you log in as `root` (as in the example inventory), you don't need `-K`. If you log in as another user and `sudo` asks that user for a password, add `-K` (`--ask-become-pass`) to the command below; Ansible then asks for the sudo password when the run starts. You need this even if you log in with an SSH key. To avoid typing the password on every run, see the stored-password options under [Install Matrix server and services](installing.md#install-matrix-server-and-services).
+
 Then, run the command below to start installation:
 
 ````sh
 ansible-playbook -i inventory/hosts setup.yml --tags=install-all,ensure-matrix-users-created,start
 ````
-
-If you **don't** use SSH keys for authentication, but rather a regular password, you may need to add `--ask-pass` to the command.
-
-If you **do** use SSH keys for authentication, **and** use a non-root user to *become* root (sudo), you may need to add `-K` (`--ask-become-pass`) to the command.
 
 Wait until the command completes. If it's all green, everything should be running properly.
 

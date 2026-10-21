@@ -34,6 +34,8 @@ If you've configured your DNS records and retrieved the playbook's source code t
 
 7. (optional, advanced) to run Ansible against multiple servers with different `sudo` credentials, you can copy the sample inventory hosts yaml file for each of your hosts: (`cp examples/host.yml inventory/my_host1.yml` …) and use the [`ansible-all-hosts.sh`](../bin/ansible-all-hosts.sh) script [in the installation step](installing.md).
 
+If you log in as a user other than `root`, set `ansible_ssh_user` to a user that can run `sudo` (see the [server prerequisites](prerequisites.md#server)) and change nothing else: the playbook runs `sudo` itself and picks the right account for each task, and it refuses to run if the inventory also sets `ansible_become`, `ansible_become_user` or similar overrides (see [Privilege escalation settings](installing.md#privilege-escalation-settings)). If `sudo` asks that user for a password, you will add `-K` to the command in the [Installing](installing.md#install-matrix-server-and-services) step.
+
 For a basic Matrix installation, that's all you need.
 
 For a more custom setup, see the [Other configuration options](#other-configuration-options) below.

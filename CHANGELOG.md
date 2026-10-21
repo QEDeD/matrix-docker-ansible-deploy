@@ -1,3 +1,11 @@
+# 2026-10-21
+
+## Inventories must not set `ansible_become` or `ansible_become_user`
+
+The playbook now refuses to run for a host whose inventory, host/group variables or extra variables define `ansible_become`, `ansible_become_user` or one of the other [become user variables it checks](docs/installing.md#privilege-escalation-settings). The earlier non-root example in `examples/hosts` set `ansible_become=true ansible_become_user=root`, so copies of it are affected. Those settings take precedence over the `become`/`become_user` keywords on tasks, so wherever they applied, tasks meant to run as the `matrix` service account or without escalation ran as root instead.
+
+If a run stops with `Privilege escalation overrides are defined for this host`, remove the variables it names and run the same command again. Keep `ansible_ssh_user`, `ansible_become_password` and the `-K` flag if you use them. [Privilege escalation settings](docs/installing.md#privilege-escalation-settings) explains stored sudo passwords, what the check does not cover, and how to keep the overrides deliberately with `matrix_playbook_privilege_escalation_validation_enabled: false`. The check does not repair file ownership from earlier runs.
+
 # 2026-10-19
 
 ## `just start-all` and `just start-group` restart all targeted services again
