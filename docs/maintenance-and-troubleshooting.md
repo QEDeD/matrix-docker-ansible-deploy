@@ -116,3 +116,22 @@ SSL certificates are managed automatically by the [Traefik](https://doc.traefik.
 If you're having trouble with SSL certificate renewal, check the Traefik logs (`journalctl -fu matrix-traefik`).
 
 If you're [using your own webserver](configuring-playbook-own-webserver.md) instead of the integrated one (Traefik), you should investigate in another way.
+
+### Docker runs out of subnets for new networks
+
+Many services that the playbook installs get a Docker network of their own. When Docker creates a network without an explicit subnet, it takes the subnet from its [default address pools](https://docs.docker.com/engine/network/#subnet-allocation). Docker's built-in pools hand out large subnets, so they only allow a limited number of networks. On a server with many services, creating another network can then fail with the error `all predefined address pools have been fully subnetted`.
+
+If the playbook manages Docker for you (the default), you can let Docker split a private range into smaller subnets by adding this to your `vars.yml` file:
+
+```yaml
+matrix_playbook_docker_installation_daemon_options_custom:
+  default-address-pools:
+    - base: "10.32.0.0/16"
+      size: 24
+```
+
+This example allows up to 256 networks with a `/24` subnet each. Choose a private range that does not overlap with any other network your server uses, such as your LAN or a VPN. Keep it inside the ranges that Matrix Authentication Service trusts as reverse proxies (`matrix_authentication_service_config_http_trusted_proxies`; by default `10.0.0.0/10`, `172.16.0.0/12` and `192.168.0.0/16`), or it ignores the client addresses that the reverse proxy forwards. If you already define `matrix_playbook_docker_installation_daemon_options_custom`, add the `default-address-pools` key to it.
+
+When the playbook manages Docker, it also manages `/etc/docker/daemon.json`: it writes all Docker daemon options to that file, replacing the whole file, and deletes the file when no options are set. It restarts Docker when the file changes. Put any other daemon settings in `matrix_playbook_docker_installation_daemon_options_custom` as well, not in the file itself.
+
+To apply the change, run the playbook as usual (for example, `just install-all`) when a short interruption of your services is acceptable. Docker uses the pools only when it creates a network: networks that already exist keep their current subnets until they are recreated. Docker's default `bridge` network (`docker0`) is an exception: Docker recreates it when it starts and, unless you set the `bip` option, can give it a subnet from the new pools.
